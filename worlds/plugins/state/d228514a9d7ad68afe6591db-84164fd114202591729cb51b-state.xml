@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!DOCTYPE muclient>
+<!-- MuClient version 5.07-pre -->
+<!-- Written by Nick Gammon -->
+<!-- Home Page: http://www.mushclient.com/ -->
+
+<!-- Plugin state saved. Plugin: "CleftMUSH_CommCatcher". World: "Cleft of Dimensions". -->
+
+<muclient>
+
+<!-- variables -->
+
+<variables
+   muclient_version="5.07-pre"
+   world_file_version="15"
+  >
+  <variable name="discord_tab">1</variable>
+  <variable name="grats_tab">1</variable>
+  <variable name="grouptell_tab">1</variable>
+  <variable name="info_tab">1</variable>
+  <variable name="music_tab">1</variable>
+  <variable name="ooc_tab">1</variable>
+  <variable name="quote_tab">1</variable>
+  <variable name="regularchan_tab">1</variable>
+  <variable name="says_tab">1</variable>
+  <variable name="shout_tab">1</variable>
+  <variable name="tells_tab">1</variable>
+  <variable name="yell_tab">1</variable>
+</variables>
+</muclient>

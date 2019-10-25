@@ -1,0 +1,14 @@
+Changelog 8/30/19 V1.0.4
+
+The Zelbess notifications no longer send to GROUP, but to a fake channel called [Tracker].
+You can use this channel to send misc info to yourself without spamming other people.
+The Zelbess notifications can be toggled on or off by typing "ferryinfo".
+
+Volume can now be controlled by typing volume NUMBER (volume 0 = mute, volume 100 = max)
+
+Max_EXP now shows the appropriate max_exp based on your remorts.
+
+Cackling now makes you sound like Kefka.
+
+Fixed the many broken rooms in Honey I shrunk the kids, where it was breaking the mapper.
+It won't draw those rooms, currently, sorry.

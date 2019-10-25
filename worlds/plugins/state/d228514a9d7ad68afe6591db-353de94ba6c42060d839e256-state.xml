@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!DOCTYPE muclient>
+<!-- MuClient version 5.07-pre -->
+<!-- Written by Nick Gammon -->
+<!-- Home Page: http://www.mushclient.com/ -->
+
+<!-- Plugin state saved. Plugin: "CleftMUSH_Group_Window". World: "Cleft of Dimensions". -->
+
+<muclient>
+
+<!-- variables -->
+
+<variables
+   muclient_version="5.07-pre"
+   world_file_version="15"
+  >
+  <variable name="bar_width">200</variable>
+  <variable name="hp_color">#00ff00</variable>
+  <variable name="mana_color">#3333ff</variable>
+  <variable name="moves_color">gold</variable>
+  <variable name="overlay_pct">1</variable>
+  <variable name="pos_x">839</variable>
+  <variable name="pos_y">0</variable>
+  <variable name="show_mana">1</variable>
+  <variable name="show_minions">1</variable>
+  <variable name="show_moves">1</variable>
+  <variable name="show_numbers">1</variable>
+  <variable name="win_height">404</variable>
+  <variable name="win_width">297</variable>
+</variables>
+</muclient>

@@ -1,0 +1,133 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!DOCTYPE muclient>
+
+<muclient>
+<plugin
+   name="CleftMUSH_Convert_Packet"
+   author="Nick Gammon"
+   id="9c0ed228bdb4a71c77e85ce0"
+   language="Lua"
+   purpose="Converts one word to another"
+   date_written="2008-06-29"
+   requires="4.00"
+   version="1.0"
+   >
+
+</plugin>
+
+<!--  Script  -->
+<script>
+function OnPluginPacketReceived (s)
+--s = string.gsub (s, "...%[0;36m(%d+,%s%d).%[0m...%[3n", "WARP ZONE\n[Start_Desc]\nThis is the Warp Zone!\n")
+s = string.gsub (s, "[\010][\013][\027]%[0;36m[\027]%[1;31m%[#%]%[#%]%[#%]%[#%]", "TETRIS ROOM 1\n")
+s = string.gsub (s, "[\010][\013][\027]%[0;36m[\027]%[1;34m%[#%]%[#%]%[#%]%[#%]", "TETRIS ROOM 2\n")
+s = string.gsub (s, "[\010][\013][\027]%[0;36m[\027]%[1;37m%[#%]%[#%]%[#%]%[#%]", "TETRIS ROOM 3\n")
+s = string.gsub (s, "[\010][\013][\027]%[0;36m[\027]%[1;37m%[!%]%[!%]%[!%]%[!%]", "TETRIS ROOM 4\n")
+s = string.gsub (s, "[\010][\013][\027]%[0;36m[\027]%[0m[\027]%[0m[\010][\013][\027]", "-NO_ROOM_NAME-\n")
+s = string.gsub (s, "[\010][\013][\027]%[0;36m[\027]%[0m[\010][\013][\027]", "-NO_ROOM_NAME-\n")
+--s = string.gsub (s, "^...%[0;36m.%[0m...$", "-NO_ROOM_NAME-\n")
+--s = string.gsub (s, "...%[0;36m(%d+,%s%d).%[0m...%[3n", "14, 6\n[Start_Desc]\nYou are in the Warp Zone.\nYou can get to various places from here.\nHave fun!\n")
+s = string.gsub (s, ".%[0m  .%[0m..", "\n  [There is no description written for this room]\n\n")
+s = string.gsub (s, "%[3n", " [Start_Desc]\n")
+s = string.gsub (s, "%[0g", " \n[SND_COD_NULL]\n")
+s = string.gsub (s, "%[1g", " \n[SND_COD_1UP]\n")
+s = string.gsub (s, "%[2g", " \n[SND_COD_ATTK]\n")
+s = string.gsub (s, "%[3g", " \n[SND_COD_BEAM]\n")
+s = string.gsub (s, "%[4g", " \n[SND_COD_BLOD]\n")
+s = string.gsub (s, "%[5g", " \n[SND_COD_BRCK]\n")
+s = string.gsub (s, "%[6g", " \n[SND_COD_BUMP]\n")
+s = string.gsub (s, "%[7g", " \n[SND_COD_BURN]\n")
+s = string.gsub (s, "%[8g", " \n[SND_COD_CAST]\n")
+s = string.gsub (s, "%[9g", " \n[SND_COD_CHAT]\n")
+s = string.gsub (s, "%[10g", " \n[SND_COD_CHRG]\n")
+s = string.gsub (s, "%[11g", " \n[SND_COD_CNCH]\n")
+--s = string.gsub (s, "%[12g", " \n[SND_COD_COIN]\n")
+s = string.gsub (s, "%[13g", " \n[SND_COD_DIE]\n")
+s = string.gsub (s, "%[14g", " \n[SND_COD_ENTR]\n")
+s = string.gsub (s, "%[15g", " \n[SND_COD_FIND]\n")
+s = string.gsub (s, "%[16g", " \n[SND_COD_FLEE]\n")
+s = string.gsub (s, "%[17g", " \n[SND_COD_GROW]\n")
+s = string.gsub (s, "%[18g", " \n[SND_COD_HEAL]\n")
+s = string.gsub (s, "%[19g", " \n[SND_COD_HIT]\n")
+s = string.gsub (s, "%[20g", " \n[SND_COD_HIT2]\n")
+s = string.gsub (s, "%[21g", " \n[SND_COD_ICE]\n")
+s = string.gsub (s, "%[22g", " \n[SND_COD_JMP2]\n")
+s = string.gsub (s, "%[23g", " \n[SND_COD_JUMP]\n")
+s = string.gsub (s, "%[24g", " \n[SND_COD_KICK]\n")
+s = string.gsub (s, "%[25g", " \n[SND_COD_LASR]\n")
+s = string.gsub (s, "%[26g", " \n[SND_COD_LEVL]\n")
+s = string.gsub (s, "%[27g", " \n[SND_COD_LOGF]\n")
+s = string.gsub (s, "%[28g", " \n[SND_COD_LOGO]\n")
+s = string.gsub (s, "%[29g", " \n[SND_COD_MECH]\n")
+s = string.gsub (s, "%[30g", " \n[SND_COD_PLNT]\n")
+s = string.gsub (s, "%[31g", " \n[SND_COD_PWIT]\n")
+s = string.gsub (s, "%[32g", " \n[SND_COD_RIP]\n")
+s = string.gsub (s, "%[33g", " \n[SND_COD_SMSH]\n")
+s = string.gsub (s, "%[34g", " \n[SND_COD_SPLS]\n")
+s = string.gsub (s, "%[35g", " \n[SND_COD_SRNK]\n")
+s = string.gsub (s, "%[36g", " \n[SND_COD_THUD]\n")
+s = string.gsub (s, "%[37g", " \n[SND_COD_TITL]\n")
+s = string.gsub (s, "%[38g", " \n[SND_COD_TRNS]\n")
+s = string.gsub (s, "%[39g", " \n[SND_COD_VICT]\n")
+s = string.gsub (s, "%[40g", " \n[SND_COD_WARP]\n")
+s = string.gsub (s, "%[41g", " \n[SND_COD_XPL1]\n")
+s = string.gsub (s, "%[42g", " \n[SND_COD_ZAP]\n")
+s = string.gsub (s, "%[43g", " \n[SND_COD_BLDG]\n")
+s = string.gsub (s, "%[44g", " \n[SND_COD_DOG]\n")
+s = string.gsub (s, "%[45g", " \n[SND_COD_DOOR]\n")
+s = string.gsub (s, "%[46g", " \n[SND_COD_DRAN]\n")
+s = string.gsub (s, "%[47g", " \n[SND_COD_EAT]\n")
+s = string.gsub (s, "%[48g", " \n[SND_COD_FALL]\n")
+s = string.gsub (s, "%[49g", " \n[SND_COD_FONE]\n")
+s = string.gsub (s, "%[50g", " \n[SND_COD_GOST]\n")
+s = string.gsub (s, "%[51g", " \n[SND_COD_GUN]\n")
+s = string.gsub (s, "%[52g", " \n[SND_COD_MOTO]\n")
+s = string.gsub (s, "%[53g", " \n[SND_COD_PNCH]\n")
+s = string.gsub (s, "%[54g", " \n[SND_COD_QST1]\n")
+s = string.gsub (s, "%[55g", " \n[SND_COD_QST2]\n")
+s = string.gsub (s, "%[56g", " \n[SND_COD_QUAK]\n")
+s = string.gsub (s, "%[57g", " \n[SND_COD_SPRS]\n")
+s = string.gsub (s, "%[58g", " \n[SND_COD_TOSS]\n")
+s = string.gsub (s, "%[59g", " \n[SND_COD_UNLK]\n")
+s = string.gsub (s, "%[60g", " \n[SND_COD_VEGE]\n")
+s = string.gsub (s, "%[61g", " \n[SND_COD_WATR]\n")
+s = string.gsub (s, "%[62g", " \n[SND_COD_WIN]\n")
+s = string.gsub (s, "%[63g", " \n[SND_COD_CHOK]\n")
+s = string.gsub (s, "%[64g", " \n[SND_COD_SPLS2]\n")
+s = string.gsub (s, "%[65g", " \n[SND_COD_SLAM2]\n")
+s = string.gsub (s, "%[66g", " \n[SND_COD_SHLD]\n")
+s = string.gsub (s, "%[67g", " \n[SND_COD_SCAN]\n")
+s = string.gsub (s, "%[68g", " \n[SND_COD_PAUS]\n")
+s = string.gsub (s, "%[69g", " \n[SND_COD_DBUF]\n")
+s = string.gsub (s, "%[70g", " \n[SND_COD_MISS]\n")
+s = string.gsub (s, "%[71g", " \n[SND_COD_SQEK]\n")
+s = string.gsub (s, "%[72g", " \n[SND_COD_SUPR]\n")
+s = string.gsub (s, "%[73g", " \n[SND_COD_SCRM]\n")
+s = string.gsub (s, "%[74g", " \n[SND_COD_BONK]\n")
+s = string.gsub (s, "%[75g", " \n[SND_COD_HELI]\n")
+s = string.gsub (s, "%[76g", " \n[SND_COD_CHRP]\n")
+s = string.gsub (s, "%[77g", " \n[SND_COD_SPIT]\n")
+s = string.gsub (s, "%[78g", " \n[SND_COD_SPIT2]\n")
+s = string.gsub (s, "%[79g", " \n[SND_COD_PWUP]\n")
+s = string.gsub (s, "%[80g", " \n[SND_COD_PKUP]\n")
+s = string.gsub (s, "%[81g", " \n[SND_COD_CRSH]\n")
+s = string.gsub (s, "%[82g", " \n[SND_COD_PKUP2]\n")
+s = string.gsub (s, "%[83g", " \n[SND_COD_ROKT]\n")
+s = string.gsub (s, "%[84g", " \n[SND_COD_BOMB]\n")
+s = string.gsub (s, "%[85g", " \n[SND_COD_RISE]\n")
+s = string.gsub (s, "%[86g", " \n[SND_COD_ROAR]\n")
+s = string.gsub (s, "%[87g", " \n[SND_COD_BEAM2]\n")
+s = string.gsub (s, "%[88g", " \n[SND_COD_RAY]\n")
+s = string.gsub (s, "%[89g", " \n[SND_COD_ROLL]\n")
+s = string.gsub (s, "%[90g", " \n[SND_COD_BLIP]\n")
+s = string.gsub (s, "%[91g", " \n[SND_COD_SCRT]\n")
+s = string.gsub (s, "%[92g", " \n[SND_COD_STAI]\n")
+
+--s = string.gsub (s, "...%[0m...", "{End_Desc}")
+s = string.gsub (s, "Your enhanced resolve fades.", "Spelldown Valor")
+s = string.gsub (s, "You feel the sinews of your muscles toughen up with resolve.", "Spellup Valor")
+return s
+end -- function OnPluginPacketReceived
+</script>
+
+</muclient>

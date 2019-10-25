@@ -1,0 +1,178 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!DOCTYPE muclient>
+<muclient>
+<plugin
+   name="ClickableNoteList"
+   author="Glaer"
+   id="afc3666c63f6a0da6ef51391"
+   language="Lua"
+   purpose="Adds hyperlinks to note listing for easy reading"
+   save_state="y"
+   date_written="2015-06-26"
+   requires="4.70"
+   version="1.1"
+   >
+
+<description trim="y">
+<![CDATA[
+Adds hyperlinks to note listing for easy reading
+
+Adds "note list new" command to filter only unread posts
+]]>
+</description>
+
+</plugin>
+
+<triggers>
+
+  <trigger enabled="y" regexp="y" sequence="100" keep_evaluating="y" omit_from_output="n" name="NoteListHeader"
+   script="TRIGGER_NoteLine"
+   match=" \|\s+knock on the address to enter home\s+\|$$"
+  ></trigger>
+  
+  <trigger enabled="n" regexp="y" sequence="100" keep_evaluating="y" omit_from_output="y" name="NoteListBlankLine"
+   script="TRIGGER_NoteLine" match="^ '-------------------------------------'$"></trigger>
+  
+  <trigger enabled="n" regexp="y" sequence="100" keep_evaluating="y" omit_from_output="y" name="NoteListItem"
+   script="TRIGGER_NoteLine"
+   match="^ \|\s+(?<NoteNumber>\d+)\s+-\s+.*\s+\|"
+  ></trigger>
+  
+  <trigger enabled="y" regexp="y" sequence="100" keep_evaluating="y" omit_from_output="n" name="NoNewPosts"
+   script="TRIGGER_NoteLine"
+   match="^No more new posts in the [A-Z][A-Za-z]+ forum\.$"
+  ></trigger>
+</triggers>
+
+<aliases>
+	<alias enabled="y" sequence="100" ignore_case="y" regexp="y" keep_evaluating="n"
+	match="^\s*note?\s+list\s+new\s*$"
+	script="COMMAND_NoteListNew"></alias>
+</aliases>
+<timers>
+</timers>
+
+<script><![CDATA[
+require "serialize"
+require "copytable"
+
+NextList_HideOldPosts = false
+
+function TRIGGER_NoteLine(name, lines, wildcards, styles) -- {{{
+	--Start capturing on the header
+	if name == "NoNewPosts" then
+		--NextList_HideOldPosts = false --clear this setting to avoid confusion
+		--I don't even know why I thought that was necessary.
+		return
+	elseif name == "NoteListHeader" then
+		EnableTrigger("NoteListBlankLine")
+		EnableTrigger("NoteListItem")
+		return
+	--stop capturing on a blank line
+	elseif name == "NoteListBlankLine" then
+		if NextList_HideOldPosts then
+			ColourNote("white", "", "Only showed unread posts in this forum.")
+		end
+		EnableTrigger("NoteListBlankLine", false)
+		EnableTrigger("NoteListItem", false)
+		NextList_HideOldPosts = false
+		Note()
+		return
+	end
+	
+	--sanity check
+	if name ~= "NoteListItem" then
+		EnableTrigger("NoteListBlankLine", false)
+		EnableTrigger("NoteListItem", false)
+		assert(false, "TRIGGER_NoteLine called with an invalid trigger name.  Aborting.")
+	end
+	
+	--Move on if this is old and we won't show it.
+	if NextList_HideOldPosts and wildcards.New == " " then
+		return
+	end
+
+	--cut the two styles we're interested in apart, then inject new styles
+	--with hyperlink information in place
+	PlayerStyle = copytable.shallow(styles[5])
+	NumberStyle = copytable.shallow(styles[2])
+	PlayerStyle.text = Trim(PlayerStyle.text)
+	NumberStyle.text = Trim(NumberStyle.text)
+	
+	styles[5].text = styles[5].text:match("%s+")
+	styles[2].text = styles[2].text:match("%s+")
+	
+	PlayerStyle.hyperlink = true
+	PlayerStyle.target = "!!afc3666c63f6a0da6ef51391:InfoPlayer("..PlayerStyle.text..")"
+	PlayerStyle.hint = "Finger/Whois "..PlayerStyle.text
+	PlayerStyle.url = false
+	PlayerStyle.nounderline = true
+	
+	NumberStyle.hyperlink = true
+	NumberStyle.target = "note read "..NumberStyle.text
+	NumberStyle.hint = "note read "..NumberStyle.text
+	NumberStyle.url = false
+	NumberStyle.nounderline = false
+	
+	if PlayerStyle.text == "Aardwolf" or PlayerStyle.text == "Orbury" then
+		PlayerStyle.hyperlink = false -- TellStyles will ignore the hyperlink opts
+	end
+	
+	table.insert(styles, 5, PlayerStyle)
+	table.insert(styles, 3, NumberStyle)
+								
+	TellStyles(styles)
+	Note()
+end -- }}}
+
+--just a quick and dirty output helper
+function TellStyles(stylesarr) -- {{{
+	assert(stylesarr and type(stylesarr) == "table", "Nil or nontabular "..
+		"list of style strings passed to TellStyles.")
+	
+	if stylesarr.text then
+		if stylesarr.hyperlink then
+			Hyperlink(stylesarr.target, stylesarr.text, stylesarr.hint or stylesarr.target,
+				RGBColourToName(stylesarr.textcolour), RGBColourToName(stylesarr.backcolour),
+				stylesarr.url, stylesarr.nounderline)
+		else
+			ColourTell(RGBColourToName(stylesarr.textcolour),
+				RGBColourToName(stylesarr.backcolour), stylesarr.text)
+		end
+	else
+		for _, stylesstr in ipairs(stylesarr) do
+			TellStyles(stylesstr)
+		end
+	end
+end -- }}}
+
+function InfoPlayer(player)
+	Execute("finger "..player)
+	Execute("whois "..player)
+end
+
+function COMMAND_NoteListNew()
+	NextList_HideOldPosts = true
+	Execute("note list")
+end
+
+]]></script>
+
+<script><![CDATA[
+function OnPluginInstall() -- {{{
+	OnPluginEnable()
+end -- }}}
+
+function OnPluginEnable() -- {{{
+	if IsConnected() then
+		ColourNote("white",  "", "ClickableNoteList version "..GetPluginInfo("afc3666c63f6a0da6ef51391", 19))
+		ColourNote("silver", "", "-------------------------------")
+		ColourNote("white", "", "Adds hyperlinks to note numbers in note lists for easy reading.")
+		ColourNote("white", "", "Adds the ", "lime", "", "note list new", "white", "", " command to list only unread notes.")
+		ColourNote("white", "", "Makes author names clickable for easy finger/whois information.")
+		ColourNote("silver", "", "  * Author names are NOT underlined but ARE clickable.")
+		Note()
+	end
+end -- }}}
+]]></script>
+</muclient>

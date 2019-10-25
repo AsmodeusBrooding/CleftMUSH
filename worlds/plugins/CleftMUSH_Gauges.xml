@@ -1,0 +1,546 @@
+
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE muclient>
+
+<muclient>
+<plugin
+   name="CleftMUSH_Big_Gauges"
+   author="Asmodeus"
+   id="48062dcd6b934c590df53c68"
+   language="Lua"
+   purpose="Shows hp, mana, move, exp, and mob health in a mini window"
+   date_written="2019-06-30 09:00"
+   requires="4.40"
+   version="5.76"
+   save_state="y"
+   >
+<description trim="y">
+<![CDATA[
+Install this plugin to show an info bar with HP, Mana, Movement, EXP points, and SUPER shown as a bar.
+
+The window can be dragged to a new location with the mouse.
+
+Your prompt needs to be set like this:
+
+<HP:%h/%H MP:%m/%M MV:%v/%V Enemy:%o TNL:%X> SUPER: %A]%c
+Previous $\<HP:(\d+)\/(\d+) MP:(\d+)\/(\d+) MV:(\d+)\/(\d+) Enemy:(.*) TNL:(\d+) SUPER: (\d+)\>$
+ 
+]]>
+</description>
+
+</plugin>
+^\|\s+HP:(\d+)\/(\d+)\s+\||\s+MP:(\d+)\/(\d+)\s+\||\s+MV:(\d+)\/(\d+)\s+\||\s+Enemy:(.*)\s+\||\s+TNL:(\d+)\s+\||\s+SUPER:\s+(\d+)\||$
+<!--  Triggers  -->
+<triggers>
+  <trigger
+   enabled="n"
+   match="^\|\s+HP:(\d+)\/(\d+)\s+\||\s+MP:(\d+)\/(\d+)\s+\||\s+MV:(\d+)\/(\d+)\s+\||\s+Enemy:(.*)\s+\||\s+TNL:(\d+)\s+\||\s+SUPER:\s+(\d+)\|| $"
+   regexp="y"
+   script="do_prompt"
+   sequence="100"
+   send_to="14"
+  >
+<send>exp = max_exp - TNL
+enemy = tonumber("%7")
+TNL = tonumber("%8")
+super = tonumber("%9")
+WindowShow (win, ShowWindow)</send>
+  </trigger>
+<trigger
+   enabled="y"
+   match="| Remort: * | Level: * |"
+   regexp="n"
+   send_to="14"
+   omit_from_output="y"
+   sequence="99"
+  >
+  <send>
+remorts = tonumber("%1") * 200 - 200
+  </send>
+  </trigger>
+<trigger
+   enabled="y"
+   match="| HP:*/* | MP:*/* | MV:*/* | Enemy:*% | TNL:* | SUPER: * | "
+   keep_evaluating="y"
+   regexp="n"
+   script="do_prompt"
+   send_to="14"
+   sequence="100"
+  >
+  <send>
+exp = max_exp - TNL
+enemy = tonumber("%7")
+TNL = tonumber("%8")
+super = tonumber("%9")
+max_exp = remorts + 2000
+     WindowShow (win, ShowWindow)
+  </send>
+  </trigger>
+
+<trigger
+   enabled="y"
+   match="| HP:*/* | MP:*/* | MV:*/* | Enemy:None! | TNL:* | SUPER: * | "
+   keep_evaluating="y"
+   regexp="n"
+   send_to="14"
+    script="do_prompt"
+   sequence="100"
+  >
+  <send>
+exp = max_exp - TNL
+enemy = 0
+TNL = tonumber("%7")
+super = tonumber("%8")
+max_exp = remorts + 2000
+     WindowShow (win, ShowWindow)
+  </send>
+  </trigger>
+
+</triggers>
+<aliases>
+<alias
+   script="gauge_show"
+   match="gauge show"
+   enabled="y"
+   sequence="100"
+   ignore_case="y"
+></alias>
+
+<alias
+   script="gauge_hide"
+   match="gauge hide"
+   enabled="y"
+   sequence="100"
+   ignore_case="y"
+></alias>
+<alias
+   match="setup prompt"
+   enabled="y"
+   sequence="100"
+   send_to="14"
+   regexp="n"
+   ignore_case="y">
+<send>setup_prompt()</send></alias>
+</aliases>
+
+
+
+
+<!--  Script  -->
+
+
+<script>
+<![CDATA[
+
+require "movewindow"
+require "gauge"
+require "serialize"
+require "checkplugin"
+require "mw_theme_base"
+require "tprint"
+
+
+GAUGE_HEIGHT = 15
+NUMBER_OF_TICKS = 9
+font_height = 15
+FONT_COLOUR = ColourNameToRGB "white"
+local bg_color = "#000000"
+local title = "Group Info"
+local title_bg_color = "#303030"
+local border_color = "#303030"
+local to_bool = {["0"] = false, ["1"] = true}
+local hp_label_color = GetVariable("hp_color") or "#00ff00" -- hp label color
+local mana_label_color = GetVariable("mana_color") or "#3333ff" -- mana label color
+local moves_label_color = GetVariable("moves_color") or "#ffd700" -- moves label color
+local pos_x = GetVariable("pos_x") or 100
+local pos_y = GetVariable("pos_y") or 100
+local window_visible = true -- always start out with visible window
+local hp_color = GetVariable("hp_color") or "#00ff00" -- color of bar
+local mana_color = GetVariable("mana_color") or "#3333ff" -- color of bar
+local moves_color = GetVariable("moves_color") or "#ffd700" -- color of bar
+local ShowWindow = GetVariable("win_shown") or "true"
+local last_refresh = 1 -- last window refresh
+local bar_border = "#777777"
+local winid = "win_"..GetPluginID()
+local bg_color = "#000000"
+local border_color = "#303030"
+local grip_resize = 10 -- resize grip size
+local win_height = GetVariable("win_height") or 97
+local win_width = GetVariable("win_width") or 740
+local font_size = 8
+local player_border_color = "#AAAAAA"
+local hp_label_color = "#00ff00" -- hp label color
+local enemy_label_color = GetVariable("enemy_color") or "#ff0000" -- color of bar
+local enemy_color = GetVariable("enemy_color") or "#ff0000" -- color of bar
+local super_label_color = GetVariable("super_color") or "#00ffff" -- color of bar
+local super_color = GetVariable("super_color") or "#00ffff" -- color of bar
+local exp_color = GetVariable("exp_color") or "#9400d3" -- color of bar
+local exp_label_color = GetVariable("exp_color") or "#9400d3" -- color of bar
+font_name = "Fixedsys"    -- the font
+TNL = 0
+exp = 0
+remorts = 0
+max_exp = 2800
+no_enemy=0
+max_enemy=100
+enemy=0
+show_mana=true
+super = 0
+max_super = 100
+
+function toggle()
+	window_visible = not window_visible
+	if not window_visible then -- remove window
+		WindowDelete(winid)
+	else
+		window(true)
+	end
+end
+
+function setup_prompt()
+Execute("prompt {R[{WLast_Dir: %d {R]%c{c%1[G_End]%c{D| {WRemort: %L {D| {WLevel: %l {D|%c| {wHP:{R%h{D/{r%H{D |{w MP:{B%m{D/{b%M{w {D| {wMV:{Y%v{D/{y%V{D |{w Enemy:{R%o{w {D| {wTNL:{m%X {D| {wSUPER: {C%A{D |{w %c{R[{WRoom{R][{W%C{R]%r%c[Exits: %e]%c")
+end -- function setup_prompt
+
+function gauge_show(name, line, wildcards)
+   ColourNote ("yellow", "", "Gauges window now shown. Type 'gauge hide' to hide it.")
+ShowWindow = true
+SetVariable("win_shown", "true")
+WindowShow( winid, ShowWindow )
+end -- function gauge_show
+
+function gauge_hide(name, line, wildcards)
+   ColourNote ("yellow", "", "Gauges window now hidden. Type 'gauge show' to see it again.")
+ShowWindow = false
+SetVariable("win_shown", "false")
+   WindowShow( winid, ShowWindow )
+end -- function gauge_hide
+
+
+function DoGauge (sPrompt, current, max, Colour)
+
+  if max <= 0 then 
+    return 
+  end -- no divide by zero
+  
+  -- fraction in range 0 to 1
+  local Fraction = math.min (math.max (current / max, 0), 1) 
+	--WindowRectOp(winid, 2, 0, 0, 0, 22, ColourNameToRGB(title_bg_color)) -- title background
+	--WindowRectOp(winid, 1, 0, 0, 0, 0, ColourNameToRGB(player_border_color)) -- border
+
+	local title = "Monitor Gauge" -- default title
+
+	--Theme.Draw3DRect(winid, 0, 0, 0, 0, depressed) -- themed window
+	Theme.DrawBorder(winid) -- theme window border
+   
+  local width = WindowTextWidth (winid, font_id, sPrompt)
+  
+  WindowText (winid, font_id, sPrompt, gauge_left - width, vertical, 0, 0, Colour)
+
+  
+  local gauge_width = (win_width - gauge_left - 5) * Fraction
+  
+   -- box size must be > 0 or WindowGradient fills the whole thing 
+  if math.floor (gauge_width) > 0 then
+    
+    -- top half
+    WindowGradient (winid, gauge_left, vertical, gauge_left + gauge_width, vertical + GAUGE_HEIGHT / 2, 
+                    0x000000,
+                    Colour, 2) 
+    
+    -- bottom half
+    WindowGradient (winid, gauge_left, vertical + GAUGE_HEIGHT / 2, 
+                    gauge_left + gauge_width, vertical +  GAUGE_HEIGHT,   
+                    Colour,
+                    0x000000,
+                    2) 
+
+  end -- non-zero
+  
+  -- show ticks
+  local ticks_at = (win_width - gauge_left - 5) / (NUMBER_OF_TICKS + 1)
+  
+  -- ticks
+  for i = 1, NUMBER_OF_TICKS do
+    WindowLine (winid, gauge_left + (i * ticks_at), vertical, 
+                gauge_left + (i * ticks_at), vertical + GAUGE_HEIGHT, ColourNameToRGB ("silver"), 0, 1)
+  end -- for
+
+  -- show actual exp in gauge
+
+ WindowText (winid, font_id, string.format ("%i/%i (%i%%)", current, max, Fraction * 100),
+                             gauge_left + 3, vertical + 1, 0, 0, ColourNameToRGB ("black"))
+
+ WindowText (winid, font_id, string.format ("%i/%i (%i%%)", current, max, Fraction * 100),
+                             gauge_left + 2, vertical + 1, 0, 0, ColourNameToRGB ("black"))
+
+ WindowText (winid, font_id, string.format ("%i/%i (%i%%)", current, max, Fraction * 100),
+                             gauge_left + 1, vertical, 0, 0, ColourNameToRGB ("white"))
+
+-- draw a box around it
+  WindowRectOp (winid, 1, gauge_left, vertical, win_width - 5, vertical + GAUGE_HEIGHT, 
+          ColourNameToRGB(player_border_color))  -- frame entire box
+	--WindowRectOp(winid, 1, gauge_left, vertical, 0, 0, ColourNameToRGB(player_border_color)) -- border
+  
+  -- mouse-over information: add hotspot if not there
+  if not WindowHotspotInfo(winid, sPrompt, 1) then
+  end -- if
+  
+  -- store numeric values in case they mouse over it
+  WindowHotspotTooltip(winid, sPrompt, string.format ("%s\t%i / %i (%i%%)", 
+                        sPrompt, current, max, Fraction * 100) )
+    Theme.AddResizeTag(winid, 1, nil, nil, "MouseDown", "ResizeMoveCallback", "ResizeReleaseCallback")
+  vertical = vertical + font_size + 9
+end -- function DoGauge
+
+
+function do_prompt (name, line, wildcards)
+
+  hp, max_hp = tonumber (wildcards [1]), tonumber (wildcards [2])
+  mana, max_mana = tonumber (wildcards [3]), tonumber (wildcards [4])
+  move, max_move = tonumber (wildcards [5]), tonumber (wildcards [6])
+
+
+
+  -- fill entire box to clear it
+	WindowRectOp(winid, 2, 2, 1, -2, -2, ColourNameToRGB(bg_color)) -- blank canvas
+  
+  -- Edge around box rectangle
+  check (WindowCircleOp (winid, 3, 0, 0, 0, 0, ColourNameToRGB(bar_border), 0, 2, 0, 1))
+
+
+  vertical = 6 -- pixel to start at
+  DoGauge ("HP: ",    hp ,   max_hp,    ColourNameToRGB(hp_color))
+  DoGauge ("Mana: ",  mana,  max_mana,  ColourNameToRGB(mana_color))
+  DoGauge ("Move: ",  move,  max_move,  ColourNameToRGB(moves_color))
+ 
+  if exp ~= nil then
+  DoGauge ("Exp: ", exp , max_exp, ColourNameToRGB(exp_color))
+else 
+if lastlearn==nil or os.time() - lastlearn > 15 then 
+Send("learn")
+lastlearn=os.time()
+end
+  end 
+  if enemy ~= nil then 
+DoGauge ("Enemy: ",  enemy,  max_enemy,  ColourNameToRGB(enemy_color))
+end
+if super ~= nil then
+DoGauge ("Super: ",  super,  max_super,  ColourNameToRGB(super_color))
+end
+     WindowShow (win, ShowWindow)
+  
+
+
+
+  
+end -- function do_prompt
+
+
+function OnPluginInstall ()
+window(true)
+    win = GetPluginID ()
+  font_id = "fn"
+  
+  require "movewindow"  -- load the movewindow.lua module
+
+   -- register with the z-order monitor
+   CallPlugin("462b665ecb569efbf261422f", "registerMiniwindow", win)
+
+  -- install the window movement handler, get back the window position
+		WindowPosition(winid, pos_x, pos_y, 0, 2)
+ windowinfo = movewindow.install (win, miniwin.pos_top_right, miniwin.create_absolute_location, true, {mouseup=MouseUp, mousedown=MouseDown, dragmove=LeftClickOnly, dragrelease=LeftClickOnly})
+      
+    
+  
+  WindowFont (winid, font_id, font_name, 9)
+  -- work out how far in to start the gauge
+  gauge_left =                        WindowTextWidth (winid, font_id, "HP: ")
+  gauge_left = math.max (gauge_left,  WindowTextWidth (winid, font_id, "Mana: "))
+  gauge_left = math.max (gauge_left,  WindowTextWidth (winid, font_id, "Move: "))
+  gauge_left = math.max (gauge_left,  WindowTextWidth (winid, font_id, "Enemy: "))
+  gauge_left = math.max (gauge_left,  WindowTextWidth (winid, font_id, "Super: "))
+  
+  gauge_left = gauge_left + 5  -- allow gap from edge
+    
+  if GetVariable ("enabled") == "false" then
+    ColourNote ("yellow", "", "Warning: Plugin " .. GetPluginName ().. " is currently disabled.")
+    check (EnablePlugin(GetPluginID (), false))
+  end -- they didn't enable us last time
+end
+ShowWindow = true 
+if GetVariable("win_shown") == "false" then ShowWindow = false 
+ 
+end -- OnPluginInstall
+
+function ResizeMoveCallback()
+	--Note("ResizeMoveCallback")
+	local x_offset, y_offset = start_x - WindowInfo(winid, 17), start_y - WindowInfo(winid, 18)
+	start_x, start_y = WindowInfo(winid, 17), WindowInfo(winid, 18)
+	win_width = win_width - x_offset
+	win_height = win_height - y_offset
+	if os.clock() - last_refresh >= .05 then
+		--Note("redraw")
+		last_refresh = os.clock()
+		  window(false)
+	end
+end
+ 
+function ResizeReleaseCallback()
+	--Note("ResizeReleaseCallback")
+	window(true)
+	SaveState()
+end
+
+function MouseDown(flags, id)
+	--Note("MouseDown")
+	if id == "resize" then
+		start_x, start_y = WindowInfo(winid, 17), WindowInfo(winid, 18)
+	end
+end
+
+function MouseUp(flags, id, win)
+	--Note("MouseUp")
+	if bit.band(flags, 0x20) ~= 0 then -- right click
+		right_click_menu()
+	end
+	pos_x, pos_y = WindowInfo(winid, 10), WindowInfo(winid, 11)
+	SaveState()
+end
+
+function right_click_menu()
+	local x, y = WindowInfo(winid, 14), WindowInfo(winid, 15)
+
+	local str = "!"
+	
+		str = str..">Colors|HP|Mana|Moves|Exp|Enemy|Super"
+
+	
+	opt = WindowMenu(winid, x, y, str)
+	
+	if opt == "" then
+		return
+	end
+	
+	opt = tonumber(opt)
+	
+	if opt == 1 then -- hp color
+		local clr = PickColour(ColourNameToRGB(hp_color))
+		if clr ~= -1 then
+			hp_color = RGBColourToName(clr)
+			SaveState()
+		end
+	elseif opt == 2 then -- mana color
+		local clr = PickColour(ColourNameToRGB(mana_color))
+		if clr ~= -1 then
+			mana_color = RGBColourToName(clr)
+			SaveState()
+		end
+	elseif opt == 3 then -- moves color
+		local clr = PickColour(ColourNameToRGB(moves_color))
+		if clr ~= -1 then
+			moves_color = RGBColourToName(clr)
+			SaveState()
+		end
+	elseif opt == 4 then -- exp color
+		local clr = PickColour(ColourNameToRGB(exp_color))
+		if clr ~= -1 then
+			exp_color = RGBColourToName(clr)
+			SaveState()
+		end
+        elseif opt == 5 then -- enemy color
+		local clr = PickColour(ColourNameToRGB(enemy_color))
+		if clr ~= -1 then
+			enemy_color = RGBColourToName(clr)
+			SaveState()
+		end
+        elseif opt == 6 then -- enemy color
+		local clr = PickColour(ColourNameToRGB(super_color))
+		if clr ~= -1 then
+			super_color = RGBColourToName(clr)
+			SaveState()
+		end
+	end
+	window(true)
+end
+
+
+function mouseover (flags, hotspot_id)
+  Note ("we moused over hotspot " .. hotspot_id)
+  return 0  -- needed for some languages
+end -- mouseover
+
+function CancelMouseOver(flags, id)
+	--Note("CancelMouseOver")
+	-- nothing
+end
+
+function CancelMouseDown(flags, id)
+	--Note("CancelMouseDown")
+	-- nothing
+end
+
+function from_bool(v)
+	if v then
+		return 1
+	end
+	return 0
+end
+
+function OnPluginDisable ()
+  WindowShow (win, ShowWindow)
+end -- OnPluginDisable
+
+function OnPluginEnable()
+	--Note("enabled")
+	window(true)
+  
+  -- draw gauge again if possible
+  if hp and max_hp and mana and max_mana and move and max_move then
+    do_prompt ("", "", { hp, max_hp, mana, max_mana, move, max_move } )
+  end -- if know hp, endurance and guile
+end -- OnPluginEnable
+function window(redraw)
+	if not window_visible then
+		return
+	end
+	
+	if redraw then
+		--Note("redraw")
+		WindowDelete("winid")
+		WindowCreate(winid, pos_x, pos_y, win_width, win_height, 0, 0, ColourNameToRGB(bg_color))
+		WindowPosition(winid, pos_x, pos_y, 0, 2)
+		WindowSetZOrder(winid, 201)
+		WindowFont(winid, "f1", font_name, font_size, false, false, false, false)
+		WindowFont(winid, "b1", font_name, font_size, true, false, false, false)
+		WindowFont(winid, "s1", font_name, font_size - 1, false, false, false, false)
+		movewindow.install(winid, 6, 2, true, nil, {mouseup=MouseUp, mousedown=MouseDown, dragmove=LeftClickOnly, dragrelease=LeftClickOnly})
+		movewindow.add_drag_handler (winid, 0, 0, 0, win_height)
+		WindowAddHotspot(winid, "resize", win_width - grip_resize, win_height - grip_resize, win_width, win_height, "MouseOver", "CancelMouseOver", "MouseDown", "", "MouseUp", "", 6, 0)
+		WindowDragHandler(winid, "resize", "ResizeMoveCallback", "ResizeReleaseCallback", 0)
+	else
+		WindowResize(winid, win_width, win_height, ColourNameToRGB(bg_color))
+		WindowMoveHotspot(winid, "resize", win_width - grip_resize, win_height - grip_resize, win_width, win_height)
+	end
+	WindowShow(winid, ShowWindow)
+	
+end
+
+function OnPluginSaveState ()
+   -- save window current location for next time  
+	SetVariable("pos_x", pos_x)
+	SetVariable("pos_y", pos_y)
+	SetVariable("win_width", win_width)
+	SetVariable("win_height", win_height)
+	SetVariable("hp_color", hp_color) -- hp color
+	SetVariable("mana_color", mana_color) -- mana color
+	SetVariable("moves_color", moves_color) -- moves color
+	SetVariable("enemy_color", enemy_color) -- enemy color
+	SetVariable("super_color", super_color) -- super color
+	SetVariable("exp_color", exp_color) -- enemy color
+end -- OnPluginSaveState
+
+
+]]>
+</script>
+
+</muclient>
