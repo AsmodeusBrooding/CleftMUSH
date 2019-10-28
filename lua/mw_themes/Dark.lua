@@ -1,6 +1,6 @@
 -- Copy this file to create your own custom themes, but please do not modify this file.
 
--- Asmodeus KAZE theme
+-- Asmodeus Dark theme
 return {
    LOGO_OPACITY = 0.03,
 
@@ -10,20 +10,20 @@ return {
 
    -- flat buttons
    CLICKABLE = 0x000000,
-   CLICKABLE_HOVER = 0x006400,             -- Color when hovering over the tab with mouse
-   CLICKABLE_HOT = 0x000000,               -- Color when you have an unread message
-   CLICKABLE_TEXT = 0xFFFFFF,
-   CLICKABLE_HOVER_TEXT = 0xFFFFFF,
-   CLICKABLE_HOT_TEXT = 0x8CE6F0,
+   CLICKABLE_HOVER = 0x303030,             -- Color when hovering over the tab with mouse
+   CLICKABLE_HOT = 0x000000,               -- Color of tab when you have an unread message
+   CLICKABLE_TEXT = 0xFFFFFF,              -- Color of tab text
+   CLICKABLE_HOVER_TEXT = 0xFFFFFF,        -- Color of tab text when hovering over it
+   CLICKABLE_HOT_TEXT = 0x8CE6F0,          -- Color of tab text when you have an unread message
 
    TITLE_PADDING = 2,
 
    -- for 3D surfaces
-   THREE_D_HIGHLIGHT = 0x006400,            -- Color of outside-most window border color, resizer, tab borders, and scrollbar highlights
+   THREE_D_HIGHLIGHT = 0x303030,            -- Color of outside-most window border color, resizer, tab borders, and scrollbar highlights
 
    THREE_D_GRADIENT = miniwin.gradient_vertical,
    THREE_D_GRADIENT_FIRST = 0x000000,
-   THREE_D_GRADIENT_SECOND = 0x006400,
+   THREE_D_GRADIENT_SECOND = 0x303030,
    THREE_D_GRADIENT_ONLY_IN_TITLE = false,
 
    THREE_D_SOFTSHADOW = 0x250808,
@@ -32,7 +32,7 @@ return {
 
    -- for scrollbar background
    SCROLL_TRACK_COLOR1 = 0x000000,          -- Color of diagonal lines on scrollbar
-   SCROLL_TRACK_COLOR2 = 0x006400,          -- Main color of scrollbar
+   SCROLL_TRACK_COLOR2 = 0x303030,          -- Main color of scrollbar
    VERTICAL_TRACK_BRUSH = miniwin.brush_hatch_forwards_diagonal,
 
    DYNAMIC_BUTTON_PADDING = 20,

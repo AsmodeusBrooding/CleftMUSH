@@ -198,6 +198,7 @@ UNKNOWN_ROOM_COLOUR           = { name = "Unknown room",     colour =  ColourNam
 DIFFERENT_AREA_COLOUR         = { name = "Another area",     colour =  ColourNameToRGB "#ff0000"}
 PK_BORDER_COLOUR              = { name = "PK border",        colour =  ColourNameToRGB "red"}
 SHOP_FILL_COLOUR              = { name = "Shop",             colour =  ColourNameToRGB "#ffad2f"}
+INN_FILL_COLOUR               = { name = "Inn",              colour =  ColourNameToRGB "lightseagreen"}
 WAYPOINT_FILL_COLOUR          = { name = "waypoint",         colour =  ColourNameToRGB "lime"}
 TRAINER_FILL_COLOUR           = { name = "Trainer",          colour =  ColourNameToRGB "#9acd32"}
 QUESTOR_FILL_COLOUR           = { name = "Questor",          colour =  ColourNameToRGB "deepskyblue"}
@@ -758,7 +759,7 @@ local function draw_room (uid, path, x, y)
    	                         if string.match (room.fillcolour, "9109504") then
           WindowDrawImage (win, "ocean", left, top, right, bottom, miniwin.image_stretch)  -- stretch to fill
 	                         elseif string.match (room.fillcolour, "9465920") then
-	      WindowDrawImage (win, "town", left, top, right, bottom, miniwin.image_stretch)  -- stretch to fill
+	      WindowDrawImage (win, "city", left, top, right, bottom, miniwin.image_stretch)  -- stretch to fill -- formerly town
 		  	                 elseif string.match (room.fillcolour, "61680") then
 	      WindowDrawImage (win, "stream", left, top, right, bottom, miniwin.image_stretch)  -- stretch to fill
 		  	                 elseif string.match (room.fillcolour, "8411682") then
@@ -839,6 +840,48 @@ local function draw_room (uid, path, x, y)
 		 	                             WindowDrawImage (win, "moti", left, top, right, bottom, miniwin.image_stretch)  -- stretch to fill
 				                         WindowCircleOp (win, miniwin.circle_rectangle, left-2-room.borderpenwidth, top-2-room.borderpenwidth,
                                          right+2+room.borderpenwidth, bottom+2+room.borderpenwidth,REGULAR_FILL_COLOUR.colour,
+                                         room.borderpen, room.borderpenwidth,-1,miniwin.brush_null)
+                                         room.fillbrush = 8  -- medium pattern
+										 			     		elseif string.match (room.info, "weaponshop") then
+                                         special_room = true
+		 	                             WindowDrawImage (win, "weaponshop", left, top, right, bottom, miniwin.image_stretch)  -- stretch to fill
+				                         WindowCircleOp (win, miniwin.circle_rectangle, left-2-room.borderpenwidth, top-2-room.borderpenwidth,
+                                         right+2+room.borderpenwidth, bottom+2+room.borderpenwidth,REGULAR_FILL_COLOUR.colour,
+                                         room.borderpen, room.borderpenwidth,-1,miniwin.brush_null)
+                                         room.fillbrush = 8  -- medium pattern
+										                		elseif string.match (room.info, "armorshop") then
+                                         special_room = true
+		 	                             WindowDrawImage (win, "armorshop", left, top, right, bottom, miniwin.image_stretch)  -- stretch to fill
+				                         WindowCircleOp (win, miniwin.circle_rectangle, left-2-room.borderpenwidth, top-2-room.borderpenwidth,
+                                         right+2+room.borderpenwidth, bottom+2+room.borderpenwidth,REGULAR_FILL_COLOUR.colour,
+                                         room.borderpen, room.borderpenwidth,-1,miniwin.brush_null)
+                                         room.fillbrush = 8  -- medium pattern
+										                		elseif string.match (room.info, "itemshop") then
+                                         special_room = true
+		 	                             WindowDrawImage (win, "itemshop", left, top, right, bottom, miniwin.image_stretch)  -- stretch to fill
+				                         WindowCircleOp (win, miniwin.circle_rectangle, left-2-room.borderpenwidth, top-2-room.borderpenwidth,
+                                         right+2+room.borderpenwidth, bottom+2+room.borderpenwidth,REGULAR_FILL_COLOUR.colour,
+                                         room.borderpen, room.borderpenwidth,-1,miniwin.brush_null)
+                                         room.fillbrush = 8  -- medium pattern		
+										                		elseif string.match (room.info, "foodshop") then
+                                         special_room = true
+		 	                             WindowDrawImage (win, "foodshop", left, top, right, bottom, miniwin.image_stretch)  -- stretch to fill
+				                         WindowCircleOp (win, miniwin.circle_rectangle, left-2-room.borderpenwidth, top-2-room.borderpenwidth,
+                                         right+2+room.borderpenwidth, bottom+2+room.borderpenwidth,REGULAR_FILL_COLOUR.colour,
+                                         room.borderpen, room.borderpenwidth,-1,miniwin.brush_null)
+                                         room.fillbrush = 8  -- medium pattern		
+										                		elseif string.match (room.info, "lightshop") then
+                                         special_room = true
+		 	                             WindowDrawImage (win, "lightshop", left, top, right, bottom, miniwin.image_stretch)  -- stretch to fill
+				                         WindowCircleOp (win, miniwin.circle_rectangle, left-2-room.borderpenwidth, top-2-room.borderpenwidth,
+                                         right+2+room.borderpenwidth, bottom+2+room.borderpenwidth,REGULAR_FILL_COLOUR.colour,
+                                         room.borderpen, room.borderpenwidth,-1,miniwin.brush_null)
+                                         room.fillbrush = 8  -- medium pattern											 
+										 						elseif string.match (room.info, "inn") then
+                                         special_room = true
+		 	                             WindowDrawImage (win, "inn", left, top, right, bottom, miniwin.image_stretch)  -- stretch to fill
+				                         WindowCircleOp (win, miniwin.circle_rectangle, left-2-room.borderpenwidth, top-2-room.borderpenwidth,
+                                         right+2+room.borderpenwidth, bottom+2+room.borderpenwidth,INN_FILL_COLOUR.colour,
                                          room.borderpen, room.borderpenwidth,-1,miniwin.brush_null)
                                          room.fillbrush = 8  -- medium pattern
 						 elseif string.match (room.info, "quest") then
@@ -1211,9 +1254,13 @@ function draw (uid)
 		  WindowLoadImage (win, "priest", "worlds\\plugins\\images\\priest.bmp")		                   --Priest Tile
 		  WindowLoadImage (win, "alchemyguild", "worlds\\plugins\\images\\alchemyguild.bmp")               --Alchemy Guild Tile		
 	      WindowLoadImage (win, "gato", "worlds\\plugins\\images\\gato.png")                               --Gato Tile	
-	      WindowLoadImage (win, "moti", "worlds\\plugins\\images\\moti.png")                               --Moti Tile			  
-
-
+	      WindowLoadImage (win, "moti", "worlds\\plugins\\images\\moti.png")                               --Moti Tile		
+	      WindowLoadImage (win, "weaponshop", "worlds\\plugins\\images\\weaponshop.png")                   --Weapon Shop Tile				  
+	      WindowLoadImage (win, "armorshop", "worlds\\plugins\\images\\armorshop.png")                     --Armor Shop Tile	
+	      WindowLoadImage (win, "itemshop", "worlds\\plugins\\images\\itemshop.png")                       --Item Shop Tile		
+	      WindowLoadImage (win, "foodshop", "worlds\\plugins\\images\\foodshop.png")                       --Food Shop Tile	
+	      WindowLoadImage (win, "lightshop", "worlds\\plugins\\images\\lightshop.png")                       --Light Shop Tile			  
+	      WindowLoadImage (win, "inn", "worlds\\plugins\\images\\inn.png")                                 --Inn Shop Tile	
 
 
 

@@ -126,7 +126,7 @@ function theme_has_bad_sha(filename)
 end
 
 local theme_controller_ID = "b9315e040989d3d71f4328d6"
-local theme_controller_name = "DemonMUSH_Theme_Controller"
+local theme_controller_name = "CleftMUSH_Theme_Controller"
 if (GetPluginID() ~= theme_controller_ID) then
    if not IsPluginInstalled(theme_controller_ID) then
       local inner_action = [[DoAfterSpecial(0.1, 'require \'checkplugin\';do_plugin_check_now(\']]..theme_controller_ID..[[\', \']]..theme_controller_name..[[\')', sendto.script)]]
