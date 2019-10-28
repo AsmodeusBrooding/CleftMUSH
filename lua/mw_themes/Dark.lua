@@ -26,7 +26,7 @@ return {
    THREE_D_GRADIENT_SECOND = 0x303030,
    THREE_D_GRADIENT_ONLY_IN_TITLE = false,
 
-   THREE_D_SOFTSHADOW = 0x250808,
+   THREE_D_SOFTSHADOW = 0x000000,
    THREE_D_HARDSHADOW = 0x000000,           -- Partial color of resizer, inner border of title windows, bottom/right color of scroller
    THREE_D_SURFACE_DETAIL = 0xFFFFFF,       -- for contrasting details/text drawn on 3D surfaces -TEXT COLOR-
 
