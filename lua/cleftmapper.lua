@@ -884,6 +884,13 @@ local function draw_room (uid, path, x, y)
                                          right+2+room.borderpenwidth, bottom+2+room.borderpenwidth,INN_FILL_COLOUR.colour,
                                          room.borderpen, room.borderpenwidth,-1,miniwin.brush_null)
                                          room.fillbrush = 8  -- medium pattern
+										 				        elseif string.match (room.info, "tavern") then
+                                         special_room = true
+		 	                             WindowDrawImage (win, "tavern", left, top, right, bottom, miniwin.image_stretch)  -- stretch to fill
+				                         WindowCircleOp (win, miniwin.circle_rectangle, left-2-room.borderpenwidth, top-2-room.borderpenwidth,
+                                         right+2+room.borderpenwidth, bottom+2+room.borderpenwidth,INN_FILL_COLOUR.colour,
+                                         room.borderpen, room.borderpenwidth,-1,miniwin.brush_null)
+                                         room.fillbrush = 8  -- medium pattern
 						 elseif string.match (room.info, "quest") then
                                          special_room = true
 		 	                             WindowDrawImage (win, "quest", left, top, right, bottom, miniwin.image_stretch)  -- stretch to fill
@@ -1261,7 +1268,7 @@ function draw (uid)
 	      WindowLoadImage (win, "foodshop", "worlds\\plugins\\images\\foodshop.png")                       --Food Shop Tile	
 	      WindowLoadImage (win, "lightshop", "worlds\\plugins\\images\\lightshop.png")                     --Light Shop Tile			  
 	      WindowLoadImage (win, "inn", "worlds\\plugins\\images\\inn.png")                                 --Inn Shop Tile	
-
+	      WindowLoadImage (win, "tavern", "worlds\\plugins\\images\\tavern.png")                           --Tavern Tile	
 
 
 												  

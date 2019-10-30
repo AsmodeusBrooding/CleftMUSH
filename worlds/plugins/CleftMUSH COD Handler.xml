@@ -573,6 +573,28 @@ Sound ("sounds/gtell.wav")
  </trigger>
  <trigger
  enabled="y"
+ match="^The Bambino Bomb violently explodes\!\!\!$"
+ regexp="y"
+ sequence="100"
+ send_to="14"
+ >
+<send>
+Sound ("sounds/secret.wav") 
+</send>
+ </trigger>
+ <trigger
+ enabled="y"
+ match="^Ding, dong, ding, dong. Leene's Bell reverberates through the city.$"
+ regexp="y"
+ sequence="100"
+ send_to="14"
+ >
+<send>
+Sound ("sounds/leene.wav") 
+</send>
+ </trigger>
+ <trigger
+ enabled="y"
  match="You buy * for *."
  sequence="100"
  send_to="14"
