@@ -504,7 +504,7 @@ end
 
 function drawPlayer(player, i, isPlayerOrEnemy)
 
-        if is_tank(player.tags) or (not show_minions and player.minion == 0) or show_minions then
+if is_tank(player.tags) or (not show_minions and player.minion == 0) or show_minions then
             local box_top, box_right, box_bottom = top, 1, nil
             across = across + 1 -- how many players fit across window
            --local isleader = leader
@@ -585,13 +585,13 @@ end
                     x = x + WindowText(winid, "f1", "[N]", x, top + 3, 0, 0, ColourNameToRGB(no_melee_color), false) -- show if no melee
                 end
            end
-            if is_tank(player.tags) then
-                if bar_width == 100 then
-                    x = x + WindowText(winid, "f1", "TANK", x, top + 3, 0, 0, ColourNameToRGB(tank_color), false) + 2 -- show if tank
-                else
-                    x = x + WindowText(winid, "f1", "[TANK]", left + 260, top + 3, 0, 0, ColourNameToRGB(tank_color), false) -- show if tank
-                end
-           end
+           -- if is_tank(player.tags) then
+           --     if bar_width == 100 then
+           --         x = x + WindowText(winid, "f1", "TANK", x, top + 3, 0, 0, ColourNameToRGB(tank_color), false) + 2 -- show if tank
+            --    else
+            --        x = x + WindowText(winid, "f1", "[TANK]", left + 260, top + 3, 0, 0, ColourNameToRGB(tank_color), false) -- show if tank
+           --     end
+          -- end
 
             top = top + 16 -- player line height
            if isPlayerOrEnemy then
