@@ -3,7 +3,7 @@
 require "wait"
 require "copytable"
 require "colors"
-dofile (GetInfo(60) .. "aardwolf_colors.lua")
+dofile (GetInfo(60) .. "cleft_colors.lua")
 
 local function getHighlightColor(bg)
    local h, s, l = colors.rgb_string_to_hsl(string.format('#%06x', bg))
@@ -620,10 +620,10 @@ function TextRect.dragMove(flags, hotspot_id)
             copied_part = StylesToColours( TruncateStyles(tr.wrapped_lines[copy_line][1], startpos+1, endpos))
             if copy_line ~= tr.copy_end_line and copy_line ~= #tr.wrapped_lines and tr.wrapped_lines[copy_line + 1][2] == true then
                -- only put a line break if the next line is from a different message
-               copied_part = copied_part.."@w\n"
+               copied_part = copied_part.."{w\n"
             elseif copy_line == tr.copy_end_line or copy_line == #tr.wrapped_lines then
                -- tack a white code on to the very end
-               copied_part = copied_part.."@w"
+               copied_part = copied_part.."{w"
             end
             tr.copied_text = tr.copied_text..(((copied_part ~= nil) and copied_part) or "")
          end
@@ -825,7 +825,7 @@ function TextRect:copyFull()
    for _,styles in ipairs(self.raw_lines) do
       table.insert(t, StylesToColoursOneLine(styles[1]))
    end
-   SetClipboard(table.concat(t,"@w\n").."@w")
+   SetClipboard(table.concat(t,"{w\n").."{w")
 end
 
 function TextRect:generateHotspotID(id)

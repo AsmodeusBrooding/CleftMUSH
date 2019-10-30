@@ -211,12 +211,12 @@ function PrintText (self, vOffset, hOffset)
     else
         ansiColors["~"] = self.textColour
         local customColours = self.customColourCodes or {}
-        local Text = string.gsub (self.caption or "", "@@", "\0")  -- change @@ to 0x00
-        if Text:sub (1, 1) ~= "@" then
-          Text = "@~" .. Text
+        local Text = string.gsub (self.caption or "", "{{", "\0")  -- change {{ to 0x00
+        if Text:sub (1, 1) ~= "{" then
+          Text = "{~" .. Text
         end
-        for colour, text in Text:gmatch ("@([%a~])([^@]+)") do
-            text = text:gsub ("%z", "@") -- put any @ characters back
+        for colour, text in Text:gmatch ("{([%a~])([^{]+)") do
+            text = text:gsub ("%z", "{") -- put any { characters back
             if #text > 0 then
                 side = side + WindowText (self.windowName, self.fontID, text, side, vOffset, hOffset + self.cellWidth, vOffset + self.fontHeight, customColours[colour] or ansiColors[colour] or ansiColors["~"])
     end end end
@@ -1000,9 +1000,9 @@ end -- capitalize
 --[=[  Internal Function used in PrintText  ]=]--
 function strip_colours (s)
     s=s or ""
-    s = s:gsub ("@@", "\0")  -- change @@ to 0x00
-    s = s:gsub ("@.([^@]*)", "%1")
-    return (s:gsub ("%z", "@") ) -- put @ back
+    s = s:gsub ("{{", "\0")  -- change {{ to 0x00
+    s = s:gsub ("{.([^{]*)", "%1")
+    return (s:gsub ("%z", "{") ) -- put { back
 end
 
 --[=[  Internal Function used in Caption, graciously borrowed from Nick Gammon  ]=]--
@@ -1382,7 +1382,7 @@ TextColour = [[
 Applies To: Bar
 Prototype: Bar:TextColour(val)
 
-The default color for text to be printed in if no other colour codes are specified in the caption value. If colour codes are specified, this function sets the value of the @~ identifier.
+The default color for text to be printed in if no other colour codes are specified in the caption value. If colour codes are specified, this function sets the value of the {~ identifier.
 
 val = string|number; name of a color ("red"), an HTML formatted string ("#FF0000"), or a number (255)]],
 TextStyle = [[
@@ -1450,14 +1450,14 @@ The text to display for a bar's label. This value does not modify numbers when p
 Bar:Caption(1000) --> prints 1,000
 Bar.caption = 1000 --> prints 1000
 
-Additional color settings can be specified with an "@x" delimiter where x is a single character. The 16 default ansi colors are taken from MushClient's settings and are set to c,m,y,k,r,g,b,w and their bold values C,M,Y,K... The colour that's in the textColour value can be referred to with "@~". Additional colours can be specified by adding a table to the customColourCodes value with a single character key, and the number value of the colour.
-"@@" is needed to actually print an @ symbol in a caption.
+Additional color settings can be specified with an "{x" delimiter where x is a single character. The 16 default ansi colors are taken from MushClient's settings and are set to c,m,y,k,r,g,b,w and their bold values C,M,Y,K... The colour that's in the textColour value can be referred to with "{~". Additional colours can be specified by adding a table to the customColourCodes value with a single character key, and the number value of the colour.
+"{{" is needed to actually print an { symbol in a caption.
 i.e.:
 MW.customColourCodes = {z = 255}
 MW.Bars[2].customColourCodes = {z = 128}
-MW.Bars[1].caption = "@zVery Red"
-MW.Bars[2].caption = "@zNot so red"
-MW.Bars[3].caption = "@zVery Red @~textColour Colour"
+MW.Bars[1].caption = "{zVery Red"
+MW.Bars[2].caption = "{zNot so red"
+MW.Bars[3].caption = "{zVery Red {~textColour Colour"
 
 txt = string; the label.]], --']]
 captionPlacement = [[

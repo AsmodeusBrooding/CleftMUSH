@@ -436,6 +436,16 @@ print("Date Format: ", date_format)
 </trigger>
 <trigger
    enabled="y"
+   name="send_tracker"
+   match="@w[Tracker]: *"
+   regexp="n"
+   script="tracker"
+   sequence="100"
+    omit_from_output="y"
+><send>[Tracker]: %1</send>
+</trigger>
+<trigger
+   enabled="y"
    match="* replies to you, '*'"
    script="tells"
    sequence="100"
@@ -687,6 +697,7 @@ require "utility"
 ----------------------------------------------------------------------------------------------------------
 --- VARIABLES GO HERE 
 ----------------------------------------------------------------------------------------------------------
+tracker_tab = GetVariable("tracker_tab") or "1"
 tells_tab = GetVariable("tells_tab") or "1"
 grats_tab = GetVariable("grats_tab") or "1"
 quote_tab = GetVariable("quote_tab") or "1"
@@ -861,6 +872,12 @@ SetVariable("all_visible", "No")
 util.print("{GAll channels are now hidden from the main output.")
 end
 end
+
+function tracker (name, line, wildcards, styles)
+    -- print ("name = " .. name)
+    tab = GetVariable("tracker_tab") or "1"
+   a, b = CallPlugin("b555825a4a5700c35fa80780", "storeFromOutside", os.date(GetPluginVariable("b555825a4a5700c35fa80780", "date_format")) .. StylesToColours(styles), tab)
+end -- tracker tab
   
 function tells (name, line, wildcards, styles)
     -- print ("name = " .. name)

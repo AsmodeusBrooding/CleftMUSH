@@ -65,12 +65,12 @@ Exposed functions are:
 
   -- what to say - one line per table entry, with imbedded colour codes
 
-  info = { "@Ctesting 1 2 3",
-           "@GThis is a heading",
-           "Line @Mwith @Bmultiple @Rcolours",
+  info = { "{Ctesting 1 2 3",
+           "{GThis is a heading",
+           "Line {Mwith {Bmultiple {Rcolours",
          }
 
-  heading = "@MHello, @Yworld"
+  heading = "{MHello, {Yworld"
   left, top = 40, 50
   align_right = false
   align_bottom = false
@@ -122,7 +122,7 @@ Exposed functions are:
 
 module (..., package.seeall)
 
-DEFAULT_COLOUR = "@w"
+DEFAULT_COLOUR = "{w"
 TRANSPARENCY_COLOUR = 0x080808
 BORDER_WIDTH = 2
 
@@ -135,10 +135,10 @@ local MAGENTA = 6
 local CYAN = 7
 local WHITE = 8
 
--- colour styles (eg. @r is normal red, @R is bold red)
+-- colour styles (eg. {r is normal red, {R is bold red)
 
--- @- is shown as ~
--- @@ is shown as @
+-- {- is shown as ~
+-- {{ is shown as {
 
 -- This table uses the colours as defined in the MUSHclient ANSI tab, however the
 -- defaults are shown on the right if you prefer to use those.
@@ -178,20 +178,20 @@ colour_conversion = {
 
 function colourtext (win, font_id, Text, Left, Top, Right, Bottom, Capitalize, utf8)
 
-  if Text:match ("@") then
+  if Text:match ("{") then
     local x = Left  -- current x position
     local need_caps = Capitalize
 
-    Text = Text:gsub ("@%-", "~")    -- fix tildes
-    Text = Text:gsub ("@@", "\0")  -- change @@ to 0x00
+    Text = Text:gsub ("{%-", "~")    -- fix tildes
+    Text = Text:gsub ("{{", "\0")  -- change {{ to 0x00
 
-    -- make sure we start with @ or gsub doesn't work properly
-    if Text:sub (1, 1) ~= "@" then
+    -- make sure we start with { or gsub doesn't work properly
+    if Text:sub (1, 1) ~= "{" then
       Text = DEFAULT_COLOUR .. Text
     end -- if
 
-    for colour, text in Text:gmatch ("@(%a)([^@]+)") do
-      text = text:gsub ("%z", "@") -- put any @ characters back
+    for colour, text in Text:gmatch ("{(%a)([^{]+)") do
+      text = text:gsub ("%z", "{") -- put any { characters back
 
       if need_caps then
         local count
@@ -223,21 +223,21 @@ end -- colourtext
 
 function ColoursToStyles (Text)
 
- if Text:match ("@") then
+ if Text:match ("{") then
 
     astyles = {}
 
-    Text = Text:gsub ("@%-", "~")    -- fix tildes
-    Text = Text:gsub ("@@", "\0")  -- change @@ to 0x00
+    Text = Text:gsub ("{%-", "~")    -- fix tildes
+    Text = Text:gsub ("{{", "\0")  -- change {{ to 0x00
 
-    -- make sure we start with @ or gsub doesn't work properly
-    if Text:sub (1, 1) ~= "@" then
+    -- make sure we start with { or gsub doesn't work properly
+    if Text:sub (1, 1) ~= "{" then
        Text = DEFAULT_COLOUR .. Text
     end -- if
 
-    for colour, text in Text:gmatch ("@(%a)([^@]+)") do
+    for colour, text in Text:gmatch ("{(%a)([^{]+)") do
 
-       text = text:gsub ("%z", "@") -- put any @ characters back
+       text = text:gsub ("%z", "{") -- put any { characters back
 
        if #text > 0 then
           table.insert (astyles, { text = text,
@@ -259,12 +259,12 @@ function ColoursToStyles (Text)
 
 end  -- function ColoursToStyles
 
--- take a string, and remove colour codes from it (eg. "@Ghello" becomes "hello"
+-- take a string, and remove colour codes from it (eg. "{Ghello" becomes "hello"
 function strip_colours (s)
-  s = s:gsub ("@%-", "~")    -- fix tildes
-  s = s:gsub ("@@", "\0")  -- change @@ to 0x00
-  s = s:gsub ("@%a([^@]*)", "%1")
-  return (s:gsub ("%z", "@")) -- put @ back
+  s = s:gsub ("{%-", "~")    -- fix tildes
+  s = s:gsub ("{{", "\0")  -- change {{ to 0x00
+  s = s:gsub ("{%a([^{]@*)", "%1")
+  return (s:gsub ("%z", "{")) -- put { back
 end -- strip_colours
 
 

@@ -49,7 +49,7 @@ or: Ctrl + Left-click and select "Copy with Colour"
 <script>
 <![CDATA[
 
--- functions for handling Aardwolf color codes
+-- functions for handling Cleft color codes
 dofile (GetPluginInfo (GetPluginID(), 20) .. "cleft_colors.lua")
 
 function OnPluginListChanged()

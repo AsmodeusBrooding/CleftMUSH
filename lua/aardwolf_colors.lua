@@ -15,7 +15,7 @@ local code_to_ansi_digit = {
    ["@b"] = 34,
    ["@m"] = 35,
    ["@c"] = 36,
-   ["@w"] = 37,
+   ["{w"] = 37,
    ["@D"] = 30,
    ["@R"] = 31,
    ["@G"] = 32,
@@ -23,7 +23,7 @@ local code_to_ansi_digit = {
    ["@B"] = 34,
    ["@M"] = 35,
    ["@C"] = 36,
-   ["@w"] = 37
+   ["{w"] = 37
 }
 
 local ansi_digit_to_dim_code = {
@@ -33,7 +33,7 @@ local ansi_digit_to_dim_code = {
    [34] = "@b",
    [35] = "@m",
    [36] = "@c",
-   [37] = "@w"
+   [37] = "{w"
 }
 
 local ansi_digit_to_bold_code = {
@@ -44,7 +44,7 @@ local ansi_digit_to_bold_code = {
    [34] = "@B",
    [35] = "@M",
    [36] = "@C",
-   [37] = "@w"
+   [37] = "{w"
 }
 
 local first_15_to_code = {}
@@ -61,7 +61,7 @@ end
 
 local bold_codes = {
    ["@D"]=true, ["@R"]=true, ["@G"]=true, ["@Y"]=true, ["@B"]=true,
-   ["@M"]=true, ["@C"]=true, ["@w"]=true
+   ["@M"]=true, ["@C"]=true, ["{w"]=true
 }
 for i = 9,15 do
    bold_codes[string.format("@x%03d",i)] = true
@@ -84,7 +84,7 @@ local function init_basic_to_color ()
       ["@b"] = GetNormalColour(BLUE),
       ["@m"] = GetNormalColour(MAGENTA),
       ["@c"] = GetNormalColour(CYAN),
-      ["@w"] = GetNormalColour(WHITE),
+      ["{w"] = GetNormalColour(WHITE),
       ["@D"] = GetBoldColour(BLACK),
       ["@R"] = GetBoldColour(RED),
       ["@G"] = GetBoldColour(GREEN),
@@ -92,7 +92,7 @@ local function init_basic_to_color ()
       ["@B"] = GetBoldColour(BLUE),
       ["@M"] = GetBoldColour(MAGENTA),
       ["@C"] = GetBoldColour(CYAN),
-      ["@w"] = GetBoldColour(WHITE)
+      ["{w"] = GetBoldColour(WHITE)
    }
 end
 
@@ -104,7 +104,7 @@ local function init_color_to_basic ()
       [code_to_client_color["@b"]] = "@b",
       [code_to_client_color["@m"]] = "@m",
       [code_to_client_color["@c"]] = "@c",
-      [code_to_client_color["@w"]] = "@w"
+      [code_to_client_color["{w"]] = "@w"
    }
 
    client_color_to_bold_code = {
@@ -115,7 +115,7 @@ local function init_color_to_basic ()
       [code_to_client_color["@B"]] = "@B",
       [code_to_client_color["@M"]] = "@M",
       [code_to_client_color["@C"]] = "@C",
-      [code_to_client_color["@w"]] = "@w"
+      [code_to_client_color["{w"]] = "@w"
    }
 end
 
@@ -165,7 +165,7 @@ function StylesToColours (styles, dollarC_resets)
    local lastcode = ""
    for i,style in ipairs(styles) do
       local bold = style.bold or (style.style and ((style.style % 2) == 1))
-      local text = string.gsub(style.text, "@", "@@")
+      local text = string.gsub(style.text, "{", "{{")
       local textcolor = style.textcolour
       local code = style.fromx
                    or bold and client_color_to_bold_code[textcolor]
@@ -263,7 +263,7 @@ function ColoursToStyles (input, default_foreground_code, default_background_cod
       default_background = default_black
    end
 
-   if input:find("@", nil, true) then
+   if input:find("{", nil, true) then
       local astyles = {}
 
       -- make sure we start with a color
@@ -271,19 +271,19 @@ function ColoursToStyles (input, default_foreground_code, default_background_cod
          input = default_foreground_code .. input
       end -- if
 
-      input = input:gsub("@@", "\0") -- change @@ to 0x00
-      input = input:gsub("@%-", "~") -- fix tildes (historical)
-      input = input:gsub("@x([^%d])","%1") -- strip invalid xterm codes (non-number)
-      input = input:gsub("@x[3-9]%d%d","") -- strip invalid xterm codes (300+)
-      input = input:gsub("@x2[6-9]%d","") -- strip invalid xterm codes (260+)
-      input = input:gsub("@x25[6-9]","") -- strip invalid xterm codes (256+)
-      input = input:gsub("@[^xrgybmcwDRGYBMCW]", "")  -- strip hidden garbage
+      input = input:gsub("{{", "\0") -- change @@ to 0x00
+      input = input:gsub("{%-", "~") -- fix tildes (historical)
+      input = input:gsub("{x([^%d])","%1") -- strip invalid xterm codes (non-number)
+      input = input:gsub("{x[3-9]%d%d","") -- strip invalid xterm codes (300+)
+      input = input:gsub("{x2[6-9]%d","") -- strip invalid xterm codes (260+)
+      input = input:gsub("{x25[6-9]","") -- strip invalid xterm codes (256+)
+      input = input:gsub("{[^xrgybmcwDRGYBMCW]", "")  -- strip hidden garbage
 
-      for code, text in input:gmatch("(@%a)([^@]*)") do
+      for code, text in input:gmatch("({%a)([^{]*)") do
          local from_x = nil
-         text = text:gsub("%z", "@") -- put any @ characters back
+         text = text:gsub("%z", "{") -- put any @ characters back
 
-         if code == "@x" then -- xterm 256 colors
+         if code == "{x" then -- xterm 256 colors
             num,text = text:match("(%d%d?%d?)(.*)")
             code = code..num
             -- Aardwolf treats x1...x15 as normal ANSI colors.
@@ -326,11 +326,11 @@ end  -- function ColoursToStyles
 
 -- Strip all color codes from a string
 function strip_colours (s)
-   s = s:gsub("@@", "\0")  -- change @@ to 0x00
-   s = s:gsub("@%-", "~")    -- fix tildes (historical)
-   s = s:gsub("@x%d?%d?%d?", "") -- strip valid and invalid xterm color codes
-   s = s:gsub("@.([^@]*)", "%1") -- strip normal color codes and hidden garbage
-   return (s:gsub("%z", "@")) -- put @ back (has parentheses on purpose)
+   s = s:gsub("{{", "\0")  -- change @@ to 0x00
+   s = s:gsub("{%-", "~")    -- fix tildes (historical)
+   s = s:gsub("{x%d?%d?%d?", "") -- strip valid and invalid xterm color codes
+   s = s:gsub("{.([^@]*)", "%1") -- strip normal color codes and hidden garbage
+   return (s:gsub("%z", "{")) -- put @ back (has parentheses on purpose)
 end -- strip_colours
 
 
@@ -401,7 +401,7 @@ end
 -- Tries to convert ANSI sequences to Aardwolf color codes
 function AnsiToColours (ansi, default_foreground_code)
    if not default_foreground_code then
-      default_foreground_code = "@w"
+      default_foreground_code = "{w"
    elseif default_foreground_code:sub(1,1) ~= "@" then
       default_foreground_code = "@"..default_foreground_code
    end

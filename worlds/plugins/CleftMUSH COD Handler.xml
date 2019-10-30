@@ -888,6 +888,9 @@ DoAfterSpecial (1, 'EnableTriggerGroup ("idea", false)', sendto.script)</send>
 
 <script>
 <![CDATA[
+require "utility"
+dofile(GetPluginInfo(GetPluginID(), 20) .. "cleft_colors.lua")
+
 uid=""
 musicPlaying = false
 function OnPluginInstall()

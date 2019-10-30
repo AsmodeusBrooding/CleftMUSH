@@ -21,6 +21,14 @@
    sequence="100"
    ignore_case="y"
 ></alias>
+<alias
+   script="choose_theme"
+   match="^theme change$"
+   regexp="y"
+   enabled="y"
+   sequence="100"
+   ignore_case="y"
+></alias>
 
 </aliases>
 

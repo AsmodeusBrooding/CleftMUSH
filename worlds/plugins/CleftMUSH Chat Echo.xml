@@ -160,10 +160,10 @@ USAGE:
 require "pairsbykeys"
 
 local init_nonchannel_keys = {"info"}
-local init_nonchannel_pairs = {["info"]="INFO:"}
+--local init_nonchannel_pairs = {["info"]="INFO:"}
 local init_channel_keys = {"grouptell", "discord", "grats", "music", "quote", "shout", "tells", "info", "says", "yell", "ooc"}
 
--- functions for handling Aardwolf color codes
+-- functions for handling Cleft color codes
 dofile(GetPluginInfo(GetPluginID(), 20) .. "cleft_colors.lua")
 
 -- legacy variables

@@ -141,7 +141,7 @@ local function init_xterm_colors ()
       client_color_to_xterm_code[color] = string.format("{x%03d",i)
    end
 
-   -- Aardwolf bumps a few very dark xterm colors to brighter values to improve
+   -- Cleft bumps a few very dark xterm colors to brighter values to improve
    -- visibility. This seems like a good idea.
    local color19 = xterm_number_to_client_color[19]
    local color238 = xterm_number_to_client_color[238]
@@ -286,7 +286,7 @@ function ColoursToStyles (input, default_foreground_code, default_background_cod
          if code == "{x" then -- xterm 256 colors
             num,text = text:match("(%d%d?%d?)(.*)")
             code = code..num
-            -- Aardwolf treats x1...x15 as normal ANSI colors.
+            -- Cleft treats x1...x15 as normal ANSI colors.
             -- That behavior does not match MUSHclient's.
             num = tonumber(num)
             from_x = code
@@ -329,12 +329,12 @@ function strip_colours (s)
    s = s:gsub("{{", "\0")  -- change {{ to 0x00
    s = s:gsub("{%-", "~")    -- fix tildes (historical)
    s = s:gsub("{x%d?%d?%d?", "") -- strip valid and invalid xterm color codes
-   s = s:gsub("{.([^{]*)", "%1") -- strip normal color codes and hidden garbage
+   s = s:gsub("{.([^{@]*)", "%1") -- strip normal color codes and hidden garbage
    return (s:gsub("%z", "{")) -- put { back (has parentheses on purpose)
 end -- strip_colours
 
 
--- Convert Aardwolf and short x codes to 3 digit x codes
+-- Convert Cleft and short x codes to 3 digit x codes
 function canonicalize_colours (s)
    if s:find("{", nil, true) then
       s = s:gsub("{x(%d%d?%d?)", function(a)
@@ -398,7 +398,7 @@ function stylesToANSI (styles, dollarC_resets)
 end
 
 
--- Tries to convert ANSI sequences to Aardwolf color codes
+-- Tries to convert ANSI sequences to Cleft color codes
 function AnsiToColours (ansi, default_foreground_code)
    if not default_foreground_code then
       default_foreground_code = "{w"
@@ -462,7 +462,7 @@ function ColoursToANSI (text)
 
       text = text:gsub("{x(%d%d?%d?)", function(a)
          local num_a = tonumber(a)
-         -- Aardwolf treats x1...x15 as normal ANSI codes
+         -- Cleft treats x1...x15 as normal ANSI codes
          if num_a <= 15 then
             if num_a >= 9 then
                return ANSI(1, num_a+22)

@@ -18,7 +18,7 @@ Steps for use: (also see https://github.com/fiendish/aardwolfclientpackage/wiki/
 --]]
 require "checkplugin"
 require "movewindow"
-dofile(GetInfo(60) .. "aardwolf_colors.lua")
+dofile(GetInfo(60) .. "cleft_colors.lua")
 
 module ("Theme", package.seeall)
 

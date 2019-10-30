@@ -155,8 +155,8 @@ log_to_file = tonumber(GetVariable("log_to_file")) or 0
 log_colour_codes = tonumber(GetVariable("log_colour_codes")) or 1
 log_timestamps = tonumber(GetVariable("log_timestamps")) or 1
 
-local init_nonchannel_keys = {"info"}
-local init_nonchannel_pairs = {["info"]="INFO:"}
+--local init_nonchannel_keys = {"info"}
+--local init_nonchannel_pairs = {["info"]="INFO:"}
 local init_channel_keys = {"grouptell", "discord", "grats", "music", "quote", "shout", "tells", "info", "says", "yell", "ooc"}
 channels_table = {}
 loadstring(GetVariable("channels_table") or "")()
@@ -203,16 +203,16 @@ function check_nonchannel_trigger(key)
    return on
 end
 
-function addDefaultNonChannels()
-   for tab,channels in ipairs(tabs_channel_captures) do
-      tabs_nonchannel_captures[tab] = tabs_nonchannel_captures[tab] or {}
-      for i,v in ipairs(init_nonchannel_keys) do
-         tabs_nonchannel_captures[tab][v] = tabs_nonchannel_captures[tab][v] or {["capture"]=true}
-      end
-   end
+--function addDefaultNonChannels()
+--   for tab,channels in ipairs(tabs_channel_captures) do
+--      tabs_nonchannel_captures[tab] = tabs_nonchannel_captures[tab] or {}
+--      for i,v in ipairs(init_nonchannel_keys) do
+--         tabs_nonchannel_captures[tab][v] = tabs_nonchannel_captures[tab][v] or {["capture"]=true}
+--      end
+--   end
 --enable non channel triggers
-   EnableTrigger("info", check_nonchannel_trigger("info"))
-end
+--  EnableTrigger("info", check_nonchannel_trigger("info"))
+--end
 
 function addNewChannel(chan)
    for tab,channels in ipairs(tabs_channel_captures) do
@@ -223,14 +223,14 @@ function addNewChannel(chan)
    end
 end
 
-function addDefaultChannels()
-   for i,v in ipairs(init_channel_keys) do
-      addNewChannel(v)
-   end
-   addDefaultNonChannels()
-end
-addDefaultChannels()
-reduce_diverse_channels()
+--function addDefaultChannels()
+--   for i,v in ipairs(init_channel_keys) do
+--      addNewChannel(v)
+--   end
+--   addDefaultNonChannels()
+--end
+--addDefaultChannels()
+--reduce_diverse_channels()
 
 function makeRect(i)
    tabs_rects[i] = TextRect.new(win, "tr"..tostring(i), tr_left, tr_top, tr_right, tr_bottom, 1000, true, Theme.PRIMARY_BODY, 3, "Fixedsys", 10)
@@ -672,7 +672,7 @@ function stampAndLog(styles)
       text = StylesToColours(styles)
 
       if (log_timestamps == 1) then
-         log_text = "~W"..timestamp..text
+         log_text = "{W"..timestamp..text
       else
          log_text = text
       end

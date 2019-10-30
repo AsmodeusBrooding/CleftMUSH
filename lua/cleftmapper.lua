@@ -1259,7 +1259,7 @@ function draw (uid)
 	      WindowLoadImage (win, "armorshop", "worlds\\plugins\\images\\armorshop.png")                     --Armor Shop Tile	
 	      WindowLoadImage (win, "itemshop", "worlds\\plugins\\images\\itemshop.png")                       --Item Shop Tile		
 	      WindowLoadImage (win, "foodshop", "worlds\\plugins\\images\\foodshop.png")                       --Food Shop Tile	
-	      WindowLoadImage (win, "lightshop", "worlds\\plugins\\images\\lightshop.png")                       --Light Shop Tile			  
+	      WindowLoadImage (win, "lightshop", "worlds\\plugins\\images\\lightshop.png")                     --Light Shop Tile			  
 	      WindowLoadImage (win, "inn", "worlds\\plugins\\images\\inn.png")                                 --Inn Shop Tile	
 
 
