@@ -1096,6 +1096,84 @@ dont_draw = false
 function halt_drawing(halt)
    dont_draw = halt
 end
+-------------------------------------------------------------------------------------
+-- EXPERIMENTAL CODE 
+-------------------------------------------------------------------------------------
+function draw_next_batch_of_rooms()
+   -- timing
+   local start_time = utils.timer ()
+
+   local metrics
+   if current_room_is_cont then
+      metrics = CONTINENTS_ROOM_INFO
+   else
+      metrics = AREA_ROOM_INFO
+   end
+
+   -- insert initial room
+   local draw_elapsed = utils.timer()
+   while #rooms_to_draw_next > 0 do
+      local this_draw_level = rooms_to_draw_next
+      rooms_to_draw_next = {}  -- new generation
+      for i, room in ipairs(this_draw_level) do
+         draw_room(room[1], room[2], room[3], metrics)
+      end -- for each existing room
+      depth = depth + 1
+      if (#rooms_to_draw_next > 0 and utils.timer()-draw_elapsed > 0.08) then
+         if not running then
+            AddTimer("draw_next_batch_of_rooms"..depth, 0, 0, 0.1, "mapper.draw_next_batch_of_rooms()", timer_flag.Enabled + timer_flag.OneShot + timer_flag.Replace + timer_flag.Temporary, "")
+            SetTimerOption("draw_next_batch_of_rooms"..depth, "send_to", sendto.script)
+         end
+         break
+      end
+   end -- while all rooms_to_draw_next
+
+   -- creating thousands of hotspots is relatively expensive, so if we've hit the time limit and
+   -- are going to make a second-pass timer wait until the second pass is done to do it.
+   -- If we're in a run, for example, we may never get there and save the effort.
+   if #rooms_to_draw_next == 0 then
+      for uid,v in pairs(drawn_uids) do
+         local left, top, right, bottom = v[1] - metrics.HALF_ROOM_DOWN, v[2] - metrics.HALF_ROOM_DOWN, v[1] + metrics.HALF_ROOM_UP, v[2] + metrics.HALF_ROOM_UP
+
+         WindowAddHotspot(win, uid,
+            left, top, right, bottom,   -- rectangle
+            "",  -- mouseover
+            "",  -- cancelmouseover
+            "",  -- mousedown
+            "",  -- cancelmousedown
+            "mapper.mouseup_room",  -- mouseup
+            daredevil_mode and "" or get_room_display_params(uid).hovermessage,
+            miniwin.cursor_hand, 0)  -- hand cursor
+
+         WindowScrollwheelHandler (win, uid, "mapper.zoom_map")
+      end
+   end
+
+   local barriers = metrics.barriers
+   for i, zone_exit in ipairs(area_exits) do
+      draw_zone_exit(zone_exit, barriers)
+  end -- for
+   local end_time = utils.timer ()
+
+ -- draw_edge()
+
+   -- timing stuff
+   if timing then
+      local count= 0
+      for k in pairs (drawn_uids) do
+         count = count + 1
+      end
+      print (string.format ("Time to draw %i rooms = %0.3f seconds, search depth = %i", count, end_time - start_time, depth))
+
+      total_times_drawn = total_times_drawn + 1
+      total_time_taken = total_time_taken + end_time - start_time
+
+      print (string.format ("Total times map drawn = %i, average time to draw = %0.3f seconds",
+         total_times_drawn,
+         total_time_taken / total_times_drawn))
+   end -- if
+end
+
 function find_paths (uid, f)
 
   local function make_particle (curr_loc, prev_path)
@@ -1181,6 +1259,8 @@ function find_paths (uid, f)
 end -- function find_paths
 
 function draw (uid)
+   -- timing
+   local outer_time = utils.timer ()
    if not uid then
       maperror "Cannot draw map right now, I don't know where you are - try: LOOK"
       return
@@ -1465,10 +1545,17 @@ function draw (uid)
       print (string.format ("Total times map drawn = %i, average time to draw = %0.3f seconds",
          total_times_drawn,
          total_time_taken / total_times_drawn))
+		             draw_next_batch_of_rooms()
    end -- if
 
    -- let them move it around
    movewindow.add_drag_handler (win, 0, 0, 0, title_bottom)
+   
+  -- end -- if
+
+--   if show_timing then
+      print("Time elapsed drawing ", utils.timer()-outer_time)
+--   end
 
    CallPlugin("abc1a0944ae4af7586ce88dc", "BufferedRepaint")
 end -- draw
@@ -1528,7 +1615,7 @@ function init (t)
    windowinfo = movewindow.install (win, miniwin.pos_bottom_right, miniwin.create_absolute_location , true, {config_win}, {mouseup=MouseUp, mousedown=LeftClickOnly, dragmove=LeftClickOnly, dragrelease=LeftClickOnly}, {x=default_x, y=default_y})
 
    -- calculate box sizes, arrows, connecting lines etc.
-   build_room_info ()
+    AREA_ROOM_INFO = build_room_info()
 
    WindowCreate (win,
       windowinfo.window_left,
@@ -2155,4 +2242,10 @@ function resize_move_callback()
    Theme.AddResizeTag(win, 1, nil, nil, "mapper.resize_mouse_down", "mapper.resize_move_callback", "mapper.resize_release_callback")
 
    WindowShow(win, true)
+end
+function draw_edge()
+   -- draw edge frame.
+   check (WindowRectOp (win, 1, 0, 0, 0, 0, 0xE8E8E8, 15))
+   check (WindowRectOp (win, 1, 1, 1, -1, -1, 0x777777, 15))
+   add_resize_tag()
 end

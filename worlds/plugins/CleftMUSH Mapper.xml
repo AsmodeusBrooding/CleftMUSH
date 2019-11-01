@@ -408,9 +408,35 @@ sequence="100"
 send_to="14"
 >
 <send>
-EnableTrigger ("area_name", (GetTriggerOption("area_name", "enabled")+1)%%2)
---util.print("{YShow area toggled")
-ColourNote ("yellow", "black", "Show area toggled: " .. tostring(GetTriggerOption("area_name", "enabled") == 1))
+SetTriggerOption ("area_name", "enabled", 1)
+SetVariable("show_areas", "Yes")
+show_areas = "Yes"
+util.print("{YArea names will now be {Rshown{Y on the map.")
+mapper.draw(current_room)
+--print("Show Areas: ", show_areas)
+Execute("look")
+if GetTriggerOption ("area_name", "enabled") == 0 and area ~= "" then
+area=nil
+end
+SaveState()
+
+--show_area()
+</send>
+</alias>
+<alias
+match="mapper hide area"
+enabled="y"
+sequence="100"
+send_to="14"
+>
+<send>
+SetTriggerOption ("area_name", "enabled", 0)
+SetVariable("show_areas", "No")
+show_areas = "No"
+util.print("{YArea names will now be {Rhidden{Y from the map.")
+SaveState()
+--print("Show Areas: ", show_areas)
+Execute("look")
 if GetTriggerOption ("area_name", "enabled") == 0 and area ~= "" then
 area=nil
 end
@@ -576,7 +602,7 @@ name="%2"
   match="^\[Room\]\[(?P<terrain>.*)\]\[ (\w+,|\w+\s+\w+,|\w+\s+\w+\s+\w+,|)(\s+|)(?P<area>.*)\s+-\s+(?P<name>.*) \]"
   regexp="y"
   omit_from_output="y"
-  sequence="99"
+  sequence="98"
   send_to="14"
   >
   <send>
@@ -868,6 +894,7 @@ count = 0
 roomcount = 0
 rooms = {}
 local user_terrain_colour = {}
+show_areas = GetVariable("show_areas") or "No"
 
 local cleftmush_dirs = {
 	["10"] = "n",
@@ -1443,7 +1470,13 @@ last_area_requested = ""
 -- -----------------------------------------------------------------
 
 function process_exits (exits_str)
-
+local show_areas = GetVariable("show_areas") or "No"
+if show_areas == "Yes" then 
+  EnableTrigger ("area_name", true)
+else
+  EnableTrigger ("area_name", false)
+end
+--print("Show Areas: ", show_areas)
   EnableTrigger ("get_room_name", true)
   EnableTrigger ("get_description_line", false)
 	--Note("process exits")
@@ -2303,6 +2336,7 @@ run_sql(sql)
 		}
 	end
 	Note("Loaded ", cnt, " rooms from database.")
+    --print("Show Areas: ", show_areas)
     SetVariable("cnt", cnt)
 	db:close()
 
