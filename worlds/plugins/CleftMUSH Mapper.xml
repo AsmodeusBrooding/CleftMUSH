@@ -24,7 +24,7 @@
    save_state="y"
    date_written="2019-07-26 07:21:01"
    requires="4.51"
-   version="5.76"
+   version="6.02"
    >
 
 </plugin>
@@ -52,13 +52,6 @@
    script="mapper.zoom_in"
   >
   </alias>
-<alias
-   match="mapper thisroom"
-   enabled="y"
-   sequence="100"
-   script="show_this_room"
-   regexp="n">
-</alias>
 <alias
    match="^mapper addnote( .*)?$"
    regexp="y"
@@ -107,6 +100,13 @@ mapper.gotoNextResult(Trim("%1"))
   </alias>  
  <alias
    match="mapper stop"
+   enabled="y"
+   sequence="100"
+   script="mapper.cancel_speedwalk"
+  >
+  </alias>
+ <alias
+   match="stop"
    enabled="y"
    sequence="100"
    script="mapper.cancel_speedwalk"
@@ -194,12 +194,6 @@ util.print("{R--------------------------------------------------")
    script="mapper.show"
   >
   </alias>
-<alias
-   match="^mapper help( (.*))?$"
-   enabled="n"
-   regexp="y"
-   script="OnHelp"
-></alias>
 
 <alias
    match="^mapper updown$"
@@ -387,6 +381,13 @@ DoAfterSpecial (0.1, 'EnableTrigger ("Exits_Line", true)', sendto.script)
 </send>
   </alias>
 
+   <alias
+      match="^mapper show tile( (on|off))?$"
+      regexp="y"
+      enabled="y"
+      sequence="100"
+      script="tile_show"
+   ></alias>
 
 <alias
 match="UpdateTownSpecial"
@@ -398,6 +399,34 @@ where shops | prefix {Where Shop}
 where banks | prefix {Where Bank}
 where teachers | prefix {Where Teacher}
 where forges | prefix {Where Forge}
+</send>
+</alias>
+<alias
+match="mapper show area"
+enabled="y"
+sequence="100"
+send_to="14"
+>
+<send>
+EnableTrigger ("area_name", (GetTriggerOption("area_name", "enabled")+1)%%2)
+--util.print("{YShow area toggled")
+ColourNote ("yellow", "black", "Show area toggled: " .. tostring(GetTriggerOption("area_name", "enabled") == 1))
+if GetTriggerOption ("area_name", "enabled") == 0 and area ~= "" then
+area=nil
+end
+--show_area()
+</send>
+</alias>
+<alias
+match="mapper show explored"
+enabled="y"
+sequence="100"
+send_to="14"
+>
+<send>
+cnt = GetVariable("cnt")
+AnsiNote(ColoursToANSI("{YYou have explored {R" .. cnt .. " {Yrooms in the game."))
+--print("Room Count: ", cnt)
 </send>
 </alias>
 
@@ -539,6 +568,27 @@ DoAfterSpecial (0.5, 'EnableTrigger ("Exits_Line", true)', sendto.script)
   <send>
 terrain="%1"
 name="%2"
+</send>
+  </trigger>
+  <trigger
+  enabled="n"
+  name="area_name"
+  match="^\[Room\]\[(?P<terrain>.*)\]\[ (\w+,|\w+\s+\w+,|\w+\s+\w+\s+\w+,|)(\s+|)(?P<area>.*)\s+-\s+(?P<name>.*) \]"
+  regexp="y"
+  omit_from_output="y"
+  sequence="99"
+  send_to="14"
+  >
+  <send>
+terrain = GetTriggerWildcard ("area_name", "terrain")  -- get wildcard named 'terrain'
+--print("Terrain: ", terrain)
+--terrain="%1"
+area = GetTriggerWildcard ("area_name", "area")  -- get wildcard named 'who'
+--area="%2"
+--print("Area: ", area)
+name = GetTriggerWildcard ("area_name", "name")  -- get wildcard named 'who'
+--name="%3"
+--print("Name: ", name)
 </send>
   </trigger>
   <trigger
@@ -793,7 +843,7 @@ require "utility"
 require "tprint"
 
 
-version = "5.76"
+version = "6.02"
 uid = -999
 current_room=nil
 current_area = -999
@@ -801,7 +851,7 @@ expected_exit=-666
 from_room=""
 last_direction_moved=nil
 terrain = 0
-area = "<No area>"
+area = GetVariable("area") or "<No area>"
 last_backup = GetVariable("last_backup") or 0
 notes = 0
 default_width = 269
@@ -813,8 +863,7 @@ areaname = -999
 last_direction_moved = nil
 OUR_ROOM_COLOUR = tonumber(GetVariable("OUR_ROOM_COLOUR")) or 0x0000FF
 shownotes = ((GetVariable("shownotes") or "1") == "1") -- default true
-
-
+tile_mode = ((GetVariable("tile_mode") or "1") == "1") -- default true
 count = 0
 roomcount = 0
 rooms = {}
@@ -896,7 +945,53 @@ directions = {
    sw=true
 }
 
+function tile_toggle()
+local tile_mode = GetVariable("tile_mode") -- default true
+   if tile_mode == "0" then
+Execute("mapper show tile on")
+   -- Note("Tile Mode is ON: Graphical tiles will be displayed.")
+--print("Tile Mode: ", tile_mode)
+SaveState()
+mapper.draw(current_room)
+   end
+if tile_mode == "1" then
+    Execute("mapper show tile off")
+    --  Note("Tile Mode is OFF: Graphical tiles will NOT be displayed.")
+--print("Tile Mode: ", tile_mode)
+SaveState()
+mapper.draw(current_room)
+   end
+end
 
+
+
+function show_area()
+if GetTriggerOption ("area_name", "enabled") == 1 then
+SetTriggerOption ("area_name", "enabled", 0)
+util.print("{YArea{W names will now be hidden")
+if GetTriggerOption ("area_name", "enabled") == 0 then
+SetTriggerOption ("area_name", "enabled", 1)
+util.print("{YArea{W names will now show")
+end
+end
+end
+
+function tile_show(name, line, wildcards)
+   if (wildcards[2] ~= "") then
+      tile_mode = (wildcards[2] == "on")
+   end
+   if tile_mode then
+      Note("Tile Mode is ON: Graphical tiles will be displayed.")
+--print("Tile Mode: ", tile_mode)
+SaveState()
+mapper.draw(current_room)
+   else
+      Note("Tile Mode is OFF: Graphical tiles will NOT be displayed.")
+--print("Tile Mode: ", tile_mode)
+SaveState()
+mapper.draw(current_room)
+   end
+end
 
 
 -- -----------------------------------------------------------------
@@ -1289,7 +1384,7 @@ function custom_exit (name, line, wildcards)
    end -- if current_room
 
    if cexit_start == "-1" then
-      world.Note ("CEXIT FAILED: You cannot link custom exits from unmappable rooms.")
+      world.Note ("CEXIT FAILED: You cannot link custom exits from unmappable rooms.") -- This shouldn't be possible to happen, but just in case
       return
    end
 
@@ -1384,7 +1479,10 @@ elseif #desc > 2200 then
  return
 end -- for
 Simulate("\n[UID]: ", uid)
-
+area = rooms[uid].area
+SetVariable("area", area)
+--print("Area: ", area)
+--print("Current Area: ", current_area)
 --print("Name: ", name)
 --print("Desc: ", desc) 
 --print("Terrain: ", terrain)
@@ -1504,8 +1602,9 @@ function get_room (uid)
       )
 
 
-	    -- SPECIAL ROOM COLOUR FILLS
+	    -- SPECIAL ROOM COLOUR FILLS: Marking a room as "special" makes the border get thicker when you walk into a room
 special_room = false
+shop = false
                          if room.info and room.info ~= "" then
                          if string.match (room.info, "waypoint") then
                                          special_room = true
@@ -1513,27 +1612,29 @@ special_room = false
                                          special_room = true
                          elseif string.match (room.info, "alchemyguild") then
                                          special_room = true
-                         elseif string.match (room.info, "teacher") then
-                                         special_room = true
-                         elseif string.match (room.info, "employer") then
-                                         special_room = true
                          elseif string.match (room.info, "priest") then
                                          special_room = true
                          elseif string.match (room.info, "forge") then
                                          special_room = true
-		                 elseif string.match (room.info, "warriortrainer") then
+                         elseif string.match (room.info, "weaponshop") then
                                          special_room = true
-				         elseif string.match (room.info, "thieftrainer") then
+                                                 shop = true
+                         elseif string.match (room.info, "armorshop") then
                                          special_room = true
-				         elseif string.match (room.info, "druidtrainer") then
+                                                 shop = true
+                         elseif string.match (room.info, "petshop") then
                                          special_room = true
-		                 elseif string.match (room.info, "clerictrainer") then
+                                                 shop = true
+                         elseif string.match (room.info, "itemshop") then
                                          special_room = true
-				         elseif string.match (room.info, "magetrainer") then
+                                                 shop = true
+                         elseif string.match (room.info, "foodshop") then
                                          special_room = true
+                                                 shop = true
+                         elseif string.match (room.info, "tavern") then
+                                         special_room = true
+                                                 shop = true
 				         elseif string.match (room.info, "morgue") then
-                                         special_room = true		
-				         elseif string.match (room.info, "rangertrainer") then
                                          special_room = true		
                          elseif string.match (room.info, "quest") then
                                          special_room = true			
@@ -1542,7 +1643,9 @@ special_room = false
                          elseif string.match (room.info, "gato") then
                                          special_room = true		
                          elseif string.match (room.info, "moti") then
-                                         special_room = true			 								 
+                                         special_room = true			
+                         elseif string.match (room.info, "inn") then
+                                         special_room = true	 								 
                  
 										end
 end -- if
@@ -1557,23 +1660,6 @@ end -- if
 
 end -- get_room
 
-function show_this_room (name, line, wildcards)
-   local room = rooms[current_room]
-   if room ~= nil then
-      Note("Details about this room:")
-      Note("+---------------------------+")
-      Note("Name: "..(name or ""))
-      Note("ID: "..(uid or ""))
-      Note("Area: "..(area or ""))
-      Note("Terrain: "..(terrain or ""))
-      Note("Info: "..(room.info or ""))
-      Note("Notes: "..(room.notes or ""))
-      Note("Exits: "..(room.exits or ""))
-else
-      Note("THISROOM ERROR: You need to type 'LOOK' first to initialize the mapper before trying to get room information.")
-   end
-end -- show_this_room
-
 function our_room_colour ()
 		local clr = PickColour(OUR_ROOM_COLOUR or 0)
 		if clr ~= -1 then
@@ -1582,7 +1668,6 @@ function our_room_colour ()
 			SaveState()
 		end
 end
-
 
 function room_click (uid, flags)
 
@@ -1619,9 +1704,16 @@ return
       { name = "Change Exit", func = room_change_exit} ,
       { name = "Delete Current Room", func = delete_room_click} ,
       { name = "-", } ,
-      { name = checkmark ("shop")  .. "Mark as Shop",         func = room_toggle_shop } ,
+      { name = checkmark ("shop")  .. "Mark as Weapon Shop",   func = room_toggle_weaponshop } ,
+      { name = checkmark ("shop")  .. "Mark as Armor Shop",    func = room_toggle_armorshop } ,
+      { name = checkmark ("shop")  .. "Mark as Food Shop",     func = room_toggle_foodshop } ,
+      { name = checkmark ("shop")  .. "Mark as Item Shop",     func = room_toggle_itemshop } ,
+      { name = checkmark ("shop")  .. "Mark as Pet Shop",      func = room_toggle_petshop } ,
+      { name = checkmark ("shop")  .. "Mark as Tavern",        func = room_toggle_tavern } ,
+      { name = checkmark ("shop")  .. "Mark as Inn",           func = room_toggle_inn } ,
       { name = "-", } ,
       { name = "Current Room Border Color", func = our_room_colour} ,
+      { name = "Toggle Graphical Tiles", func = tile_toggle} ,
      } -- handlers
 
   local t, tf = {}, {}
@@ -1644,8 +1736,9 @@ return
 end -- room_click
 
 
-
-
+function room_toggle_weaponshop()
+Execute ("mapper flag weaponshop")
+end
 
 -- -----------------------------------------------------------------
 -- map_find: mapper find xxx
@@ -1987,132 +2080,15 @@ function OnPluginInstall ()
   mapper.init { config = config,
                 get_room = get_room, findpath = findpath,
                 room_click = room_click,    -- called on RH click on room square,
-                show_help = OnHelp,         -- to show help,
+                show_help = mapperhelp,         -- to show help,
                 show_other_areas = show_other_areas,  -- want to see areas other than the current one?
 }
-  mapper.mapprint (string.format ("CleftMUSH Mapper installed, version %0.1f", mapper.VERSION))
+      util.print("{YC{yl{Ye{yf{Yt{RM{rU{RS{rH {RG{Yr{Ga{Cp{Bh{Mi{mc{Ra{Yl {x238Mapper installed: {Gv" .. version)
 
 
 end -- OnPluginInstall
 
-function OnHelp (name, line, wildcards)
-   local help_header = "                              [Cleft Mush Mapper Help]                              "
 
-   local help_index = [[
-                           Mapper Help Index
-=============================================================================
- mapper help               --> Show this list
------------------------------------------------------------------------------
- mapper help config        --> Commands for configuring the mapper
- mapper help exits         --> Commands for setting custom exits
- mapper help moving        --> Commands for moving between rooms
- mapper help utils         --> Other utilitarian commands
- mapper help searching     --> Used for finding notes, shops, banks, etc
-=============================================================================
-]]
-   local help_table = {
-   ['config'] = {
-['header'] = [[===== CONFIGURATION =============>]],
-[[mapper help                    --> This help
-                                 > (or click the "?" button on the top right)]],
-[[mapper zoom out                --> Zoom out]],
-[[mapper zoom in                 --> Zoom in]],
-[[mapper hide                    --> Hide map]],
-[[mapper show                    --> Show map]],
-[[mapper updown                  --> Toggle up/down exit drawing]],
-[[mapper underlines              --> Toggle underlining of clickable links]]
-},
-
-   ['utils'] = {
-['header'] = [[===== UTILITIES =================>]],
-[[mapper backup                  --> Creates a backup of the mapper database]],
-[[mapper addnote                 --> Add a new note to the current room]],
-[[mapper addnote <note>          --> Ditto, but skips the dialog]]
-},
-   ['searching'] = {
-['header'] = [[===== SEARCHING =================>]],
-[[mapper find <text>             --> Full-text search the whole database]],
-[[]],
-[[mapper where <room id>         --> Show directions to a room number]]
-}
-}
-
-   local function show_help(helps)
-      blackindigoPrint("")
-      blackindigoPrint(helps['header'])
-      blackindigoPrint("")
-      for i,v in ipairs(helps) do
-         blackindigoPrint(v)
-      end
-   end
-
-
-   blackindigoPrint("")
-   whiteindigoPrint(help_header)
-   blackindigoPrint("+---------------------------------------------------------------------------+")
-   badnews = true
-   if wildcards and wildcards[2] ~= "" then
-      badnews = false
-      if wildcards[2] == "all" then
-         show_help(help_table['config'])
-         show_help(help_table['exits'])
-         show_help(help_table['searching'])
-         show_help(help_table['moving'])
-         show_help(help_table['utils'])
-      elseif wildcards[2] == "config" then
-         show_help(help_table['config'])
-      elseif wildcards[2] == "exits" then
-         show_help(help_table['exits'])
-      elseif wildcards[2] == "searching" then
-         show_help(help_table['searching'])
-      elseif wildcards[2] == "moving" then
-         show_help(help_table['moving'])
-      elseif wildcards[2] == "utils" then
-         show_help(help_table['utils'])
-      elseif wildcards[2]:find("search ") == 1 then
-         local st, en = wildcards[2]:find("search ")
-         local pattern = Trim(wildcards[2]:sub(en+1))
-         ColourTell("cornflower","black","Searching help for: ")
-         ColourNote("red","black",pattern)
-         if pattern ~= "" then
-            for k,v in pairs(help_table) do
-               local done_header = false
-               for j,w in ipairs(v) do
-                  if (w ~= "") and (w:find("--------",nil,true) == nil) and (w:find(pattern) ~= nil) then
-                     if not done_header then
-                        blackindigoPrint("")
-                        blackindigoPrint(v['header'])
-                        done_header = true
-                     end
-                     blackindigoPrint("")
-                     local wtable = w:split(pattern)
-                     for i,v in ipairs(wtable) do
-                        ColourTell("cornflower","black",v)
-                        if (i < #wtable) then
-                           ColourTell("red", "black", pattern)
-                        end
-                     end
-                     Note("")
-                  end
-               end
-            end
-         else
-            badnews = true
-         end
-      else
-         badnews = true
-      end
-   end
-   if badnews then
-      blackindigoPrint("")
-      mapper.mapprint (world.GetPluginInfo (world.GetPluginID (), 3))
-      blackindigoPrint("")
-      blackindigoPrint(help_index)
-   end
-   blackindigoPrint("")
-   blackindigoPrint("+---------------------------------------------------------------------------+")
-   blackindigoPrint("")
-end
 ------------------------------------------------------------------------------------------------------------
 ---------------------------------- SUPER MAPPER HELP PAGES HERE --------------------------------------------
 ------------------------------------------------------------------------------------------------------------
@@ -2205,12 +2181,14 @@ function mapperhelputils()
       util.print("")
       util.print("{Y mapper print              {R-->{W Prints a list of the UID, name, terrain, exits,")
       util.print("{Y                              {W area, and room flags from your current room")
+      util.print("{Y mapper show explored      {R-->{W Shows the amount of rooms explored in the game")
       util.print("{Y mapper print uid          {R-->{W Prints the UID of the current room")
       util.print("{Y mapper backup             {R-->{W Instantly creates a backup of the map database")
       util.print("{Y mapper addnote            {R-->{W Adds a new note for the current room. Erase all")
       util.print("{Y                              {W text to remove a note from a room")
       util.print("{Y mapper addnote <note>     {R-->{W Adds a new note, but skips the entry box")
       util.print("{Y mapper shownotes [on/off] {R-->{W Toggles display of notes upon entering a room")
+      util.print("{Y mapper show tile [on/off] {R-->{W Toggles display of graphical tiles")
       util.print("{Y mapper delete room        {R-->{W Deletes the current room you're in")
       util.print("{Y mapper delete room <uid>  {R-->{W Deletes the designated room")
       util.print("{Y mapper where <uid>        {R-->{W Shows directions to the designated room")
@@ -2229,6 +2207,7 @@ function OnPluginSaveState ()
   SetVariable("last_backup", last_backup)
 SetVariable("OUR_ROOM_COLOUR", OUR_ROOM_COLOUR) -- Color of Room Border
    SetVariable("shownotes", shownotes and "1" or "0")
+   SetVariable("tile_mode", tile_mode and "1" or "0")
 end -- OnPluginSaveState
 
 ------------------------------------------
@@ -2324,6 +2303,7 @@ run_sql(sql)
 		}
 	end
 	Note("Loaded ", cnt, " rooms from database.")
+    SetVariable("cnt", cnt)
 	db:close()
 
 	if tonumber(last_backup) == 0 then

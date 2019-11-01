@@ -59,7 +59,7 @@ Room info should include:
 
 module (..., package.seeall)
 
-VERSION = 5.76   -- for querying by plugins
+VERSION = 6.02   -- for querying by plugins
 require "aard_register_z_on_create"
 
 require "mw_theme_base"
@@ -248,6 +248,7 @@ default_config = {
 
    SHOW_ROOM_ID = false,
    SHOW_ROOM_NOTES = false,
+   --SHOW_TILES = GetPluginVariable("dd07d6dbe73fe0bd02ddb62c", "tile_mode") or "1",
 SHOW_AREA_EXITS = false
 }
 
@@ -499,6 +500,22 @@ local function draw_configuration ()
       "Click to toggle display of room NOTES",
       miniwin.cursor_hand, 0)  -- hand cursor
    y = y + font_height
+   
+            -- show tiles
+--   WindowText(config_win, CONFIG_FONT_ID, "Show Tiles", x, y, 0, 0, 0x000000)
+--   WindowText(config_win, CONFIG_FONT_ID_UL, ((config.SHOW_TILES and "On") or "Off"), width + rh_size / 2 + box_size - WindowTextWidth(config_win, CONFIG_FONT_ID_UL, ((config.SHOW_TILES and "On") or "Off"))/2, y, 0, 0, 0x808080)
+   
+      -- show tiles hotspot
+--   WindowAddHotspot(config_win,
+--      "$<show_tiles>",
+--      x + GAP,
+--      y,
+--      x + frame_width,
+--      y + font_height,   -- rectangle
+--      "", "", "", "", "mapper.mouseup_change_show_tiles",  -- mouseup
+--      "Click to toggle display of room tiles",
+--      miniwin.cursor_hand, 0)  -- hand cursor
+--  y = y + font_height
 
 
    -- show area exits
@@ -752,9 +769,11 @@ local function draw_room (uid, path, x, y)
    WindowScrollwheelHandler (win, uid, "mapper.zoom_map")
    
      local special_room = false
+	 
    -- DRAW MAP IMAGES 
-
-                             if room.fillcolour and room.fillcolour ~= "" then
+tile_mode = GetPluginVariable("dd07d6dbe73fe0bd02ddb62c", "tile_mode") or "1" 
+area = GetPluginVariable("dd07d6dbe73fe0bd02ddb62c", "area") or "<No_Area>" 
+                             if room.fillcolour and room.fillcolour ~= "" and tile_mode == "1" then
 		 
    	                         if string.match (room.fillcolour, "9109504") then
           WindowDrawImage (win, "ocean", left, top, right, bottom, miniwin.image_stretch)  -- stretch to fill
@@ -776,6 +795,8 @@ local function draw_room (uid, path, x, y)
 	      WindowDrawImage (win, "rock", left, top, right, bottom, miniwin.image_stretch)  -- stretch to fill
 		  		  		  	 elseif string.match (room.fillcolour, "65280") then
 	      WindowDrawImage (win, "field", left, top, right, bottom, miniwin.image_stretch)  -- stretch to fill
+		  		  		  		 elseif string.match (room.fillcolour, "6316128") and area == "Brigantes Castle" then
+	      WindowDrawImage (win, "inside_brigantes", left, top, right, bottom, miniwin.image_stretch)  -- stretch to fill
 		  		  		  	 elseif string.match (room.fillcolour, "6316128") then
 	      WindowDrawImage (win, "building", left, top, right, bottom, miniwin.image_stretch)  -- stretch to fill
 		  	                 elseif string.match (room.fillcolour, "65535") then
@@ -982,6 +1003,13 @@ local function draw_room (uid, path, x, y)
                                          room.borderpen, room.borderpenwidth,-2,miniwin.brush_null)										
 end
 end
+
+			             if uid == current_room and not special_room and tile_mode == "0" then
+                                         WindowCircleOp (win, miniwin.circle_rectangle, left-2-room.borderpenwidth, top-2-room.borderpenwidth,
+                                         right+2+room.borderpenwidth, bottom+2+room.borderpenwidth, OUR_ROOM_COLOUR.colour,
+                                         room.borderpen, room.borderpenwidth,-2,miniwin.brush_null)		
+										
+										 end
   
   
 
@@ -1269,7 +1297,7 @@ function draw (uid)
 	      WindowLoadImage (win, "lightshop", "worlds\\plugins\\images\\lightshop.png")                     --Light Shop Tile			  
 	      WindowLoadImage (win, "inn", "worlds\\plugins\\images\\inn.png")                                 --Inn Shop Tile	
 	      WindowLoadImage (win, "tavern", "worlds\\plugins\\images\\tavern.png")                           --Tavern Tile	
-
+	      WindowLoadImage (win, "inside_brigantes", "worlds\\plugins\\images\\inside_brigantes.png")       --Inside terrain in Brigantes Castle
 
 												  
 
@@ -1749,9 +1777,9 @@ function find (f, show_uid, expected_count, walk, fcb)
 
       -- in case the same UID shows up later, it is only valid from the same room
       local hash = utils.tohex (utils.md5 (tostring (current_room) .. "<-->" .. tostring (uid)))
-
+         table.insert(last_result_list, uid)
       Hyperlink ("!!" .. GetPluginID () .. ":mapper.do_hyperlink(" .. hash .. ")",
-                room_name, "Click to speedwalk there (" .. distance .. ")", "", "", false)
+                 "["..#last_result_list.."] "..room_name, "Click to speedwalk there (" .. distance .. ")", "", "", false)
       local info = ""
       if type (paths [uid].reason) == "string" and paths [uid].reason ~= "" then
         info = " [" .. paths [uid].reason .. "]"
@@ -1776,7 +1804,10 @@ function find (f, show_uid, expected_count, walk, fcb)
               "which I could not find a path to within",
               config.SCAN.depth, "rooms.")
   end -- if
-
+   if not walk then
+      last_result_list = {}
+      next_result_index = 0
+   end
 end -- map_find_things
 
 function do_hyperlink (hash)
@@ -2046,6 +2077,22 @@ function mouseup_change_show_notes (flags, hotspot_id)
 	  
    else
       config.SHOW_ROOM_NOTES = true
+   end
+   draw (current_room)
+end -- mouseup_change_area_textures
+
+function mouseup_change_show_tiles (flags, hotspot_id)
+   if config.SHOW_TILES == true then
+      config.SHOW_TILES = false
+	  CallPlugin("dd07d6dbe73fe0bd02ddb62c", "SetVariable", "tile_mode", "0")
+	  SaveState()
+	  draw (current_room)
+	  
+   else
+      config.SHOW_TILES = true
+	 CallPlugin("dd07d6dbe73fe0bd02ddb62c", "SetVariable", "tile_mode", "1")
+	 SaveState()
+	 draw (current_room)
    end
    draw (current_room)
 end -- mouseup_change_area_textures

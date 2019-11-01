@@ -970,6 +970,8 @@ function extend_rightclick_menu_result(sender, hotspot_id, result)
       CallPlugin("462b665ecb569efbf261422f","boostMe", win)
    elseif result == 17 then
       CallPlugin("462b665ecb569efbf261422f","dropMe", win)
+   elseif result == 18 then
+  Execute("commcheck")
    end
    SaveState()
 end
@@ -1009,7 +1011,9 @@ function extend_rightclick_menu_string(tr)
       "Clear Tab",
       "-",
       "Bring to Front",
-      "Send to Back"
+      "Send to Back",
+      "-",
+      "Check Tab Settings"
    }
    local ms = menu_strings
 
