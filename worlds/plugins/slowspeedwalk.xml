@@ -263,7 +263,7 @@ function func_help_speedwalk ()
   world.Note (world.GetPluginInfo (world.GetPluginID (), 3))
 end
 
-DoAfterSpecial (1, 'ColourNote ("white", "green", "Slow speedwalk plugin installed.")', 12);
+--DoAfterSpecial (1, 'ColourNote ("white", "green", "Slow speedwalk plugin installed.")', 12);
 
 </script>
 
