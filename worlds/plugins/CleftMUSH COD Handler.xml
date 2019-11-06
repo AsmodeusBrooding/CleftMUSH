@@ -44,9 +44,9 @@ musicPlaying = false
    enabled="y"
    group="linkify"
    match="^(?&lt;pre&gt;You think( to yourself| to say)?\,? (\&quot;|\')?)(?&lt;reply&gt;.*?)(?&lt;pst&gt;(\&quot;|\')?)$"
-   omit_from_output="y"
    regexp="y"
    script="hl_splitreply"
+   omit_from_output="y"
    send_to="14"
    sequence="100"
   >

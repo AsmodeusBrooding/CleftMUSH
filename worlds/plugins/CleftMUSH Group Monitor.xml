@@ -323,7 +323,9 @@ end
 function split(n, t)
 	local tags = {}
 	for i = 1, #t do
-		local tag = string.sub(t, i, i)
+		local tag = string.sub(t, i)
+		--(t, i, i)
+		--print("Tag: ", tag)
  if tag == "L" then
 			group_leader = n
 		end
@@ -335,7 +337,7 @@ end
 
 function is_minion(tags)
 	for i, tag in ipairs(tags) do
-		if tag == "O" or tag == "M" then
+		if tag == "O" or tag == "Mob" then
 			return true
 		end
 	end
@@ -344,7 +346,7 @@ end
 
 function is_pet(tags)
 	for i, tag in ipairs(tags) do
-		if tag == "P" then
+		if tag == "Pet" then
 			return true
 	end
 end
@@ -457,7 +459,7 @@ end
 
 function abbreviate(str,length)
     if length == nil then
-        length=24
+        length=22
     end
     if string.len(str)>length then
         return string.sub(str, 1, length)..string.char(133)
@@ -533,7 +535,7 @@ end
                 --x = WindowRectOp(winid, 2, left - 3, top, 307, 198, ColourNameToRGB(enemy_background_color))
                 x = WindowText(winid, "f1", "Lv["..player.level.."]", left, top + 3, 0, 0, ColourNameToRGB(level_color), false) + left -- label and padding
                 x = x + WindowText(winid, "f1", abbreviate(player.name), left + 50, top + 3, 0, 0, ColourNameToRGB(player_color), false) + left + 18 + 8 -- player name
-                x = WindowText(winid, "f1", "[ENEMY]", left + 248, top + 3, 0, 0, ColourNameToRGB(tank_color), false) -- show if enemy
+                x = WindowText(winid, "f1", "[ENEMY]", left + 219, top + 3, 0, 0, ColourNameToRGB(tank_color), false) -- show if enemy
            end
             if bar_width == 200 and not isPlayerOrEnemy and not show_numbers then
                 x = WindowText(winid, "f1", "Lv["..player.level.."]", left, top + 3, 0, 0, ColourNameToRGB(level_color), false) + left -- label and padding
@@ -549,7 +551,7 @@ end
                     x = x + WindowText(winid, "f1", "L", left+210, top + 3, 0, 0, ColourNameToRGB(leader_color), false) + 2 -- show if leader
            end
                 if group_leader == player.name and isPlayerOrEnemy and bar_width == 200 and show_numbers then
-                    x = x + WindowText(winid, "f1", "[LEADER]", left + 240, top + 3, 0, 0, ColourNameToRGB(leader_color), false) -- show if leader
+                    x = x + WindowText(winid, "f1", "[LEADER]", left+219	, top + 3, 0, 0, ColourNameToRGB(leader_color), false) -- show if leader -- used to be left+240
            end
 
             if is_minion(player.tags) and isPlayerOrEnemy then
@@ -557,7 +559,7 @@ end
                     x = x + WindowText(winid, "f1", "C", x, top + 3, 0, 0, ColourNameToRGB(minion_color), false) + 2 -- show if minion
                 end
             if is_minion(player.tags) and isPlayerOrEnemy and bar_width == 200 and show_numbers then
-                    x = x WindowText(winid, "f1", "[CHARM]", left + 248, top + 3, 0, 0, ColourNameToRGB(minion_color), false)  -- show if minion
+                    x = x WindowText(winid, "f1", "[CHARM]", left+219, top + 3, 0, 0, ColourNameToRGB(minion_color), false)  -- show if minion
                --box_right is usually 307 (vertical) or 611 (horizontal)
                 end
            end
@@ -575,7 +577,7 @@ end
                 end
                    if is_pet(player.tags)and show_numbers then
                 if bar_width == 200 then
-                    x = x + WindowText(winid, "f1", "[PET]", left + 260, top + 3, 0, 0, ColourNameToRGB(pet_color), false) -- show if pet
+                    x = x + WindowText(winid, "f1", "[PET]", left + 219, top + 3, 0, 0, ColourNameToRGB(pet_color), false) -- show if pet
                 end
            end
             if is_no_melee(player.tags) then

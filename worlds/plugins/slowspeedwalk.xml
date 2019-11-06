@@ -7,7 +7,7 @@
   <!ENTITY abort_speedwalk_alias "abort speedwalk" > 
   <!ENTITY help_speedwalk_alias "help speedwalk" > 
   <!ENTITY timeout_secs "10" > 
-  <!ENTITY delay_secs "0.5" >
+  <!ENTITY delay_secs "0.3" >
   <!ENTITY exits_trigger 
       "^((?P<exits>\\[Exits\\: .+\\])|(.*)Alas, you cannot go that way\\.)$" > 
 ]>
