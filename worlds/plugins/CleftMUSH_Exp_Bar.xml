@@ -113,15 +113,8 @@ max_exp = remorts + 2000
    sequence="100"
    ignore_case="y"
 ></alias>
-<alias
-   match="setup prompt"
-   enabled="y"
-   sequence="100"
-   send_to="14"
-   regexp="n"
-   ignore_case="y">
-<send>setup_prompt()</send></alias>
 </aliases>
+
 
 
 

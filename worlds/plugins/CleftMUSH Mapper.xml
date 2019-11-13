@@ -1185,6 +1185,7 @@ function updateRoomInfo(name, line, wildcards)
             if not string.find(rooms[roomuid].info, roomtype) then
               rooms[roomuid].info = rooms[roomuid].info .. roomtype
               add_update_room(roomuid, rooms[roomuid])
+			  print("Roomtype: ", roomtype)
             end
         end
         mapper.draw(roomuid)
@@ -1776,11 +1777,13 @@ return
 
 
   local handlers = {
-      { name = "(NOT-YET-IMPLEMENTED)Edit bookmark", func = room_edit_bookmark} ,
-      { name = "-", } ,
-      { name = "(NOT-YET-IMPLEMENTED)Add Exit",    func = room_add_exit} ,
+     -- { name = "(NOT-YET-IMPLEMENTED)Edit bookmark", func = room_edit_bookmark} ,
+    --  { name = "-", } ,
+    --  { name = "(NOT-YET-IMPLEMENTED)Add Exit",    func = room_add_exit} ,
       { name = "Change Exit", func = room_change_exit} ,
       { name = "Delete Current Room", func = delete_room_click} ,
+	  { name = "Current Room Border Color", func = our_room_colour} ,
+      { name = "Toggle Graphical Tiles", func = tile_toggle} ,
       { name = "-", } ,
       { name = checkmark ("shop")  .. "Mark as Weapon Shop",   func = room_toggle_weaponshop } ,
       { name = checkmark ("shop")  .. "Mark as Armor Shop",    func = room_toggle_armorshop } ,
@@ -1789,9 +1792,6 @@ return
       { name = checkmark ("shop")  .. "Mark as Pet Shop",      func = room_toggle_petshop } ,
       { name = checkmark ("shop")  .. "Mark as Tavern",        func = room_toggle_tavern } ,
       { name = checkmark ("shop")  .. "Mark as Inn",           func = room_toggle_inn } ,
-      { name = "-", } ,
-      { name = "Current Room Border Color", func = our_room_colour} ,
-      { name = "Toggle Graphical Tiles", func = tile_toggle} ,
      } -- handlers
 
   local t, tf = {}, {}
@@ -1816,7 +1816,31 @@ end -- room_click
 
 function room_toggle_weaponshop()
 Execute ("mapper flag weaponshop")
-end
+end -- room_toggle_weaponshop
+
+function room_toggle_armorshop()
+Execute ("mapper flag armorshop")
+end -- room_toggle_armorshop
+
+function room_toggle_foodshop()
+Execute ("mapper flag foodshop")
+end -- room_toggle_foodshop
+
+function room_toggle_itemshop()
+Execute ("mapper flag itemshop")
+end -- room_toggle_itemshop
+
+function room_toggle_petshop()
+Execute ("mapper flag petshop")
+end  -- room_toggle_petshop
+
+function room_toggle_tavern()
+Execute ("mapper flag tavern")
+end -- room_toggle_tavern
+
+function room_toggle_inn()
+Execute ("mapper flag inn")
+end -- room_toggle_inn
 
 -- -----------------------------------------------------------------
 -- map_find: mapper find xxx

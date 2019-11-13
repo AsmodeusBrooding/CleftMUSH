@@ -100,6 +100,15 @@ util.print("{GThe Music channel has been set to tab %1.")
 </send></alias>
 <alias enabled="y"
     sequence="100"
+    match="set clan tab *"
+    send_to="14"
+    regexp="n"
+    ignore_case="y"><send>
+SetVariable("clan_tab", %1)
+util.print("{GThe Clan channel has been set to tab %1.")
+</send></alias>
+<alias enabled="y"
+    sequence="100"
     match="set grats tab *"
     send_to="14"
     regexp="n"
@@ -181,6 +190,22 @@ SetVariable("tells_visible", "No")
 util.print("{GTells are now hidden from the main output.")
 end
 
+</send></alias>
+<alias enabled="y"
+    sequence="100"
+    match="mute clan"
+    send_to="14"
+    regexp="n"
+    ignore_case="y"><send>
+if GetTriggerOption ("send_clan", "omit_from_output") == 1 then
+SetTriggerOption ("send_clan", "omit_from_output", 0)
+SetVariable("clan_visible", "Yes")
+util.print("{GClan tells are now visible in the main output.")
+elseif GetTriggerOption ("send_clan", "omit_from_output") == 0 then
+SetTriggerOption ("send_clan", "omit_from_output", 1)
+SetVariable("clan_visible", "No")
+util.print("{GClan tells are now hidden from the main output.")
+end
 </send></alias>
 <alias enabled="y"
     sequence="100"
@@ -452,6 +477,14 @@ print("Date Format: ", date_format)
    omit_from_output="n">
 </trigger>
 <trigger
+   enabled="y"
+   name="send_clan"
+   match="* Clans '*'"
+   script="clan"
+   sequence="100"
+   omit_from_output="n">
+</trigger>
+<trigger
     enabled="y"
     name="get_grats"
     match="* grats '*'"
@@ -709,6 +742,7 @@ info_tab = GetVariable("info_tab") or "1"
 discord_tab = GetVariable("discord_tab") or "1"
 shout_tab = GetVariable("shout_tab") or "1"
 yell_tab = GetVariable("yell_tab") or "1"
+clan_tab = GetVariable("clan_tab") or "1"
 date_format = GetPluginVariable("b555825a4a5700c35fa80780", "date_format") or "%b %d %I:%M:%S%p"    -- Gets date_format variable from the Chat Window itself.
 tells_visible = GetVariable("tells_visible") or "Yes"
 grats_visible = GetVariable("grats_visible") or "Yes"
@@ -721,6 +755,7 @@ info_visible = GetVariable("info_visible") or "Yes"
 discord_visible = GetVariable("discord_visible") or "Yes"
 shout_visible = GetVariable("shout_visible") or "Yes"
 yell_visible = GetVariable("yell_visible") or "Yes"
+clan_visible = GetVariable("clan_visible") or "Yes"
 all_visible = GetVariable("all_visible") or "Yes"
 
 ----------------------------------------------------------------------------------------------------------
@@ -750,6 +785,7 @@ SetTriggerOption ("send_quote", "omit_from_output", 0)
 SetTriggerOption ("get_quote", "omit_from_output", 0)
 SetTriggerOption ("send_grats", "omit_from_output", 0)
 SetTriggerOption ("get_grats", "omit_from_output", 0)
+SetTriggerOption ("send_clan", "omit_from_output", 0)
 SetVariable("yell_visible", "Yes")
 SetVariable("shout_visible", "Yes")
 SetVariable("info_visible", "Yes")
@@ -761,6 +797,7 @@ SetVariable("grouptell_visible", "Yes")
 SetVariable("quote_visible", "Yes")
 SetVariable("grats_visible", "Yes")
 SetVariable("tells_visible", "Yes")
+SetVariable("clan_visible", "Yes")
 SetVariable("all_visible", "Yes")
 util.print("{GAll channels are now visible in the main output.")
 end
@@ -786,6 +823,7 @@ SetTriggerOption ("send_quote", "omit_from_output", 1)
 SetTriggerOption ("get_quote", "omit_from_output", 1)
 SetTriggerOption ("send_grats", "omit_from_output", 1)
 SetTriggerOption ("get_grats", "omit_from_output", 1)
+SetTriggerOption ("send_clan", "omit_from_output", 1)
 SetVariable("yell_visible", "No")
 SetVariable("shout_visible", "No")
 SetVariable("info_visible", "No")
@@ -797,6 +835,7 @@ SetVariable("grouptell_visible", "No")
 SetVariable("grats_visible", "No")
 SetVariable("tells_visible", "No")
 SetVariable("quote_visible", "No")
+SetVariable("clan_visible", "No")
 SetVariable("all_visible", "No")
 util.print("{GAll channels are now hidden from the main output.")
 end
@@ -823,6 +862,7 @@ SetTriggerOption ("send_quote", "omit_from_output", 0)
 SetTriggerOption ("get_quote", "omit_from_output", 0)
 SetTriggerOption ("send_grats", "omit_from_output", 0)
 SetTriggerOption ("get_grats", "omit_from_output", 0)
+SetTriggerOption ("send_clan", "omit_from_output", 0)
 SetVariable("yell_visible", "Yes")
 SetVariable("shout_visible", "Yes")
 SetVariable("info_visible", "Yes")
@@ -834,6 +874,7 @@ SetVariable("grouptell_visible", "Yes")
 SetVariable("quote_visible", "Yes")
 SetVariable("grats_visible", "Yes")
 SetVariable("tells_visible", "Yes")
+SetVariable("clan_visible", "Yes")
 SetVariable("all_visible", "Yes")
 util.print("{GAll channels are now visible in the main output.")
 elseif GetTriggerOption ("send_yell", "omit_from_output") == 0 then
@@ -857,6 +898,7 @@ SetTriggerOption ("send_quote", "omit_from_output", 1)
 SetTriggerOption ("get_quote", "omit_from_output", 1)
 SetTriggerOption ("send_grats", "omit_from_output", 1)
 SetTriggerOption ("get_grats", "omit_from_output", 1)
+SetTriggerOption ("send_clan", "omit_from_output", 1)
 SetVariable("yell_visible", "No")
 SetVariable("shout_visible", "No")
 SetVariable("info_visible", "No")
@@ -868,6 +910,7 @@ SetVariable("grouptell_visible", "No")
 SetVariable("grats_visible", "No")
 SetVariable("tells_visible", "No")
 SetVariable("quote_visible", "No")
+SetVariable("clan_visible", "No")
 SetVariable("all_visible", "No")
 util.print("{GAll channels are now hidden from the main output.")
 end
@@ -880,6 +923,12 @@ function tracker (name, line, wildcards, styles)
 end -- tracker tab
   
 function tells (name, line, wildcards, styles)
+    -- print ("name = " .. name)
+    tab = GetVariable("tells_tab") or "1"
+   a, b = CallPlugin("b555825a4a5700c35fa80780", "storeFromOutside", os.date(GetPluginVariable("b555825a4a5700c35fa80780", "date_format")) .. StylesToColours(styles), tab)
+end -- tells tab
+
+function clan (name, line, wildcards, styles)
     -- print ("name = " .. name)
     tab = GetVariable("tells_tab") or "1"
    a, b = CallPlugin("b555825a4a5700c35fa80780", "storeFromOutside", os.date(GetPluginVariable("b555825a4a5700c35fa80780", "date_format")) .. StylesToColours(styles), tab)
@@ -965,6 +1014,7 @@ function commcheck()
       util.print("{Y            Tells             {R-->           {Y" .. GetVariable("tells_tab") .."            " .. GetVariable("tells_visible"))
       util.print("{Y            Info              {R-->           {Y" .. GetVariable("info_tab") .."            " .. GetVariable("info_visible"))
       util.print("{Y            Says              {R-->           {Y" .. GetVariable("says_tab") .."            " .. GetVariable("says_visible"))
+      util.print("{Y            Clan              {R-->           {Y" .. GetVariable("clan_tab") .."            " .. GetVariable("clan_visible"))
       util.print("{Y            Yell              {R-->           {Y" .. GetVariable("yell_tab") .."            " .. GetVariable("yell_visible"))
       util.print("{Y            OOC               {R-->           {Y" .. GetVariable("ooc_tab") .."            " .. GetVariable("ooc_visible"))
       util.print("")
