@@ -14,7 +14,7 @@ language="Lua"
 purpose="Affects Window"
 date_written="2019-07-03 12:04:56"
 requires="5.00"
-version="5.76"
+version="0.65"
 >
 
 </plugin>
@@ -146,7 +146,7 @@ version="5.76"
 	   ["protect"] = "protect",
 	   ["charge"] = "charge",
 	   ["power surge"] = "power_surge",
-       ["attack up"] = "attackup",
+	   ["attack up"] = "attackup",
 	   ["hungry"] = "hungry",
 	   ["thirsty"] = "thirsty"}
 
@@ -611,6 +611,14 @@ version="5.76"
 	   -- nothing
 	end
 
+	function SaveState()
+	   SetVariable("pos_x", pos_x)
+	   SetVariable("pos_y", pos_y)
+	   SetVariable("win_width", win_width)
+	   SetVariable("win_height", win_height)
+	   SetVariable("debug", tostring(debug))
+	end
+
 	function OnPluginEnable()
 	   --DebugNote("enabled")
 	   window(true)
@@ -625,11 +633,24 @@ version="5.76"
 	end
 
 	function OnPluginSaveState()
-	   SetVariable("pos_x", pos_x)
-	   SetVariable("pos_y", pos_y)
-	   SetVariable("win_width", win_width)
-	   SetVariable("win_height", win_height)
-	   SetVariable("debug", tostring(debug))
+	   SaveState()
+	end
+
+	function OnPluginWorldSave()
+	   SaveState()
+	end
+
+	function OnPluginDisable()
+	   SaveState()
+	end
+
+	function OnPluginDisconnect()
+	   SaveState()
+	end
+
+	-- For saving state when reloading w/ bast's plugins plugin
+	function OnPluginListChanged()
+	   SaveState()
 	end
 
 	window(true)
