@@ -1,1 +1,0 @@
-Copy the contents of affects folder to /worlds/plugins/images/affects
