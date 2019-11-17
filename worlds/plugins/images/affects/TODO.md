@@ -41,8 +41,6 @@ Fix resize grabber \*
 
 multiple deliniated rows of different status types? \*\*
 
-Handle broth...imms won't fix bug probably \*
-
 Overlay timing info on icons \*\*\*
 
 
