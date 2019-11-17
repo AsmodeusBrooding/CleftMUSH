@@ -97,15 +97,6 @@ version="0.7"
   </trigger>
   <trigger
       enabled="y"
-      match="You drink (?<affect>broth) .*?$"
-      regexp="y"
-      send_to="12"
-      sequence="100"
-      script="RemoveAffect"
-      >
-  </trigger>
-  <trigger
-      enabled="y"
       match="Your (magical )?(?<affect>charge) (dissipates|wears off)."
       regexp="y"
       send_to="12"
@@ -272,8 +263,6 @@ version="0.7"
 		 match = "hungry"
 	      elseif (match:lower() == "thirst") then
 		 match = "thirsty"
-	      elseif (match:lower() == "broth") then
-		 match = "both"
 	      end -- if
 	      return match
 	end
@@ -307,15 +296,6 @@ version="0.7"
 	      affect = wildcards["affect"]
 	      affect = FixWildcardsForHungerThirst(affect)
 	      affect = affect:lower()
-	      -- Handle broth
-	      if (affect == "both") then
-		 DebugNote("Handling Broth")
-		 wildcards["affect"] = "hunger"
-		 RemoveAffect(name, line, wildcards)
-		 wildcards["affect"] = "thirsty"
-		 RemoveAffect(name, line, wildcards)
-		 do return end
-	      end -- if
 	      DebugNote(affect)
 	      local k, v = FindAffectInInfos(affect)
 	      DebugNote("k:" .. tostring(k))

@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!DOCTYPE muclient>
+<!-- MuClient version 5.07-pre -->
+<!-- Written by Nick Gammon -->
+<!-- Home Page: http://www.mushclient.com/ -->
+
+<!-- Plugin state saved. Plugin: "CleftMUSH_Big_Gauges". World: "Cleft of Dimensions". -->
+
+<muclient>
+
+<!-- variables -->
+
+<variables
+   muclient_version="5.07-pre"
+   world_file_version="15"
+  >
+  <variable name="aard_theme_just_reloading">1</variable>
+  <variable name="enemy_color">#ff0000</variable>
+  <variable name="exp_color">#9400d3</variable>
+  <variable name="hp_color">#00ff00</variable>
+  <variable name="mana_color">#3333ff</variable>
+  <variable name="moves_color">#ffd700</variable>
+  <variable name="pos_x">1</variable>
+  <variable name="pos_y">200</variable>
+  <variable name="super_color">#00ffff</variable>
+  <variable name="win_height">111</variable>
+  <variable name="win_width">839</variable>
+</variables>
+</muclient>

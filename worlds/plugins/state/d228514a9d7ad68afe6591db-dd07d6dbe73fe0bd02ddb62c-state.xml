@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!DOCTYPE muclient>
+<!-- MuClient version 5.07-pre -->
+<!-- Written by Nick Gammon -->
+<!-- Home Page: http://www.mushclient.com/ -->
+
+<!-- Plugin state saved. Plugin: "CleftMUSH_Mapper". World: "Cleft of Dimensions". -->
+
+<muclient>
+
+<!-- variables -->
+
+<variables
+   muclient_version="5.07-pre"
+   world_file_version="15"
+  >
+  <variable name="DISTANCE_TO_NEXT_ROOM">22</variable>
+  <variable name="OUR_ROOM_COLOUR">255</variable>
+  <variable name="ROOM_SIZE">26</variable>
+  <variable name="aard_theme_just_reloading">1</variable>
+  <variable name="config">config = {
+  SHOW_ROOM_ID = false,
+  DELAY = {
+    time = 0.3,
+    },
+  USE_TEXTURES = {
+    enabled = true,
+    },
+  WINDOW = {
+    height = 404,
+    width = 459,
+    },
+  SCAN = {
+    depth = 300,
+    },
+  FONT = {
+    name = "Dina",
+    size = 8,
+    },
+  SHOW_AREA_EXITS = false,
+  }</variable>
+  <variable name="last_backup">1566992035</variable>
+  <variable name="mw_dd07d6dbe73fe0bd02ddb62c_mapper_windowx">1135</variable>
+  <variable name="mw_dd07d6dbe73fe0bd02ddb62c_mapper_windowy">0</variable>
+</variables>
+</muclient>
