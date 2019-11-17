@@ -1964,8 +1964,7 @@ function note_find (name, line, wildcards)
       v.description = ""
     end -- if no description
 
-    if string.find (v.notes:lower (), fixed_target) or
-       string.find (v.description:lower (), fixed_target) then
+    if ((v.notes ~= nil) and (string.find (v.notes:lower (), fixed_target) or string.find (v.description:lower (), fixed_target))) then
       matches [k] = true
       count = count + 1
     end -- if match
