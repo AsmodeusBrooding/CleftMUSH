@@ -14,7 +14,7 @@ language="Lua"
 purpose="Affects Window"
 date_written="2019-07-03 12:04:56"
 requires="5.00"
-version="0.65"
+version="0.7"
 >
 
 </plugin>
@@ -303,8 +303,8 @@ version="0.65"
 		 DebugNote("Removing " .. tostring(k))
 		 table.remove(infos, k)
 		 affect = string.gsub(affect, " ", "_")
-		 Note(affect)
-		 Note(DeleteTimer(affect))
+		 DebugNote(affect)
+		 DebugNote(DeleteTimer(affect))
 		 window(true) -- Redraw
 	      end
 	   end
