@@ -1,0 +1,12 @@
+## CleftMUSH gitignore ##
+# Ignore state folder
+worlds/plugins/state/
+
+# Ignore db and backups
+CleftOfDimensions.db
+db_backups
+
+# Ignore the symlinks for your MCL file (wine)
+CleftOfDimensions.MCL*
+
+#ignore 
