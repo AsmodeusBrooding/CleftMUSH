@@ -445,17 +445,21 @@ version="0.65"
 	   DebugNote("win_height " .. win_height)
 	   DebugNote("row " .. rows)
 	   DebugNote("col " .. cols)
-	   num_gifs = #infos
-	   movieInfo = info
+	   if (frames ~= 0) then
+	      num_gifs = #infos
+	      movieInfo = info
 
-	   -- Find position
+	      -- Find position
 
-	   x,y = FindNextPos(32)
-	   PlayMovie {
-	      filename = filename,
-	      frames = frames,
-	      x = x,
-	      y = y,}
+	      x,y = FindNextPos(32)
+	      PlayMovie {
+		 filename = filename,
+		 frames = frames,
+		 x = x,
+		 y = y,}
+	   else
+	      ColourNote ("Red", "", "Could not find any frames matching " .. filename)
+	   end
 	end
 
 	function FindNextPos(size)
