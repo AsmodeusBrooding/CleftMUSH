@@ -457,7 +457,8 @@ version="0.65"
 		 frames = frames,
 		 x = x,
 		 y = y,}
-	   else
+	   elseif(not warned_about_missing_files) then
+	      warned_about_missing_files = true
 	      ColourNote ("Red", "", "Could not find any frames matching " .. filename)
 	   end
 	end
