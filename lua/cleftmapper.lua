@@ -795,9 +795,9 @@ area = GetPluginVariable("dd07d6dbe73fe0bd02ddb62c", "area") or "<No_Area>"
 	      WindowDrawImage (win, "rock", left, top, right, bottom, miniwin.image_stretch)  -- stretch to fill
 		  		  		  	 elseif string.match (room.fillcolour, "65280") then
 	      WindowDrawImage (win, "field", left, top, right, bottom, miniwin.image_stretch)  -- stretch to fill
-		  		  		  		 elseif string.match (room.fillcolour, "6316128") and area == "Brigantes Castle" then
-	      WindowDrawImage (win, "inside_brigantes", left, top, right, bottom, miniwin.image_stretch)  -- stretch to fill
-		  		  		  	 elseif string.match (room.fillcolour, "6316128") then
+		  		  		  		 elseif string.match (room.fillcolour, "6316128") and room.area == "Brigantes Castle" then
+	      WindowDrawImage (win, "inside_brigantes", left, top, right, bottom, miniwin.image_stretch)  -- stretch to fill\		              
+		  		  		  	 elseif string.match (room.fillcolour, "6316128") and room.area ~= "Brigantes Castle" then
 	      WindowDrawImage (win, "building", left, top, right, bottom, miniwin.image_stretch)  -- stretch to fill
 		  	                 elseif string.match (room.fillcolour, "65535") then
           WindowDrawImage (win, "desert", left, top, right, bottom, miniwin.image_stretch)  -- stretch to fill
@@ -907,7 +907,8 @@ area = GetPluginVariable("dd07d6dbe73fe0bd02ddb62c", "area") or "<No_Area>"
                                          room.fillbrush = 8  -- medium pattern
 										 				        elseif string.match (room.info, "tavern") then
                                          special_room = true
-		 	                             WindowDrawImage (win, "tavern", left, top, right, bottom, miniwin.image_stretch)  -- stretch to fill
+		 	                             --WindowDrawImage (win, "tavern", left, top, right, bottom, miniwin.image_stretch)  -- stretch to fill
+										 WindowDrawImageAlpha (win, "tavern", left, top, right, bottom)
 				                         WindowCircleOp (win, miniwin.circle_rectangle, left-2-room.borderpenwidth, top-2-room.borderpenwidth,
                                          right+2+room.borderpenwidth, bottom+2+room.borderpenwidth,INN_FILL_COLOUR.colour,
                                          room.borderpen, room.borderpenwidth,-1,miniwin.brush_null)
