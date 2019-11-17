@@ -3,10 +3,11 @@
 worlds/plugins/state/
 
 # Ignore db and backups
-CleftOfDimensions.db
+CleftofDimensions.db
 db_backups
 
-# Ignore the symlinks for your MCL file (wine)
-CleftOfDimensions.MCL*
+# Ignore ALL symlinks (possibly only a wine issue)
+*.lnk
 
-#ignore 
+# Ignore emacs poop
+*#*
