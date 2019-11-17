@@ -41,7 +41,7 @@ version="0.65"
       match="^affects window$"
       enabled="y"
       sequence="100"
-      script="toggle"
+      script="Toggle"
       >
   </alias>
   <alias
@@ -52,23 +52,19 @@ version="0.65"
       script="ToggleDebug"
       >
   </alias>
+  <alias
+      regexp="y"
+      match="^affects window gag prompt"
+      enabled="y"
+      sequence="100"
+      script="TogglePromptGag"
+      >
+  </alias>
 </aliases>
 
 <!--  Triggers  -->
 
 <triggers>
-  <trigger
-   enabled="y"
-   lines_to_match="2"
-   match="\AYou are affected by:\n---------------------------------------------------------\Z"
-   multi_line="y"
-   name="aff_start"
-   script="AffectsListStart"
-   regexp="y"
-   send_to="12"
-   sequence="100"
-  >
-  </trigger>
   <trigger
       enabled="y"
       match="^You are (hungry|thirsty)\.$"
@@ -138,6 +134,7 @@ version="0.65"
 	-- Global Vars
 	infos = {}
 	affects = {}
+	warned_about_missing_files = false
 	-- In game name to filename map
 	affect_icons = {
 	   ["invisibility"] = "invis",
@@ -152,7 +149,16 @@ version="0.65"
 
 	path_prefix = "worlds\\plugins\\images\\affects\\"
 	debug = GetVariable("debug") or false
+	prompt_gag = GetVariable("prompt_gag") or false
 	pulse_length = 4
+
+	function NotifyNote(message)
+	      ColourNote ("Green", "", message)
+	end
+
+	function ErrorNote(message)
+	      ColourNote ("Red", "", message)
+	end
 
 	function DebugNote(message)
 	   if(debug) then
@@ -160,7 +166,7 @@ version="0.65"
 	   end
 	end
 
-	function toggle()
+	function Toggle()
 	   window_visible = not window_visible
 	   if not window_visible then -- remove window
 	      WindowDelete(winid)
@@ -171,15 +177,28 @@ version="0.65"
 
 	function ToggleDebug()
 	   debug = not debug
-	   Note("Debug is now " .. tostring(debug))
+	   NotifyNote("Debug is now " .. tostring(debug))
+	   SaveState()
+	end
+
+	function TogglePromptGag()
+	   prompt_gag = not prompt_gag
+	   stringified = not prompt_gag and "enabled" or "disabled"
+	   NotifyNote("Prompts will now be " .. stringified)
+	   SetupAffectTriggers()
 	   SaveState()
 	end
 
 	function AffectsListStart(name, line, wildcards)
 	   DebugNote("got start of Affects")
-	   AddTriggerEx("GRAB_SPELLS_TIME", "^(.*?) +(?:modifies .*? -?\\d+ )?for (\\d+) pulses.*?$", "", trigger_flag.Enabled + trigger_flag.RegularExpression, custom_colour.NoChange, 0, "", "AddAffectTimed", 0, 100)
-	   AddTriggerEx("GRAB_SPELLS_INDEFINITELY", "^(.*?) +(indefinitely).*$", "", trigger_flag.Enabled + trigger_flag.RegularExpression, custom_colour.NoChange, 0, "", "AddAffect", 0, 100)
-	   AddTriggerEx("AFF_END", "---------------------------------------------------------", "", trigger_flag.Enabled + trigger_flag.OneShot, custom_colour.NoChange, 0, "", "AffectsListEnd", 0, 100)
+	   EnableTrigger("aff_start_2", false)
+	   flags = trigger_flag.Enabled + trigger_flag.RegularExpression
+	   if (prompt_gag) then
+	      flags = flags + trigger_flag.OmitFromOutput
+	   end
+	   AddTriggerEx("GRAB_SPELLS_TIME", "^(.*?) +(?:modifies .*? -?\\d+ )?for (\\d+) pulses.*?$", "", flags, custom_colour.NoChange, 0, "", "AddAffectTimed", 0, 100)
+	   AddTriggerEx("GRAB_SPELLS_INDEFINITELY", "^(.*?) +(indefinitely).*$", "", flags, custom_colour.NoChange, 0, "", "AddAffect", 0, 100)
+	   AddTriggerEx("AFF_END", "---------------------------------------------------------", "", flags + trigger_flag.OneShot, custom_colour.NoChange, 0, "", "AffectsListEnd", 0, 100)
 	end -- AffectsListStart
 
 	function AffectsListEnd(name, line, wildcards)
@@ -355,9 +374,9 @@ version="0.65"
 	      if not WindowImageInfo(winid, filename, 2) then
 		 local result = WindowLoadImage(winid, filename, filename)
 		 if result ~= error_code.eOK then
-		    ColourNote ("Red", "", "Could not open move frame file:")
-		    ColourNote ("Red", "", "   -> " .. filename)
-		    ColourNote ("Red", "", "   Reason: " .. error_desc [result])
+		    ErrorNote ("Could not open move frame file:")
+		    ErrorNote ("   -> " .. filename)
+		    ErrorNote ("   Reason: " .. error_desc [result])
 		    gotErrors = true
 		 end -- if
 	      end -- if
@@ -388,7 +407,7 @@ version="0.65"
 	   local filename = string.format (movieInfo.filename, movieInfo.currentFrame)
 	   if WindowDrawImage (winid, filename, movieInfo.x, movieInfo.y, 0, 0,
 			       miniwin.image_copy) ~= error_code.eOK then
-	      ColourNote ("Orange", "", "Could not draw image: " .. filename)
+	      ErrorNote ("Could not draw image: " .. filename)
 	   end -- if
 	   Redraw () -- force screen update
 
@@ -459,7 +478,7 @@ version="0.65"
 		 y = y,}
 	   elseif(not warned_about_missing_files) then
 	      warned_about_missing_files = true
-	      ColourNote ("Red", "", "Could not find any frames matching " .. filename)
+	      ErrorNote ("Could not find any frames matching " .. filename)
 	   end
 	end
 
@@ -622,6 +641,21 @@ version="0.65"
 	   SetVariable("win_width", win_width)
 	   SetVariable("win_height", win_height)
 	   SetVariable("debug", tostring(debug))
+	   SetVariable("prompt_gag", tostring(prompt_gag))
+	end
+
+	function SetupAffectTriggers()
+	   DebugNote("function SetupAffectTriggers()")
+	   flags = trigger_flag.Enabled + trigger_flag.RegularExpression
+	   if (prompt_gag) then
+	      flags = flags + trigger_flag.OmitFromOutput
+	   end
+	   DebugNote(flags)
+	   DebugNote(prompt_gag)
+	   DebugNote(DeleteTrigger("aff_start_1"))
+	   DebugNote(DeleteTrigger("aff_start_2"))
+	   DebugNote(AddTriggerEx("aff_start_1", "^You are affected by:$", "", flags, custom_colour.NoChange, 0, "", "enable_aff_start_2", 0, 100))
+	   DebugNote(AddTriggerEx("aff_start_2", "---------------------------------------------------------", "", flags - trigger_flag.Enabled, custom_colour.NoChange, 0, "", "AffectsListStart", 0, 100))
 	end
 
 	function OnPluginEnable()
@@ -635,6 +669,15 @@ version="0.65"
 
 	function OnPluginClose()
 	   WindowDelete(winid)
+	end
+
+	function enable_aff_start_2()
+	   DebugNote(EnableTrigger("aff_start_2", true))
+	end
+
+	function OnPluginConnect()
+	   DebugNote("OnPluginConnect")
+	   SetupAffectTriggers()
 	end
 
 	function OnPluginSaveState()
