@@ -224,7 +224,13 @@ util.print("{R--------------------------------------------------")
    enabled="y"
    regexp="y"
    send_to="14"
-><send>our_room_colour()</send></alias>
+><send>config_our_room_colour()</send></alias>
+<alias
+   match="^mapper config notecolor$"
+   enabled="y"
+   regexp="y"
+   send_to="14"
+><send>config_note_colour()</send></alias>
  <alias
    match="mapper goto *"
    enabled="y"
@@ -927,6 +933,7 @@ local DIFFERENT_AREA_COLOUR = "#ff0000"
 areaname = -999
 last_direction_moved = nil
 OUR_ROOM_COLOUR = tonumber(GetVariable("OUR_ROOM_COLOUR")) or 0x0000FF
+NOTE_ROOM_COLOUR = tonumber(GetVariable("NOTE_ROOM_COLOUR")) or 0x90EE90
 shownotes = ((GetVariable("shownotes") or "1") == "1") -- default true
 tile_mode = ((GetVariable("tile_mode") or "1") == "1") -- default true
 count = 0
@@ -1739,11 +1746,20 @@ end -- if
 
 end -- get_room
 
-function our_room_colour ()
+function config_our_room_colour ()
 		local clr = PickColour(OUR_ROOM_COLOUR or 0)
 		if clr ~= -1 then
 			OUR_ROOM_COLOUR = clr
             mapper.OUR_ROOM_COLOUR.colour = clr
+			SaveState()
+		end
+end
+
+function config_note_colour ()
+		local clr = PickColour(NOTE_ROOM_COLOUR)
+		if clr ~= -1 then
+			NOTE_ROOM_COLOUR = clr
+            mapper.NOTE_ROOM_COLOUR.colour = clr
 			SaveState()
 		end
 end
@@ -1782,7 +1798,8 @@ return
     --  { name = "(NOT-YET-IMPLEMENTED)Add Exit",    func = room_add_exit} ,
       { name = "Change Exit", func = room_change_exit} ,
       { name = "Delete Current Room", func = delete_room_click} ,
-	  { name = "Current Room Border Color", func = our_room_colour} ,
+	  { name = "Current Room Border Color", func = config_our_room_colour} ,
+	  { name = "Note Room Border Color", func = config_note_colour} ,
       { name = "Toggle Graphical Tiles", func = tile_toggle} ,
       { name = "-", } ,
       { name = checkmark ("shop")  .. "Mark as Weapon Shop",   func = room_toggle_weaponshop } ,
@@ -2466,6 +2483,7 @@ function OnPluginSaveState ()
   SetVariable ("config", "config = " .. serialize.save_simple (config))
   SetVariable("last_backup", last_backup)
 SetVariable("OUR_ROOM_COLOUR", OUR_ROOM_COLOUR) -- Color of Room Border
+SetVariable("NOTE_ROOM_COLOUR", NOTE_ROOM_COLOUR) -- Color of Room Border
    SetVariable("shownotes", shownotes and "1" or "0")
    SetVariable("tile_mode", tile_mode and "1" or "0")
 end -- OnPluginSaveState

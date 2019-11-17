@@ -193,7 +193,7 @@ BACKGROUND_COLOUR             = { name = "Area Background",  colour =  ColourNam
 ROOM_COLOUR                   = { name = "Room",             colour =  ColourNameToRGB "#dcdcdc"}
 EXIT_COLOUR                   = { name = "Exit",             colour =  ColourNameToRGB "#e0ffff"}
 EXIT_COLOUR_UP_DOWN           = { name = "Exit up/down",     colour =  ColourNameToRGB "#ffb6c1"}
-ROOM_NOTE_COLOUR              = { name = "Room notes",       colour =  ColourNameToRGB "lightgreen"}
+NOTE_ROOM_COLOUR              = { name = "Room notes",       colour =  tonumber(GetPluginVariable("7c54b861a8cd3c4745c28834", "NOTE_ROOM_COLOUR")) or 0xFF }
 UNKNOWN_ROOM_COLOUR           = { name = "Unknown room",     colour =  ColourNameToRGB "#8b0000"}
 DIFFERENT_AREA_COLOUR         = { name = "Another area",     colour =  ColourNameToRGB "#ff0000"}
 PK_BORDER_COLOUR              = { name = "PK border",        colour =  ColourNameToRGB "red"}
@@ -748,7 +748,7 @@ local function draw_room (uid, path, x, y)
       -- mark rooms with notes
       if room.notes ~= nil and room.notes ~= "" then
          WindowCircleOp (win, miniwin.circle_rectangle, left-1-room.borderpenwidth, top-1-room.borderpenwidth,
-            right+1+room.borderpenwidth, bottom+1+room.borderpenwidth,ROOM_NOTE_COLOUR.colour,
+            right+1+room.borderpenwidth, bottom+1+room.borderpenwidth,NOTE_ROOM_COLOUR.colour,
             room.borderpen, room.borderpenwidth,-1,miniwin.brush_null)
       end
    end -- if
