@@ -8,6 +8,3 @@ db_backups
 
 # Ignore ALL symlinks (possibly only a wine issue)
 *.lnk
-
-# Ignore emacs poop
-*#*
