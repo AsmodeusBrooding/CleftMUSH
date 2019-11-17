@@ -218,7 +218,7 @@ end -- function gauge_hide
 
 function DoGauge (sPrompt, current, max, Colour)
 
-  if max <= 0 then 
+  if (max <= 0 or current == nil) then
     return 
   end -- no divide by zero
   
