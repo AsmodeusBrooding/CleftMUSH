@@ -427,7 +427,10 @@ function right_click_menu()
 
 	local str = "!"
 	
-		str = str..">Colors|HP|Mana|Moves|Exp|Enemy|Super"
+		str = str..">Colors|HP|Mana|Moves|Exp|Enemy|Super|<"
+		 str = str.."|-|Bring to Front"
+
+         str = str.."|-|Send to Back"
 
 	
 	opt = WindowMenu(winid, x, y, str)
@@ -474,6 +477,14 @@ function right_click_menu()
 			super_color = RGBColourToName(clr)
 			SaveState()
 		end
+		elseif opt == 7 then -- Bring to Front
+        CallPlugin("462b665ecb569efbf261422f","boostMe", winid)
+      --  print("Bring to Front")
+        SaveState()
+elseif opt == 8 then -- Send to back
+        CallPlugin("462b665ecb569efbf261422f","dropMe", winid)
+      --  print("Sent to Back")
+        SaveState()
 	end
 	window(true)
 end
@@ -531,6 +542,8 @@ function window(redraw)
 		WindowFont(winid, "b1", font_name, font_size, true, false, false, false)
 		WindowFont(winid, "s1", font_name, font_size - 1, false, false, false, false)
 		movewindow.install(winid, 6, 2, true, nil, {mouseup=MouseUp, mousedown=MouseDown, dragmove=LeftClickOnly, dragrelease=LeftClickOnly})
+		    -- register with the z-order monitor
+CallPlugin("462b665ecb569efbf261422f", "registerMiniwindow", winid)
 		movewindow.add_drag_handler (winid, 0, 0, 0, win_height)
 		WindowAddHotspot(winid, "resize", win_width - grip_resize, win_height - grip_resize, win_width, win_height, "MouseOver", "CancelMouseOver", "MouseDown", "", "MouseUp", "", 6, 0)
 		WindowDragHandler(winid, "resize", "ResizeMoveCallback", "ResizeReleaseCallback", 0)
