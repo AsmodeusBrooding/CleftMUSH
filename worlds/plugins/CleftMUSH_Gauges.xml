@@ -24,7 +24,7 @@ Your prompt needs to be set like this:
 
 <HP:%h/%H MP:%m/%M MV:%v/%V Enemy:%o TNL:%X> SUPER: %A]%c
 Previous $\<HP:(\d+)\/(\d+) MP:(\d+)\/(\d+) MV:(\d+)\/(\d+) Enemy:(.*) TNL:(\d+) SUPER: (\d+)\>$
- 
+
 ]]>
 </description>
 
@@ -219,11 +219,11 @@ end -- function gauge_hide
 function DoGauge (sPrompt, current, max, Colour)
 
   if (max <= 0 or current == nil) then
-    return 
+    return
   end -- no divide by zero
-  
+
   -- fraction in range 0 to 1
-  local Fraction = math.min (math.max (current / max, 0), 1) 
+  local Fraction = math.min (math.max (current / max, 0), 1)
 	--WindowRectOp(winid, 2, 0, 0, 0, 22, ColourNameToRGB(title_bg_color)) -- title background
 	--WindowRectOp(winid, 1, 0, 0, 0, 0, ColourNameToRGB(player_border_color)) -- border
 
@@ -231,37 +231,37 @@ function DoGauge (sPrompt, current, max, Colour)
 
 	--Theme.Draw3DRect(winid, 0, 0, 0, 0, depressed) -- themed window
 	Theme.DrawBorder(winid) -- theme window border
-   
+
   local width = WindowTextWidth (winid, font_id, sPrompt)
-  
+
   WindowText (winid, font_id, sPrompt, gauge_left - width, vertical, 0, 0, Colour)
 
-  
+
   local gauge_width = (win_width - gauge_left - 5) * Fraction
-  
-   -- box size must be > 0 or WindowGradient fills the whole thing 
+
+   -- box size must be > 0 or WindowGradient fills the whole thing
   if math.floor (gauge_width) > 0 then
-    
+
     -- top half
-    WindowGradient (winid, gauge_left, vertical, gauge_left + gauge_width, vertical + GAUGE_HEIGHT / 2, 
+    WindowGradient (winid, gauge_left, vertical, gauge_left + gauge_width, vertical + GAUGE_HEIGHT / 2,
                     0x000000,
-                    Colour, 2) 
-    
+                    Colour, 2)
+
     -- bottom half
-    WindowGradient (winid, gauge_left, vertical + GAUGE_HEIGHT / 2, 
-                    gauge_left + gauge_width, vertical +  GAUGE_HEIGHT,   
+    WindowGradient (winid, gauge_left, vertical + GAUGE_HEIGHT / 2,
+                    gauge_left + gauge_width, vertical +  GAUGE_HEIGHT,
                     Colour,
                     0x000000,
-                    2) 
+                    2)
 
   end -- non-zero
-  
+
   -- show ticks
   local ticks_at = (win_width - gauge_left - 5) / (NUMBER_OF_TICKS + 1)
-  
+
   -- ticks
   for i = 1, NUMBER_OF_TICKS do
-    WindowLine (winid, gauge_left + (i * ticks_at), vertical, 
+    WindowLine (winid, gauge_left + (i * ticks_at), vertical,
                 gauge_left + (i * ticks_at), vertical + GAUGE_HEIGHT, ColourNameToRGB ("silver"), 0, 1)
   end -- for
 
@@ -277,16 +277,16 @@ function DoGauge (sPrompt, current, max, Colour)
                              gauge_left + 1, vertical, 0, 0, ColourNameToRGB ("white"))
 
 -- draw a box around it
-  WindowRectOp (winid, 1, gauge_left, vertical, win_width - 5, vertical + GAUGE_HEIGHT, 
+  WindowRectOp (winid, 1, gauge_left, vertical, win_width - 5, vertical + GAUGE_HEIGHT,
           ColourNameToRGB(player_border_color))  -- frame entire box
 	--WindowRectOp(winid, 1, gauge_left, vertical, 0, 0, ColourNameToRGB(player_border_color)) -- border
-  
+
   -- mouse-over information: add hotspot if not there
   if not WindowHotspotInfo(winid, sPrompt, 1) then
   end -- if
-  
+
   -- store numeric values in case they mouse over it
-  WindowHotspotTooltip(winid, sPrompt, string.format ("%s\t%i / %i (%i%%)", 
+  WindowHotspotTooltip(winid, sPrompt, string.format ("%s\t%i / %i (%i%%)",
                         sPrompt, current, max, Fraction * 100) )
     Theme.AddResizeTag(winid, 1, nil, nil, "MouseDown", "ResizeMoveCallback", "ResizeReleaseCallback")
   vertical = vertical + font_size + 9
@@ -303,7 +303,7 @@ function do_prompt (name, line, wildcards)
 
   -- fill entire box to clear it
 	WindowRectOp(winid, 2, 2, 1, -2, -2, ColourNameToRGB(bg_color)) -- blank canvas
-  
+
   -- Edge around box rectangle
   check (WindowCircleOp (winid, 3, 0, 0, 0, 0, ColourNameToRGB(bar_border), 0, 2, 0, 1))
 
@@ -312,27 +312,27 @@ function do_prompt (name, line, wildcards)
   DoGauge ("HP: ",    hp ,   max_hp,    ColourNameToRGB(hp_color))
   DoGauge ("Mana: ",  mana,  max_mana,  ColourNameToRGB(mana_color))
   DoGauge ("Move: ",  move,  max_move,  ColourNameToRGB(moves_color))
- 
+
   if exp ~= nil then
   DoGauge ("Exp: ", exp , max_exp, ColourNameToRGB(exp_color))
-else 
-if lastlearn==nil or os.time() - lastlearn > 15 then 
+else
+if lastlearn==nil or os.time() - lastlearn > 15 then
 Send("learn")
 lastlearn=os.time()
 end
-  end 
-  if enemy ~= nil then 
+  end
+  if enemy ~= nil then
 DoGauge ("Enemy: ",  enemy,  max_enemy,  ColourNameToRGB(enemy_color))
 end
 if super ~= nil then
 DoGauge ("Super: ",  super,  max_super,  ColourNameToRGB(super_color))
 end
      WindowShow (win, ShowWindow)
-  
 
 
 
-  
+
+
 end -- function do_prompt
 
 
@@ -340,7 +340,7 @@ function OnPluginInstall ()
 window(true)
     win = GetPluginID ()
   font_id = "fn"
-  
+
   require "movewindow"  -- load the movewindow.lua module
 
    -- register with the z-order monitor
@@ -349,9 +349,9 @@ window(true)
   -- install the window movement handler, get back the window position
 		WindowPosition(winid, pos_x, pos_y, 0, 2)
  windowinfo = movewindow.install (win, miniwin.pos_top_right, miniwin.create_absolute_location, true, {mouseup=MouseUp, mousedown=MouseDown, dragmove=LeftClickOnly, dragrelease=LeftClickOnly})
-      
-    
-  
+
+
+
   WindowFont (winid, font_id, font_name, 9)
   -- work out how far in to start the gauge
   gauge_left =                        WindowTextWidth (winid, font_id, "HP: ")
@@ -359,17 +359,17 @@ window(true)
   gauge_left = math.max (gauge_left,  WindowTextWidth (winid, font_id, "Move: "))
   gauge_left = math.max (gauge_left,  WindowTextWidth (winid, font_id, "Enemy: "))
   gauge_left = math.max (gauge_left,  WindowTextWidth (winid, font_id, "Super: "))
-  
+
   gauge_left = gauge_left + 5  -- allow gap from edge
-    
+
   if GetVariable ("enabled") == "false" then
     ColourNote ("yellow", "", "Warning: Plugin " .. GetPluginName ().. " is currently disabled.")
     check (EnablePlugin(GetPluginID (), false))
   end -- they didn't enable us last time
 end
-ShowWindow = true 
-if GetVariable("win_shown") == "false" then ShowWindow = false 
- 
+ShowWindow = true
+if GetVariable("win_shown") == "false" then ShowWindow = false
+
 end -- OnPluginInstall
 
 function ResizeMoveCallback()
@@ -384,11 +384,11 @@ function ResizeMoveCallback()
 		  window(false)
 	end
 end
- 
+
 function ResizeReleaseCallback()
 	--Note("ResizeReleaseCallback")
 	--window(true)
-	SendNoEcho("pbust %%")
+	SendNoEcho("pbust %")
 	SaveState()
 end
 
@@ -412,18 +412,18 @@ function right_click_menu()
 	local x, y = WindowInfo(winid, 14), WindowInfo(winid, 15)
 
 	local str = "!"
-	
+
 		str = str..">Colors|HP|Mana|Moves|Exp|Enemy|Super"
 
-	
+
 	opt = WindowMenu(winid, x, y, str)
-	
+
 	if opt == "" then
 		return
 	end
-	
+
 	opt = tonumber(opt)
-	
+
 	if opt == 1 then -- hp color
 		local clr = PickColour(ColourNameToRGB(hp_color))
 		if clr ~= -1 then
@@ -494,7 +494,7 @@ end -- OnPluginDisable
 function OnPluginEnable()
 	--Note("enabled")
 	window(true)
-  
+
   -- draw gauge again if possible
   if hp and max_hp and mana and max_mana and move and max_move then
     do_prompt ("", "", { hp, max_hp, mana, max_mana, move, max_move } )
@@ -504,7 +504,7 @@ function window(redraw)
 	if not window_visible then
 		return
 	end
-	
+
 	if redraw then
 		--Note("redraw")
 		WindowDelete("winid")
@@ -523,11 +523,11 @@ function window(redraw)
 		WindowMoveHotspot(winid, "resize", win_width - grip_resize, win_height - grip_resize, win_width, win_height)
 	end
 	WindowShow(winid, ShowWindow)
-	
+
 end
 
 function OnPluginSaveState ()
-   -- save window current location for next time  
+   -- save window current location for next time
 	SetVariable("pos_x", pos_x)
 	SetVariable("pos_y", pos_y)
 	SetVariable("win_width", win_width)
