@@ -7,7 +7,7 @@
 <muclient>
 <plugin
 name="CleftMUSH_Affects_Window"
-author="Glade, Asmodeus"
+author="Elisius, Asmodeus"
 id="353de94ba6c43260d839e256"
 save_state="y"
 language="Lua"
