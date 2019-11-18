@@ -26,22 +26,21 @@ PUT IDEAS OF THINGS TO DO  IN  HERE, ALONG WITH A PRIORITY
 
    (NUMBER) is priority [Y] or [N] is if you know how to do it already
 
+- [ ]\(1\)\[N\] DO Fix cexits to prioritize non cardinal/intercardinal directions
 
-"IMPORTANT" (1)[N] DO Fix cexits to prioritize non cardinal/intercardinal directions
+- [ ]\(3\)\[Y\] DO Create troubleshooting help page and client help page
 
-- [ ](3)[Y] DO Create troubleshooting help page and client help page
+- [ ]\(5\)\[Y\] DO Add classes to group window, MAYBE with icons
 
-- [ ](5)[Y] DO Add classes to group window, MAYBE with icons
+- [ ]\(5\)\[Y\] DO fix "logging to file" on chat window: this will probably finish the window
 
-- [ ](5)[Y] DO fix "logging to file" on chat window: this will probably finish the window
+- [ ]\(5\)\[Y\] DO Add Bring to front/send to back functionality to all windows
 
-- [ ](5)[Y] DO Add Bring to front/send to back functionality to all windows
+- [ ]\(5\)\[Y\] DO Make non-graphical map special rooms show hashes and such
 
-- [ ](5)[Y] DO Make non-graphical map special rooms show hashes and such
+- [x]\(5\)\[Y\] DO Make action bar stay hidden if you have hidden it
 
-- [x](5) DO Make action bar stay hidden if you have hidden it
-
-- [ ](5)[Y] DO Make volume settings save  Use SetVariable and GetVariable
+- [ ]\(5\)\[Y\] DO Make volume settings save  Use SetVariable and GetVariable
 
   Will need to GetVariable every time you logon or reconnect, so it
 
