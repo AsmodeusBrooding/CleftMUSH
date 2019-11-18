@@ -1,4 +1,3 @@
-
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE muclient>
 
@@ -33,95 +32,102 @@ Previous $\<HP:(\d+)\/(\d+) MP:(\d+)\/(\d+) MV:(\d+)\/(\d+) Enemy:(.*) TNL:(\d+)
 <!--  Triggers  -->
 <triggers>
   <trigger
-   enabled="n"
-   match="^\|\s+HP:(\d+)\/(\d+)\s+\||\s+MP:(\d+)\/(\d+)\s+\||\s+MV:(\d+)\/(\d+)\s+\||\s+Enemy:(.*)\s+\||\s+TNL:(\d+)\s+\||\s+SUPER:\s+(\d+)\|| $"
-   regexp="y"
-   script="do_prompt"
-   sequence="100"
-   send_to="14"
-  >
-<send>exp = max_exp - TNL
-enemy = tonumber("%7")
-TNL = tonumber("%8")
-super = tonumber("%9")
-WindowShow (win, ShowWindow)
-</send>
+      enabled="n"
+      match="^\|\s+HP:(\d+)\/(\d+)\s+\||\s+MP:(\d+)\/(\d+)\s+\||\s+MV:(\d+)\/(\d+)\s+\||\s+Enemy:(.*)\s+\||\s+TNL:(\d+)\s+\||\s+SUPER:\s+(\d+)\|| $"
+      regexp="y"
+      script="do_prompt"
+      sequence="100"
+      send_to="14"
+      >
+    <send>
+      exp = max_exp - TNL
+      enemy = tonumber("%7")
+      TNL = tonumber("%8")
+      super = tonumber("%9")
+      WindowShow (win, ShowWindow)
+    </send>
   </trigger>
-<trigger
-   enabled="y"
-   match="| Remort: * | Level: * |"
-   regexp="n"
-   send_to="14"
-   omit_from_output="y"
-   sequence="99"
-  >
-  <send>
-remorts = tonumber("%1") * 200 - 200
-  </send>
+  <trigger
+      enabled="y"
+      match="| Remort: * | Level: * |"
+      regexp="n"
+      send_to="14"
+      omit_from_output="y"
+      sequence="99"
+      >
+    <send>
+      remorts = tonumber("%1") * 200 - 200
+    </send>
   </trigger>
-<trigger
-   enabled="y"
-   match="| HP:*/* | MP:*/* | MV:*/* | Enemy:*% | TNL:* | SUPER: * | "
-   keep_evaluating="y"
-   regexp="n"
-   script="do_prompt"
-   send_to="14"
-   sequence="100"
-  >
-  <send>
-exp = max_exp - TNL
-enemy = tonumber("%7")
-TNL = tonumber("%8")
-super = tonumber("%9")
-max_exp = remorts + 2000
-     WindowShow (win, ShowWindow)
-  </send>
+  <trigger
+      enabled="y"
+      match="| HP:*/* | MP:*/* | MV:*/* | Enemy:*% | TNL:* | SUPER: * | "
+      keep_evaluating="y"
+      regexp="n"
+      script="do_prompt"
+      send_to="14"
+      sequence="100"
+      >
+    <send>
+      exp = max_exp - TNL
+      enemy = tonumber("%7")
+      TNL = tonumber("%8")
+      super = tonumber("%9")
+      max_exp = remorts + 2000
+      WindowShow (win, ShowWindow)
+    </send>
   </trigger>
-
-<trigger
-   enabled="y"
-   match="| HP:*/* | MP:*/* | MV:*/* | Enemy:None! | TNL:* | SUPER: * | "
-   keep_evaluating="y"
-   regexp="n"
-   send_to="14"
-    script="do_prompt"
-   sequence="100"
-  >
-  <send>
-exp = max_exp - TNL
-enemy = 0
-TNL = tonumber("%7")
-super = tonumber("%8")
-max_exp = remorts + 2000
-     WindowShow (win, ShowWindow)
-  </send>
+  <trigger
+      enabled="y"
+      match="| HP:*/* | MP:*/* | MV:*/* | Enemy:None! | TNL:* | SUPER: * | "
+      keep_evaluating="y"
+      regexp="n"
+      send_to="14"
+      script="do_prompt"
+      sequence="100"
+      >
+    <send>
+      exp = max_exp - TNL
+      enemy = 0
+      TNL = tonumber("%7")
+      super = tonumber("%8")
+      max_exp = remorts + 2000
+      WindowShow (win, ShowWindow)
+    </send>
   </trigger>
-
 </triggers>
-<aliases>
-<alias
-   script="gauge_show"
-   match="gauge show"
-   enabled="y"
-   sequence="100"
-   ignore_case="y"
-></alias>
 
-<alias
-   script="gauge_hide"
-   match="gauge hide"
-   enabled="y"
-   sequence="100"
-   ignore_case="y"
-></alias>
-<alias
-   match="setup prompt"
-   enabled="y"
-   sequence="100"
-   send_to="14"
-   regexp="n"
-   ignore_case="y">
-<send>setup_prompt()</send></alias>
+<!--  Aliases  -->
+
+<aliases>
+    <alias
+	script="gauge_show"
+	match="gauge show"
+	enabled="y"
+	sequence="100"
+	ignore_case="y"
+	>
+    </alias>
+
+    <alias
+	script="gauge_hide"
+	match="gauge hide"
+	enabled="y"
+	sequence="100"
+	ignore_case="y"
+	>
+    </alias>
+    <alias
+	match="setup prompt"
+	enabled="y"
+	sequence="100"
+	send_to="14"
+	regexp="n"
+	ignore_case="y">
+    <send>
+	setup_prompt()
+    </send>
+    </alias>
 </aliases>
 
 
@@ -247,15 +253,15 @@ function DoGauge (sPrompt, current, max, Colour)
 
     -- top half
     WindowGradient (winid, gauge_left, vertical, gauge_left + gauge_width, vertical + GAUGE_HEIGHT / 2,
-                    0x000000,
-                    Colour, 2)
+		    0x000000,
+		    Colour, 2)
 
     -- bottom half
     WindowGradient (winid, gauge_left, vertical + GAUGE_HEIGHT / 2,
-                    gauge_left + gauge_width, vertical +  GAUGE_HEIGHT,
-                    Colour,
-                    0x000000,
-                    2)
+		    gauge_left + gauge_width, vertical +  GAUGE_HEIGHT,
+		    Colour,
+		    0x000000,
+		    2)
 
   end -- non-zero
 
@@ -265,23 +271,23 @@ function DoGauge (sPrompt, current, max, Colour)
   -- ticks
   for i = 1, NUMBER_OF_TICKS do
     WindowLine (winid, gauge_left + (i * ticks_at), vertical,
-                gauge_left + (i * ticks_at), vertical + GAUGE_HEIGHT, ColourNameToRGB ("silver"), 0, 1)
+		gauge_left + (i * ticks_at), vertical + GAUGE_HEIGHT, ColourNameToRGB ("silver"), 0, 1)
   end -- for
 
   -- show actual exp in gauge
 
  WindowText (winid, font_id, string.format ("%i/%i (%i%%)", current, max, Fraction * 100),
-                             gauge_left + 3, vertical + 1, 0, 0, ColourNameToRGB ("black"))
+			     gauge_left + 3, vertical + 1, 0, 0, ColourNameToRGB ("black"))
 
  WindowText (winid, font_id, string.format ("%i/%i (%i%%)", current, max, Fraction * 100),
-                             gauge_left + 2, vertical + 1, 0, 0, ColourNameToRGB ("black"))
+			     gauge_left + 2, vertical + 1, 0, 0, ColourNameToRGB ("black"))
 
  WindowText (winid, font_id, string.format ("%i/%i (%i%%)", current, max, Fraction * 100),
-                             gauge_left + 1, vertical, 0, 0, ColourNameToRGB ("white"))
+			     gauge_left + 1, vertical, 0, 0, ColourNameToRGB ("white"))
 
 -- draw a box around it
   WindowRectOp (winid, 1, gauge_left, vertical, win_width - 5, vertical + GAUGE_HEIGHT,
-          ColourNameToRGB(player_border_color))  -- frame entire box
+	  ColourNameToRGB(player_border_color))  -- frame entire box
 	--WindowRectOp(winid, 1, gauge_left, vertical, 0, 0, ColourNameToRGB(player_border_color)) -- border
 
   -- mouse-over information: add hotspot if not there
@@ -290,7 +296,7 @@ function DoGauge (sPrompt, current, max, Colour)
 
   -- store numeric values in case they mouse over it
   WindowHotspotTooltip(winid, sPrompt, string.format ("%s\t%i / %i (%i%%)",
-                        sPrompt, current, max, Fraction * 100) )
+			sPrompt, current, max, Fraction * 100) )
     Theme.AddResizeTag(winid, 1, nil, nil, "MouseDown", "ResizeMoveCallback", "ResizeReleaseCallback")
   vertical = vertical + font_size + 9
 end -- function DoGauge
@@ -364,9 +370,9 @@ Theme.DrawTitleBar(winid, font_id, title, center)
 		  local txt = " Status Gauges will appear in this window when you receive a prompt."
 	Theme.DrawBorder(winid) -- theme window border
 WindowText (winid, "intro", txt,
-            5, 65, 0, 0,  -- rectangle
-            ColourNameToRGB ("white"),
-            false) -- not Unicode
+	    5, 65, 0, 0,  -- rectangle
+	    ColourNameToRGB ("white"),
+	    false) -- not Unicode
 	end
   if GetVariable ("enabled") == "false" then
     ColourNote ("yellow", "", "Warning: Plugin " .. GetPluginName ().. " is currently disabled.")
@@ -425,21 +431,21 @@ function right_click_menu()
 	local x, y = WindowInfo(winid, 14), WindowInfo(winid, 15)
 
 	local str = "!"
-	
+
 		str = str..">Colors|HP|Mana|Moves|Exp|Enemy|Super|<"
 		 str = str.."|-|Bring to Front"
 
-         str = str.."|-|Send to Back"
+	 str = str.."|-|Send to Back"
 
-	
+
 	opt = WindowMenu(winid, x, y, str)
-	
+
 	if opt == "" then
 		return
 	end
-	
+
 	opt = tonumber(opt)
-	
+
 	if opt == 1 then -- hp color
 		local clr = PickColour(ColourNameToRGB(hp_color))
 		if clr ~= -1 then
@@ -464,26 +470,26 @@ function right_click_menu()
 			exp_color = RGBColourToName(clr)
 			SaveState()
 		end
-        elseif opt == 5 then -- enemy color
+	elseif opt == 5 then -- enemy color
 		local clr = PickColour(ColourNameToRGB(enemy_color))
 		if clr ~= -1 then
 			enemy_color = RGBColourToName(clr)
 			SaveState()
 		end
-        elseif opt == 6 then -- enemy color
+	elseif opt == 6 then -- enemy color
 		local clr = PickColour(ColourNameToRGB(super_color))
 		if clr ~= -1 then
 			super_color = RGBColourToName(clr)
 			SaveState()
 		end
 		elseif opt == 7 then -- Bring to Front
-        CallPlugin("462b665ecb569efbf261422f","boostMe", winid)
+	CallPlugin("462b665ecb569efbf261422f","boostMe", winid)
       --  print("Bring to Front")
-        SaveState()
+	SaveState()
 elseif opt == 8 then -- Send to back
-        CallPlugin("462b665ecb569efbf261422f","dropMe", winid)
+	CallPlugin("462b665ecb569efbf261422f","dropMe", winid)
       --  print("Sent to Back")
-        SaveState()
+	SaveState()
 	end
 	window(true)
 end
@@ -546,13 +552,12 @@ CallPlugin("462b665ecb569efbf261422f", "registerMiniwindow", winid)
 		movewindow.add_drag_handler (winid, 0, 0, 0, win_height)
 		WindowAddHotspot(winid, "resize", win_width - grip_resize, win_height - grip_resize, win_width, win_height, "MouseOver", "CancelMouseOver", "MouseDown", "", "MouseUp", "", 6, 0)
 		WindowDragHandler(winid, "resize", "ResizeMoveCallback", "ResizeReleaseCallback", 0)
-		
+
 	else
 		WindowResize(winid, win_width, win_height, ColourNameToRGB(bg_color))
 		WindowMoveHotspot(winid, "resize", win_width - grip_resize, win_height - grip_resize, win_width, win_height)
 	end
 	WindowShow(winid, ShowWindow)
-	
 end
 
 function OnPluginSaveState ()
