@@ -387,7 +387,8 @@ end
  
 function ResizeReleaseCallback()
 	--Note("ResizeReleaseCallback")
-	window(true)
+	--window(true)
+	SendNoEcho("pbust %%")
 	SaveState()
 end
 
