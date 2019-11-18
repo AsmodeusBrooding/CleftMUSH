@@ -178,6 +178,7 @@ local super_color = GetVariable("super_color") or "#00ffff" -- color of bar
 local exp_color = GetVariable("exp_color") or "#9400d3" -- color of bar
 local exp_label_color = GetVariable("exp_color") or "#9400d3" -- color of bar
 local page_built = false
+local hp, max_hp, mana, max_mana, move, max_move
 font_name = "Fixedsys"    -- the font
 TNL = 0
 exp = 0
@@ -294,46 +295,41 @@ function DoGauge (sPrompt, current, max, Colour)
   vertical = vertical + font_size + 9
 end -- function DoGauge
 
-
 function do_prompt (name, line, wildcards)
-page_built = true
+   page_built = true
 
-  hp, max_hp = tonumber (wildcards [1]), tonumber (wildcards [2])
-  mana, max_mana = tonumber (wildcards [3]), tonumber (wildcards [4])
-  move, max_move = tonumber (wildcards [5]), tonumber (wildcards [6])
-
-
-
-  -- fill entire box to clear it
-	WindowRectOp(winid, 2, 2, 1, -2, -2, ColourNameToRGB(bg_color)) -- blank canvas
-  
-  -- Edge around box rectangle
-  check (WindowCircleOp (winid, 3, 0, 0, 0, 0, ColourNameToRGB(bar_border), 0, 2, 0, 1))
+   hp, max_hp = tonumber (wildcards [1]), tonumber (wildcards [2])
+   mana, max_mana = tonumber (wildcards [3]), tonumber (wildcards [4])
+   move, max_move = tonumber (wildcards [5]), tonumber (wildcards [6])
 
 
-  vertical = 6 -- pixel to start at
-  DoGauge ("HP: ",    hp ,   max_hp,    ColourNameToRGB(hp_color))
-  DoGauge ("Mana: ",  mana,  max_mana,  ColourNameToRGB(mana_color))
-  DoGauge ("Move: ",  move,  max_move,  ColourNameToRGB(moves_color))
-  if exp ~= nil then
-  DoGauge ("Exp: ", exp , max_exp, ColourNameToRGB(exp_color))
-else 
-if lastlearn==nil or os.time() - lastlearn > 15 then 
-Send("learn")
-lastlearn=os.time()
-end
-  end 
-  if enemy ~= nil then 
-DoGauge ("Enemy: ",  enemy,  max_enemy,  ColourNameToRGB(enemy_color))
-end
-if super ~= nil then
-DoGauge ("Super: ",  super,  max_super,  ColourNameToRGB(super_color))
-end
-     WindowShow (win, ShowWindow)
-  
+
+   -- fill entire box to clear it
+   WindowRectOp(winid, 2, 2, 1, -2, -2, ColourNameToRGB(bg_color)) -- blank canvas
+   
+   -- Edge around box rectangle
+   check (WindowCircleOp (winid, 3, 0, 0, 0, 0, ColourNameToRGB(bar_border), 0, 2, 0, 1))
 
 
-  
+   vertical = 6 -- pixel to start at
+   DoGauge ("HP: ",    hp ,   max_hp,    ColourNameToRGB(hp_color))
+   DoGauge ("Mana: ",  mana,  max_mana,  ColourNameToRGB(mana_color))
+   DoGauge ("Move: ",  move,  max_move,  ColourNameToRGB(moves_color))
+   if exp ~= nil then
+      DoGauge ("Exp: ", exp , max_exp, ColourNameToRGB(exp_color))
+   else 
+      if lastlearn==nil or os.time() - lastlearn > 15 then 
+	 Send("learn")
+	 lastlearn=os.time()
+      end
+   end 
+   if enemy ~= nil then 
+      DoGauge ("Enemy: ",  enemy,  max_enemy,  ColourNameToRGB(enemy_color))
+   end
+   if super ~= nil then
+      DoGauge ("Super: ",  super,  max_super,  ColourNameToRGB(super_color))
+   end
+   WindowShow (win, ShowWindow)
 end -- function do_prompt
 
 
@@ -389,10 +385,13 @@ function ResizeMoveCallback()
 	start_x, start_y = WindowInfo(winid, 17), WindowInfo(winid, 18)
 	win_width = win_width - x_offset
 	win_height = win_height - y_offset
-	if os.clock() - last_refresh >= .05 then
+	if os.clock() - last_refresh >= .01 then
 		--Note("redraw")
 		last_refresh = os.clock()
-		  window(false)
+		if hp and max_hp and mana and max_mana and move and max_move then
+		   do_prompt ("", "", { hp, max_hp, mana, max_mana, move, max_move } )
+		end
+		window(false)
 	end
 end
  
