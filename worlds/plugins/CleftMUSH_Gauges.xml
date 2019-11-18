@@ -382,8 +382,13 @@ function ResizeMoveCallback()
 	--Note("ResizeMoveCallback")
 	local x_offset, y_offset = start_x - WindowInfo(winid, 17), start_y - WindowInfo(winid, 18)
 	start_x, start_y = WindowInfo(winid, 17), WindowInfo(winid, 18)
+	local min_width = 200
+	local min_height = GAUGE_HEIGHT + 8
 	win_width = win_width - x_offset
+	win_width = (win_width > min_width) and win_width or min_width
 	win_height = win_height - y_offset
+	win_height = (function() if (win_height > min_height) then return win_height else SaveState(); return min_height end end)()
+	Note(win_width)
 	if os.clock() - last_refresh >= .01 then
 		--Note("redraw")
 		last_refresh = os.clock()
