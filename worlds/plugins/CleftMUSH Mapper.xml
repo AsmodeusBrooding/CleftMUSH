@@ -135,7 +135,13 @@ util.print("{R--------------------------------------------------")
    AnsiNote(ColoursToANSI(" {WTerrain: {Y"..terrain.."{R"))
    AnsiNote(ColoursToANSI(" {WExits: {Y"..printexits.."{R"))
    AnsiNote(ColoursToANSI(" {WCurrent Area: {Y"..current_area.."{R"))
-   AnsiNote(ColoursToANSI(" {WRoom Flags: {Y"..rooms[uid].info.."{R"))
+   local info
+   if (rooms[uid] ~= nil and rooms[uid].info ~= nil and rooms[uid].info ~= "") then
+      info = rooms[uid].info
+   else
+      info = " No flags"
+   end
+   AnsiNote(ColoursToANSI(" {WRoom Flags:{Y"..info.."{R"))
 util.print("{R--------------------------------------------------")
 </send>
   </alias>
@@ -309,7 +315,7 @@ util.print("{R--------------------------------------------------")
 
 
 <alias
-  match="^mapper flag (.*)$"
+  match="^mapper flags? (.*)$"
   enabled="y" 
   regexp="y" 
   sequence="100"
@@ -381,6 +387,14 @@ util.print("{R--------------------------------------------------")
   sequence="100"
   send_to="14">
 <send>mapperhelputils()</send>
+</alias>
+<alias
+  match="^mapper help flags"
+  enabled="y"
+  regexp="y"
+  sequence="100"
+  send_to="14">
+<send>mapperhelpflags()</send>
 </alias>
 
  <alias
@@ -1171,34 +1185,55 @@ end
 ------------------------------------------
 
 function updateRoomInfo(name, line, wildcards)
-    local roomtype, room, roomuid, matchFound = wildcards[1], wildcards[2], current_room or 0, false
+   local valid_flags = {["waypoint"]="waypoint", ["bank"]="bank", ["alchemyguild"]="alchemyguild", ["priest"]="priest", ["forge"]="forge", ["weaponshop"]="weaponshop", ["armorshop"]="armorshop", ["petshop"]="petshop", ["itemshop"]="itemshop", ["foodshop"]="foodshop", ["tavern"]="tavern", ["morgue"]="morgue", ["quest"]="quest", ["fountain"]="fountain", ["gato"]="gato", ["moti"]="moti", ["inn"]="inn"}
+   local roomtype, room, roomuid, matchFound = wildcards[1], wildcards[2], current_room or 0, false
+   new_flags = {}
+   for word in wildcards[1]:gmatch("%w+") do table.insert(new_flags, word) end
 
-    if room then
-        for i,v in pairs(rooms) do
-            if v.name == Trim(room) then
-                roomuid = i
-                matchFound = true
-                break
-            end
-        end
-    else
-        matchFound = true
-    end
+   local function CheckFlags()
+      for _, v in pairs(new_flags) do
+	 if (valid_flags[v] == nil) then
+	    return false
+	 else
+	    return true
+	 end
+      end
+   end
 
-    if matchFound == true then
-        if not rooms[roomuid].info then
-            rooms[roomuid].info = roomtype
-        else
-            if not string.find(rooms[roomuid].info, roomtype) then
-              rooms[roomuid].info = rooms[roomuid].info .. roomtype
-              add_update_room(roomuid, rooms[roomuid])
-			  print("Roomtype: ", roomtype)
-            end
-        end
-        mapper.draw(roomuid)
-    else
-        print("Room not mapped!")
-    end
+   if room then
+      for i,v in pairs(rooms) do
+	 if v.name == Trim(room) then
+	    roomuid = i
+	    matchFound = true
+	    break
+	 end
+      end
+   else
+      matchFound = true
+   end
+
+   if matchFound == true and rooms[roomuid] ~= nil then
+      if (roomtype == "clear") then
+	 rooms[roomuid].info = nil
+	 print("Cleared flags from: ", rooms[roomuid].name)
+	 add_update_room(roomuid, rooms[roomuid])
+      elseif (not rooms[roomuid].info and CheckFlags()) then
+	 rooms[roomuid].info = roomtype
+	 add_update_room(roomuid, rooms[roomuid])
+	 print("Added flags: ", roomtype)
+      elseif (CheckFlags()) then
+	 for k, v in pairs(new_flags) do
+	    rooms[roomuid].info = rooms[roomuid].info .. " " .. v
+	 end
+	 add_update_room(roomuid, rooms[roomuid])
+	 print("Added flags:", roomtype)
+      else
+	 print("Flag:", roomtype, "is not valid")
+      end
+   else
+      print("Room not mapped!")
+   end
+   mapper.draw(roomuid)
 end
 
 function updateRoomName()
@@ -2386,6 +2421,7 @@ function mapperhelp()
       util.print("{Y mapper help exits         {R-->{W Commands for setting custom exits")
       util.print("{Y mapper help moving        {R-->{W Commands for moving between rooms")
       util.print("{Y mapper help utils         {R-->{W Other utilitarian commands")
+      util.print("{Y mapper help flags         {R-->{W Commands to set flags on rooms")
       util.print("{x238 mapper help searching     --> Used for finding notes, shops, banks, etc")
       util.print("")
       util.print("{R================================================================================")
@@ -2469,6 +2505,22 @@ function mapperhelputils()
       util.print("{Y mapper delete room        {R-->{W Deletes the current room you're in")
       util.print("{Y mapper delete room <uid>  {R-->{W Deletes the designated room")
       util.print("{Y mapper where <uid>        {R-->{W Shows directions to the designated room")
+      util.print("")
+      util.print("{W--------------------------------------------------------------------------------")
+      util.print("")
+end
+
+function mapperhelpflags()
+      util.print("{W--------------------------------------------------------------------------------")
+      util.print("                 {YC{yl{Ye{yf{Yt{RM{rU{RS{rH {x238Mapper Help: {YFlags            ")
+      util.print("{W--------------------------------------------------------------------------------")
+      util.print("")
+      util.print("{Y mapper flag [flag/clear]  {R-->{W Appends or clears a flag to the current room")
+      util.print("")
+      util.print("{Y Valid flags               {R-->{W waypoint, bank, alchemyguild, priest, forge")
+      util.print("{Y                              {W weaponshop, armorshop, petshop, itemshop")
+      util.print("{Y                              {W foodshop, tavern, morgue, quest, fountain, gato")
+      util.print("{Y                              {W moti, inn")
       util.print("")
       util.print("{W--------------------------------------------------------------------------------")
       util.print("")
@@ -2575,7 +2627,7 @@ run_sql(sql)
 			fillcolour = row.fillcolour,
 			fillbrush = row.fillbrush,
 			bordercolour = row.bordercolour,
-			info = row.info,
+			info = row.info or "",
 			notes = row.notes,
 			exits = loadstring("return "..row.exits)()
 		}
