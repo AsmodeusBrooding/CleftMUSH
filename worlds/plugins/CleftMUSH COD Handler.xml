@@ -27,20 +27,6 @@ Multipurpose utility with sounds
 </plugin>
 <triggers>
   <trigger
-   enabled="n"
-   match="^kxwt\_waypoint$"
-   omit_from_log="y"
-   omit_from_output="y"
-   regexp="y"
-   send_to="14"
-   sequence="100"
-  >
-<send>
-Sound("stop=all")
-musicPlaying = false
-</send>
-  </trigger>
-  <trigger
    enabled="y"
    group="linkify"
    match="^(?&lt;pre&gt;You think( to yourself| to say)?\,? (\&quot;|\')?)(?&lt;reply&gt;.*?)(?&lt;pst&gt;(\&quot;|\')?)$"
@@ -51,168 +37,6 @@ musicPlaying = false
    sequence="100"
   >
   </trigger>
-  <trigger
-   enabled="y"
-   match="^kxwt_emote (.*)$"
-   omit_from_log="y"
-   omit_from_output="y"
-   regexp="y"
-   send_to="14"
-   sequence="1"
-  >
-  <send>
-Note("%1")
-</send>
-  </trigger>
-  <trigger
-   enabled="y"
-   match="^kxwt\_group\_start$"
-   omit_from_log="y"
-   omit_from_output="y"
-   regexp="y"
-   send_to="14"
-   sequence="100"
-  >
-  <send>
-kplayers={}
-kminions={}
-kotherminions={}
-kpcount = 0
-</send>
-  </trigger>
-   <trigger
- enabled="y"
- match="^kxwt_spellup (.*)"
-regexp="y"
- send_to="14"
- sequence="99"
-omit_from_output="y"
- >
-
- </trigger>
-<trigger
- enabled="y"
- match="kxwt_audio *"
- omit_from_output="y"
- omit_from_log="y"
- sequence="100"
- >
- </trigger>
-<trigger
- enabled="y"
- match="kxwt_action *"
- omit_from_output="y"
- omit_from_log="y"
- sequence="100"
- >
- </trigger>
- <trigger
- enabled="y"
- match="^kxwt_spelldown (.*)"
-regexp="y"
- send_to="14"
- sequence="99"
-omit_from_output="y"
- >
-
- </trigger>
-  <trigger
-   enabled="n"
-   match="^kxwt_walkdir (\d+)"
-   omit_from_output="y"
-   regexp="y"
-   send_to="14"
-   sequence="100"
-  >
-
-  </trigger>
-   <trigger
-   enabled="n"
-   match="^kxwt_group (?P&lt;hp&gt;-?\d+) (?P&lt;mhp&gt;\d+) (?P&lt;mn&gt;-?\d+) (?P&lt;mmn&gt;\d+) (?P&lt;mv&gt;-?\d+) (?P&lt;mmv&gt;\d+) (?P&lt;tag&gt;\S+) (?P&lt;name&gt;.*)"
-   omit_from_output="y"
-   regexp="y"
-   sequence="100"
-  >
-  </trigger>
-
-  <trigger
-   enabled="y"
-   match="^kxwt_rvnum (\d+)"
-   omit_from_output="y"
-   regexp="y"
-   send_to="14"
-   sequence="100"
-  >
-  </trigger>
-  <trigger
-   enabled="y"
-   match="kxwt_supported"
-   omit_from_output="y"
-   sequence="100"
-  >
-  <send>set kxwt on
-set cprefix ~R~H[]~O</send>
-  </trigger>
-<trigger
- enabled="y"
- match="kxwt_idle"
- omit_from_output="y"
- omit_from_log="y"
- sequence="100"
- >
-<send>l</send>
- </trigger>
-    <trigger
-   enabled="y"
-   match="kxwt_nocast"
-   omit_from_output="y"
-   send_to="14"
-   sequence="100"
-  >
-  <send>
-nocastroom=true
-</send>
-</trigger>
- <trigger
-   enabled="y"
-   match="kxwt_expcap *"
-   omit_from_output="y"
-   send_to="14"
-   sequence="100"
-  >
-  <send>k_cap=tonumber("%1")</send>
-  </trigger>
-  <trigger
-   enabled="y"
-   match="kxwt_obj_zap *"
-   omit_from_output="y"
-   send_to="14"
-   sequence="100"
-  >
-  <send>
-print ZAPPED
-</send>
-  </trigger>
-  <trigger
- enabled="y"
- match="^kxwt_prompt (-{0,1}\d+) (-{0,1}\d+) (-{0,1}\d+) (-{0,1}\d+) (-{0,1}\d+) (-{0,1}\d+)"
-sequence="1"
-regexp="y"
- send_to="14"
-omit_from_output="y"
- omit_from_log="y"
- >
- </trigger>
- <trigger
- enabled="y"
- match="^kxwt_area (-{0,1}\d+) (.*)"
-sequence="3"
-regexp="y"
- send_to="14"
-omit_from_output="y"
- omit_from_log="y"
- >
- </trigger>
  <trigger
    enabled="y"
    match="^\*pong\*$"
@@ -305,202 +129,8 @@ keep_evaluating="y"
   </trigger>
 
 -----------------------------------------------------------------------------------
--- FAME SECTION
------------------------------------------------------------------------------------
-
-  <trigger
-   enabled="y"
-   match="^\( 6\)A wino sits on the ground, a bottle in his hand\.$"
-   omit_from_output="y"
-   regexp="y"
-   send_to="12"
-   sequence="100"
-  >
-  <send>ColourTell (
-"white","black", "( 6)",
-"yellow", "black", "(FAME)",
-"darkcyan", "black", " A wino sits on the ground, a bottle in his hand.")  </send>
-  </trigger>
-
-  <trigger
-   enabled="y"
-   match="^A gypsy wino is DEAD\!$"
-   regexp="y"
-   send_to="12"
-   sequence="100"
-  >
-  <send>ColourTell (
-"mediumpurple", "black", "You will gain a ",
-"yellow","black", "(FAME)",
-"mediumpurple", "black", " point for killing A gypsy wino!") </send>
-  </trigger>
-
-  <trigger
-   enabled="y"
-   match="^\( 6\)An old man rests on a stool\.$"
-   omit_from_output="y"
-   regexp="y"
-   send_to="12"
-   sequence="100"
-  >
-  <send>ColourTell (
-"white","black", "( 6)",
-"yellow", "black", "(FAME)",
-"darkcyan", "black", " An old man rests on a stool.")  </send>
-  </trigger>
-
-  <trigger
-   enabled="y"
-   match="^An elderly gypsy man is DEAD\!$"
-   regexp="y"
-   send_to="12"
-   sequence="100"
-  >
-  <send>ColourTell (
-"mediumpurple", "black", "You will gain a ",
-"yellow","black", "(FAME)",
-"mediumpurple", "black", " point for killing An elderly gypsy man!") </send>
-  </trigger>
-  <trigger
-   enabled="y"
-   match="^\( 6\)A woman chats with her friend\.$"
-   omit_from_output="y"
-   regexp="y"
-   send_to="12"
-   sequence="100"
-  >
-  <send>ColourTell (
-"white","black", "( 6)",
-"yellow", "black", "(FAME)",
-"darkcyan", "black", " A woman chats with her friend.")  </send>
-  </trigger>
-
-  <trigger
-   enabled="y"
-   match="^An excited gypsy woman is DEAD\!$"
-   regexp="y"
-   send_to="12"
-   sequence="100"
-  >
-  <send>ColourTell (
-"mediumpurple", "black", "You will gain a ",
-"yellow","black", "(FAME)",
-"mediumpurple", "black", " point for killing An excited gypsy woman!") </send>
-  </trigger>
-  <trigger
-   enabled="y"
-   match="^\( 6\)A wizard is here, studying a magic tome\.$"
-   omit_from_output="y"
-   regexp="y"
-   send_to="12"
-   sequence="100"
-  >
-  <send>ColourTell (
-"white","black", "( 6)",
-"yellow", "black", "(FAME)",
-"darkcyan", "black", " A wizard is here, studying a magic tome.")  </send>
-  </trigger>
-
-  <trigger
-   enabled="y"
-   match="^A travelling magician is DEAD\!$"
-   regexp="y"
-   send_to="12"
-   sequence="100"
-  >
-  <send>ColourTell (
-"mediumpurple", "black", "You will gain a ",
-"yellow","black", "(FAME)",
-"mediumpurple", "black", " point for killing A travelling magician!") </send>
-  </trigger>
-
-
------------------------------------------------------------------------------------
 -- COLORS SECTION
 -----------------------------------------------------------------------------------
-
- <trigger
- enabled="y"
- match="kxwt_edeath *"
- omit_from_output="y"
- omit_from_log="y"
- send_to="14"
- sequence="100"
- >
-<send>ColourNote("red", "", "GROUP: %1 has just been KILLED!")</send>
-</trigger>
-
-  <trigger
-   enabled="y"
-   match="You drive a stake through *'s shadow, pinning it in place!"
-   omit_from_output="y"
-   send_to="12"
-   sequence="100"
-  >
-  <send>ColourNote("blueviolet", "", "You drive a stake through %1 shadow, pinning it in place!")</send>
-  </trigger>
-  <trigger
-   enabled="y"
-   match="Your sickening touch spreads to * as you hit it!"
-   omit_from_output="y"
-   send_to="12"
-   sequence="100"
-  >
-  <send>ColourNote("lime", "", "Your sickening touch spreads to %1 as you hit it!")</send>
-  </trigger>
-  <trigger
-   enabled="y"
-   match="* concentrates, and conjures a huge wall of ice."
-   omit_from_output="y"
-   send_to="12"
-   sequence="100"
-  >
-  <send>ColourNote("cyan", "", "%1 concentrates, and conjures a huge wall of ice.")</send>
-  </trigger>
-  <trigger
-   enabled="y"
-   match="The white aura around your body fades."
-   omit_from_output="n"
-   send_to="12"
-   sequence="100"
-  >
-  <send>ColourNote("yellow", "", "WARNING: SANCTUARY DOWN")</send>
-  </trigger>
-  <trigger
-   enabled="y"
-   match="* utters the words, 'yrmnortcyrt'."
-   omit_from_output="y"
-   send_to="12"
-   sequence="100"
-  >
-  <send>ColourNote("darkgrey", "", "%1 utters the words, 'yrmnortcyrt'. (Enchantment)")</send>
-  </trigger>
-  <trigger
-   enabled="y"
-   match="Double mob experience is now enabled!"
-   omit_from_output="y"
-   send_to="12"
-   sequence="100"
-  >
-  <send>
-ColourNote("lime", "black", "---------------------------")
-ColourNote("lime", "black", "| DOUBLE EXP MODE ENABLED |")
-ColourNote("lime", "black", "---------------------------")
-</send>
-  </trigger>
-  <trigger
-   enabled="y"
-   match="Double experience caps for mob kills are now enabled!"
-   omit_from_output="y"
-   send_to="12"
-   sequence="100"
-  >
-  <send>
-ColourNote("lime", "black", "---------------------------")
-ColourNote("lime", "black", "| DOUBLE CAP MODE ENABLED |")
-ColourNote("lime", "black", "---------------------------")
-</send>
-  </trigger>
 </triggers>
 
 
@@ -641,28 +271,6 @@ DoAfterSpecial (0.2, 'EnableTriggerGroup ("equip", true)', sendto.script) </send
   </trigger>
  <trigger
  enabled="y"
- match="^kxwt_walkdir (\d+)"
- regexp="y"
- omit_from_output="y"
- sequence="100"
- send_to="14"
- >
-<send>
-Sound ("sounds/Walk.wav") 
-</send>
- </trigger>
- <trigger
- enabled="y"
- match="Your leaping attack *** DEMOLISHES *** *!"
- sequence="100"
- send_to="14"
- >
-<send>
-Sound ("sounds/demolishleap.wav") 
-</send>
- </trigger>
- <trigger
- enabled="y"
  match="You close *."
  sequence="100"
  send_to="14"
@@ -728,6 +336,8 @@ Sound ("sounds/death.mp3")
 </send>
  </trigger>
 
+-- Sound("stop=all")
+-- musicPlaying = false
 ------------------------------------------------------------------------------------
 -- WEAPON BATTLE SOUNDS
 ------------------------------------------------------------------------------------
@@ -765,13 +375,6 @@ Sound ("sounds/death.mp3")
 ------------------------------------------------------------------------------------
 
    <aliases>
-   <alias
-   match="kxwt_area --printareanumber"
-	send_to="12"
-   enabled="y"
-   sequence="100"
-  >
-<send>Note(areanumber)</send></alias>
    <alias
    match="mute"
 	send_to="12"
@@ -893,11 +496,8 @@ Execute("ide list")
 ColourNote("red", "", "Idea List:")
 DoAfterSpecial (1, 'EnableTriggerGroup ("idea", false)', sendto.script)</send>
   </alias>
-
-
   </aliases>
   
-
 
 <!--  Script  -->
 
@@ -977,8 +577,7 @@ end -- function
 --  Send (line) --Sends the line to the MUD
 --  reply="say "..wildcards [1]
 -- Whoopsie: This immediately sends.  Send ("say ", wildcards [1])
--- Later on, I might try to pull out and hyperlink JUST the phrase, for style points, but maybe not.
-	
+-- Later on, I might try to pull out and hyperlink JUST the phrase, for style points, but maybe not.	
 
 ]]>
 </script>
