@@ -375,6 +375,22 @@ Sound ("sounds/death.mp3")
 ------------------------------------------------------------------------------------
 
    <aliases>
+<alias
+   match="setup prompt"
+   enabled="y"
+   sequence="100"
+   send_to="14"
+   regexp="n"
+   ignore_case="y">
+<send>setup_prompt()</send></alias>
+<alias
+   match="setup prompt affects"
+   enabled="y"
+   sequence="100"
+   send_to="14"
+   regexp="n"
+   ignore_case="y">
+<send>setup_prompt_aff()</send></alias>
    <alias
    match="mute"
 	send_to="12"
@@ -508,6 +524,16 @@ dofile(GetPluginInfo(GetPluginID(), 20) .. "cleft_colors.lua")
 
 uid=""
 musicPlaying = false
+
+
+function setup_prompt()
+Execute("prompt {R[{WLast_Dir: %d {R]%c{c%1[G_End]%c{D| {WRemort: %L {D| {WLevel: %l {D|%c| {wHP:{R%h{D/{r%H{D |{w MP:{B%m{D/{b%M{w {D| {wMV:{Y%v{D/{y%V{D |{w Enemy:{R%o{w {D| {wTNL:{m%X {D| {wSUPER: {C%A{D |{w %c{R[{WRoom{R][{W%C{R]%r%c[Exits: %e]%c")
+end -- function setup_prompt
+
+function setup_prompt_aff()
+Execute("prompt {R[{WLast_Dir: %d {R]%c{c%1[G_End]%c{D| {WRemort: %L {D| {WLevel: %l {D|%c| {wHP:{R%h{D/{r%H{D |{w MP:{B%m{D/{b%M{w {D| {wMV:{Y%v{D/{y%V{D |{w Enemy:{R%o{w {D| {wTNL:{m%X {D| {wSUPER: {C%A{D |{w %c{R[{WRoom{R][{W%C{R]%r%c[Exits: %e]%c%E%c")
+end -- function setup_prompt
+
 function OnPluginInstall()
   uid=GetVariable("id")
   if(uid==NIL) then
