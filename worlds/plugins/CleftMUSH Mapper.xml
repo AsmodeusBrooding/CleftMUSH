@@ -24,7 +24,7 @@
    save_state="y"
    date_written="2019-07-26 07:21:01"
    requires="4.51"
-   version="6.02"
+   version="6.05"
    >
 
 </plugin>
@@ -141,7 +141,7 @@ util.print("{R--------------------------------------------------")
    else
       info = " No flags"
    end
-   AnsiNote(ColoursToANSI(" {WRoom Flags:{Y"..info.."{R"))
+   AnsiNote(ColoursToANSI(" {WRoom Flags: {Y"..info.."{R"))
 util.print("{R--------------------------------------------------")
 </send>
   </alias>
@@ -396,26 +396,6 @@ util.print("{R--------------------------------------------------")
   send_to="14">
 <send>mapperhelpflags()</send>
 </alias>
-
- <alias
-    enabled="n"
-    group="look"
-    name="Lookthing"
-    keep_evaluating="y"
-    match="^l (\w|\d).*$"
-    omit_from_output="n"
-    regexp="y"
-    send_to="12"
-    sequence="5"
-    ><send>
-EnableTrigger ("get_room_name", false)
-EnableTrigger ("get_description_line", false)
-EnableTrigger ("Exits_Line", false)
-Execute("look %1")
-DoAfterSpecial (0.1, 'EnableTrigger ("get_room_name", true)', sendto.script)
-DoAfterSpecial (0.1, 'EnableTrigger ("Exits_Line", true)', sendto.script)
-</send>
-  </alias>
 
    <alias
       match="^mapper show tile( (on|off))?$"
@@ -928,7 +908,7 @@ require "utility"
 require "tprint"
 
 
-version = "6.02"
+version = "6.05"
 uid = -999
 current_room=nil
 current_area = -999
@@ -1843,6 +1823,7 @@ return
       { name = checkmark ("shop")  .. "Mark as Item Shop",     func = room_toggle_itemshop } ,
       { name = checkmark ("shop")  .. "Mark as Pet Shop",      func = room_toggle_petshop } ,
       { name = checkmark ("shop")  .. "Mark as Tavern",        func = room_toggle_tavern } ,
+	  { name = checkmark ("shop")  .. "Mark as Bank",          func = room_toggle_bank } ,
       { name = checkmark ("shop")  .. "Mark as Inn",           func = room_toggle_inn } ,
      } -- handlers
 
@@ -1889,6 +1870,10 @@ end  -- room_toggle_petshop
 function room_toggle_tavern()
 Execute ("mapper flag tavern")
 end -- room_toggle_tavern
+
+function room_toggle_bank()
+Execute ("mapper flag bank")
+end -- room_toggle_bank
 
 function room_toggle_inn()
 Execute ("mapper flag inn")
@@ -2697,10 +2682,10 @@ function room_delete_exit (room, uid, exit)
       for k,v in pairs (room.exits) do
          available [k] = k .. " --> " .. room.exits [k]
       temp_room = k
-print ("AvailableK: ", available [k])
-print ("Available: ", available )
-print ("Temp_Room: ", temp_room)
-print ("RoomsK: ", room.exits [k])
+--print ("AvailableK: ", available [k])
+--print ("Available: ", available )
+--print ("Temp_Room: ", temp_room)
+--print ("RoomsK: ", room.exits [k])
     room.exits[k] = nil -- setting table item to nil deletes it
 	SendNoEcho("look")
       end -- for
@@ -2832,7 +2817,7 @@ end
 -- end backup stuff
 ------------------------------------------
 
--- Special thanks to Fiendish, Endymion, Valour, and Nick Gammon for all of their assistance with the mapper, and the original basis from which its built.
+-- Special thanks to Fiendish, Endymion, Valour, Elisius, and Nick Gammon for all of their assistance with the mapper, and the original basis from which its built.
 
 ]]>
 </script>
