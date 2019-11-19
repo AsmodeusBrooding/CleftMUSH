@@ -116,7 +116,7 @@ max_exp = remorts + 2000
 ></alias>
 <alias
    match="setup prompt"
-   enabled="y"
+   enabled="n"
    sequence="100"
    send_to="14"
    regexp="n"
