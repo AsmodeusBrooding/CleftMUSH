@@ -16,7 +16,7 @@
    save_state="y"
    date_written="2019-01-04"
    requires="4.00"
-   version="1.1"
+   version="6.1"
    >
 
 <description trim="y">
@@ -391,6 +391,38 @@ Sound ("sounds/death.mp3")
    regexp="n"
    ignore_case="y">
 <send>setup_prompt_aff()</send></alias>
+<alias
+   match="cleft help"
+   enabled="y"
+   sequence="100"
+   send_to="14"
+   regexp="n"
+   ignore_case="y">
+<send>clefthelp()</send></alias>
+<alias
+   match="client help"
+   enabled="y"
+   sequence="100"
+   send_to="14"
+   regexp="n"
+   ignore_case="y">
+<send>clefthelp()</send></alias>
+<alias
+   match="mush help"
+   enabled="y"
+   sequence="100"
+   send_to="14"
+   regexp="n"
+   ignore_case="y">
+<send>clefthelp()</send></alias>
+<alias
+   match="cleftmush help"
+   enabled="y"
+   sequence="100"
+   send_to="14"
+   regexp="n"
+   ignore_case="y">
+<send>clefthelp()</send></alias>
    <alias
    match="mute"
 	send_to="12"
@@ -524,7 +556,7 @@ dofile(GetPluginInfo(GetPluginID(), 20) .. "cleft_colors.lua")
 
 uid=""
 musicPlaying = false
-
+version = "6.1"
 
 function setup_prompt()
 Execute("prompt {R[{WLast_Dir: %d {R]%c{c%1[G_End]%c{D| {WRemort: %L {D| {WLevel: %l {D|%c| {wHP:{R%h{D/{r%H{D |{w MP:{B%m{D/{b%M{w {D| {wMV:{Y%v{D/{y%V{D |{w Enemy:{R%o{w {D| {wTNL:{m%X {D| {wSUPER: {C%A{D |{w %c{R[{WRoom{R][{W%C{R]%r%c[Exits: %e]%c")
@@ -604,7 +636,28 @@ end -- function
 --  reply="say "..wildcards [1]
 -- Whoopsie: This immediately sends.  Send ("say ", wildcards [1])
 -- Later on, I might try to pull out and hyperlink JUST the phrase, for style points, but maybe not.	
+-------------------------------------------------------------------------------------------------------------------------------
+---- HELP PAGES SECTION 
+-------------------------------------------------------------------------------------------------------------------------------
 
+function clefthelp()
+      util.print("{R----------------------------------------------------------------------------------")
+      util.print("{WClient Name  : {YC{yl{Ye{yf{Yt{RM{rU{RS{rH {RG{Yr{Ga{Cp{Bh{Mi{mc{Ra{Yl {x238Client")
+      util.print("{WAuthors      : {DAsmodeus, Elisius")
+      util.print("{WVersion      : {G" .. version)
+      util.print("{R----------------------------------------------------------------------------------")
+      util.print("{w      Thank you for choosing {YC{yl{Ye{yf{Yt{RM{rU{RS{rH{w. The following guide will assist you ")
+      util.print("{w      with any needs you might have with the client. There are tons of cool ")
+      util.print("{w      features, so if you forget any of the commands, please refer to these")
+      util.print("{w      pages. Type one of the following options inside the brackets for help")
+      util.print("")
+      util.print("")
+	  util.print(" {D[{x099Map Window{D: {Ymapper help{D] {D[{x099Chat Window{D: {Ychat help{D] {D[{x099Affects Window{D: {Yaffect help{D] ")
+	  util.print("")
+	  util.print(" {D[{x099Action Bar{D: {Yaction help{D] {D[{x099Code Credit{D:   {Ycredits{D]")
+      util.print("{R----------------------------------------------------------------------------------")
+      util.print("")
+end
 ]]>
 </script>
 </muclient>
