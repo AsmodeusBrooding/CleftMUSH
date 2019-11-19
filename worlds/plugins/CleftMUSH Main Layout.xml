@@ -9,10 +9,10 @@
 
 <plugin
    name="CleftMUSH_Main_Layout"
-   author="Fiendish and Lasher and Cleft"
+   author="Asmodeus, Fiendish, Lasher"
    id="c293f9e7f04dde719f65cb90"
    language="Lua"
-   purpose="Layout Cleft-Mush Main Screen"
+   purpose="Main Layout for CleftMUSH"
    date_written="2019-01-15 18:32:06"
    requires="4.56"
    version="1.0"
@@ -88,7 +88,7 @@
 <![CDATA[
 require "mw_theme_base"
 require "movewindow"
-
+require "utility"
 
 default_top = 140
 default_bottom = 544
@@ -107,24 +107,29 @@ MIN_SIZE         = 50
 require "serialize"
 
 function LayoutHelp()
-   print("")
-   print("CleftMUSH MUSHclient Layout Command Help")
-   print("--------------------------------------------------------------------------------")
-   print("cleft layout lock               :  prevent dragging miniwindows")
-   print("cleft layout unlock             :  allow dragging miniwindows")
-   print("cleft layout save <keyword>     :  store the current layout as the given keyword")
-   print("cleft layout restore <keyword>  :  restore the layout for the given keyword")
-   print("cleft layout forget <keyword>   :  forget the layout for the given keyword")
-   print("cleft layout list               :  list all stored layout keywords")
-   print("cleft layout help               :  show this command help")
-   print("cleft layout reset              :  like resetcleft, but better")
-   print("")
+   util.print("")
+   util.print("                       {YC{yl{Ye{yf{Yt{RM{rU{RS{rH {DLayout Command Help")
+   util.print("{R--------------------------------------------------------------------------------")
+   util.print("{Ycleft layout lock               {R:  {Wprevent dragging miniwindows")
+   util.print("{Ycleft layout unlock             {R:  {Wallow dragging miniwindows")
+   util.print("{Ycleft layout save <keyword>     {R:  {Wstore the current layout as the given keyword")
+   util.print("{Ycleft layout restore <keyword>  {R:  {Wrestore the layout for the given keyword")
+   util.print("{Ycleft layout forget <keyword>   {R:  {Wforget the layout for the given keyword")
+   util.print("{Ycleft layout list               {R:  {Wlist all stored layout keywords")
+   util.print("{Ycleft layout help               {R:  {Wshow this command help")
+   util.print("{Ycleft layout reset              {R:  {Wlike resetcleft, but better")
+   util.print("{R--------------------------------------------------------------------------------")
+   util.print("")
    LockStatus()
-   print("")
+   util.print("")
 end
 
 function LockStatus()
-   print("Current layout lock status:", ((GetVariable("lock_down_miniwindows") == "1") and "LOCKED") or "UNLOCKED")
+if GetVariable("lock_down_miniwindows") == "1" then 
+   util.print("{YCurrent layout lock status:{R LOCKED")
+else
+   util.print("{YCurrent layout lock status:{G UNLOCKED")
+end
 end
 
 function LayoutCommand(name, line, wildcards)
