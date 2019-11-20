@@ -30,6 +30,8 @@ PUT IDEAS OF THINGS TO DO  IN  HERE, ALONG WITH A PRIORITY
 
 - [ ] \(3\)\[Y\] DO Create troubleshooting help page and client help page
 
+- [ ] \(4\)\[Y\] DO Let users delete exits in mapper/level lock exits
+
 - [ ] \(5\)\[Y\] DO Add classes to group window, MAYBE with icons
 
 - [ ] \(5\)\[Y\] DO fix "logging to file" on chat window: this will probably finish the window
