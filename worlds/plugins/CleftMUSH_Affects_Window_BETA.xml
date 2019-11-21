@@ -256,7 +256,7 @@ version="0.7"
 		 elseif (string.find(new_affect, "HUNGER")) then
 		    DebugNote("HUNGER")
 		    AddAffect(name, line, {"hungry"})
-		 else
+		 elseif (string.find(new_affect, "THIRST")) then
 		    DebugNote("Thirst")
 		    AddAffect(name, line, {"thirsty"})
 		 end
