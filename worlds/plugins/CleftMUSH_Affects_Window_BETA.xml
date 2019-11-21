@@ -684,8 +684,12 @@ version="0.7"
 	   DebugNote(AddTriggerEx("aff_start_2", "---------------------------------------------------------", "", flags - trigger_flag.Enabled, custom_colour.NoChange, 0, "", "AffectsListStart", 0, 100))
 	end
 
+	function OnPluginInstall()
+	   SetupAffectTriggers()
+	   window(true)
+	end
+
 	function OnPluginEnable()
-	   --DebugNote("enabled")
 	   window(true)
 	end
 
