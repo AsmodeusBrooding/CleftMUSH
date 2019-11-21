@@ -67,28 +67,19 @@ version="0.7"
 <triggers>
   <trigger
       enabled="y"
-      match="^You are (hungry|thirsty)\.$"
-      regexp="y"
-      send_to="12"
-      keep_evaluating="n"
-      sequence="50"
-      name="AddHungerThirst"
-      script="AddAffect"
-      >
-  </trigger>
-  <trigger
-      enabled="y"
-      match="\|.+\| \[(HUNGER|THIRST)\].*"
+      match="^\|(BODILYREQUIREMENTS .*? .*?)\|"
       regexp="y"
       send_to="12"
       sequence="100"
       name="AddHungerThirstScore"
+      omit_from_output="y"
       script="AddAffect"
       >
   </trigger>
   <trigger
       enabled="y"
-      match="^(((You are )(no longer )?)|(Your ))(?<affect>full|hungry|thirst)( is quenched)?\.$"
+      match="^(?!You are hungry\.)(((You are )(no longer )?)|(Your ))(?<affect>full|hungry|thirst)( is quenched)?\.$"
+
       regexp="y"
       send_to="12"
       sequence="100"
@@ -256,12 +247,27 @@ version="0.7"
 	   DebugNote("AddAffect")
 	   DebugNote(wildcards[1])
 	   if(wildcards[1] ~= nil) then
-	      wildcards[1] = FixWildcardsForHungerThirst(wildcards[1])
-	      local k, v = FindAffectInInfos(wildcards[1])
-	      DebugNote(wildcards[1])
+	      new_affect = wildcards[1]
+	      if (string.find(new_affect, "BODILYREQUIREMENTS")) then
+		 if (string.find(new_affect, "HUNGER THIRST")) then
+		    DebugNote("BOTH")
+		    AddAffect(name, line, {"hungry"})
+		    AddAffect(Name, line, {"thirsty"})
+		 elseif (string.find(new_affect, "HUNGER")) then
+		    DebugNote("HUNGER")
+		    AddAffect(name, line, {"hungry"})
+		 else
+		    DebugNote("Thirst")
+		    AddAffect(name, line, {"thirsty"})
+		 end
+	      end
+
+	      new_affect = FixWildcardsForHungerThirst(wildcards[1])
+	      local k, v = FindAffectInInfos(new_affect)
+	      DebugNote(new_affect)
 	      if(k == -1) then
-		 if(affect_icons[wildcards[1]] ~= nil) then
-		    PlaceNewGIF(path_prefix .. affect_icons[wildcards[1]] .. "_%03i.png")
+		 if(affect_icons[new_affect] ~= nil) then
+		    PlaceNewGIF(path_prefix .. affect_icons[new_affect] .. "_%03i.png")
 		 end
 	      end -- if
 	   end -- if
