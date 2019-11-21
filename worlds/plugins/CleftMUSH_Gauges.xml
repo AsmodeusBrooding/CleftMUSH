@@ -140,9 +140,9 @@ require "checkplugin"
 require "mw_theme_base"
 require "tprint"
 
-GAUGE_HEIGHT = 15
 NUMBER_OF_TICKS = 9
-font_height = 15
+font_size = GetVariable("font_size") or 15
+GAUGE_HEIGHT = GetVariable("GAUGE_HEIGHT") or 15
 FONT_COLOUR = ColourNameToRGB "white"
 
 local bg_color = "#000000"
@@ -168,7 +168,7 @@ local border_color = "#303030"
 local grip_resize = 10 -- resize grip size
 local win_height = GetVariable("win_height") or 97
 local win_width = GetVariable("win_width") or 740
-local font_size = 8
+--local font_size = 8
 local player_border_color = "#AAAAAA"
 local hp_label_color = "#00ff00" -- hp label color
 local enemy_label_color = GetVariable("enemy_color") or "#ff0000" -- color of bar
@@ -179,7 +179,7 @@ local exp_color = GetVariable("exp_color") or "#9400d3" -- color of bar
 local exp_label_color = GetVariable("exp_color") or "#9400d3" -- color of bar
 local page_built = false
 local hp, max_hp, mana, max_mana, move, max_move
-font_name = "Fixedsys"    -- the font
+font_name = GetVariable("font_name") or "Fixedsys"    -- the font
 TNL = 0
 exp = 0
 remorts = 0
@@ -220,7 +220,6 @@ end -- function gauge_hide
 
 
 function DoGauge (sPrompt, current, max, Colour)
-
   if (max <= 0 or current == nil) then
     return
   end -- no divide by zero
@@ -244,7 +243,7 @@ function DoGauge (sPrompt, current, max, Colour)
 
    -- box size must be > 0 or WindowGradient fills the whole thing
   if math.floor (gauge_width) > 0 then
-
+GAUGE_HEIGHT = GetVariable("GAUGE_HEIGHT") or 15
     -- top half
     WindowGradient (winid, gauge_left, vertical, gauge_left + gauge_width, vertical + GAUGE_HEIGHT / 2,
                     0x000000,
@@ -269,14 +268,13 @@ function DoGauge (sPrompt, current, max, Colour)
   end -- for
 
   -- show actual exp in gauge
-
- WindowText (winid, font_id, string.format ("%i/%i (%i%%)", current, max, Fraction * 100),
+ WindowText (winid, "f1", string.format ("%i/%i (%i%%)", current, max, Fraction * 100),
                              gauge_left + 3, vertical + 1, 0, 0, ColourNameToRGB ("black"))
 
- WindowText (winid, font_id, string.format ("%i/%i (%i%%)", current, max, Fraction * 100),
+ WindowText (winid, "f1", string.format ("%i/%i (%i%%)", current, max, Fraction * 100),
                              gauge_left + 2, vertical + 1, 0, 0, ColourNameToRGB ("black"))
 
- WindowText (winid, font_id, string.format ("%i/%i (%i%%)", current, max, Fraction * 100),
+ WindowText (winid, "f1", string.format ("%i/%i (%i%%)", current, max, Fraction * 100),
                              gauge_left + 1, vertical, 0, 0, ColourNameToRGB ("white"))
 
 -- draw a box around it
@@ -347,7 +345,7 @@ window(true)
   -- install the window movement handler, get back the window position
 		WindowPosition(winid, pos_x, pos_y, 0, 2)
  windowinfo = movewindow.install (win, miniwin.pos_top_right, miniwin.create_absolute_location, true, {mouseup=MouseUp, mousedown=MouseDown, dragmove=LeftClickOnly, dragrelease=LeftClickOnly})
-
+font_name = GetVariable("font_name") or "Fixedsys" 
   WindowFont (winid, font_id, font_name, 9)
   -- work out how far in to start the gauge
   gauge_left =                        WindowTextWidth (winid, font_id, "HP: ")
@@ -426,10 +424,13 @@ function right_click_menu()
 
 	local str = "!"
 	
-		str = str..">Colors|HP|Mana|Moves|Exp|Enemy|Super|<"
+		 str = str..">Colors|HP|Mana|Moves|Exp|Enemy|Super|<"
+		
 		 str = str.."|-|Bring to Front"
 
          str = str.."|-|Send to Back"
+		  
+		 str = str.."|-|Change Font"
 
 	
 	opt = WindowMenu(winid, x, y, str)
@@ -484,7 +485,19 @@ elseif opt == 8 then -- Send to back
         CallPlugin("462b665ecb569efbf261422f","dropMe", winid)
       --  print("Sent to Back")
         SaveState()
-	end
+elseif opt == 9 then -- Change Font
+     wanted_font = utils.fontpicker (font_name, font_size) --font dialog
+         if wanted_font then
+            font_name = wanted_font.name
+            font_size = wanted_font.size
+			SetVariable("font_size", font_size)
+			SetVariable("font_name", font_name)
+			GAUGE_HEIGHT = font_size + 8
+            SetVariable("GAUGE_HEIGHT", GAUGE_HEIGHT)			
+        	SendNoEcho("pbust %")			
+			--SetVariable("bar_height", bar_height)		
+end		
+end	
 	window(true)
 end
 
@@ -501,6 +514,7 @@ end
 
 function CancelMouseDown(flags, id)
 	--Note("CancelMouseDown")
+	SendNoEcho("pbust %")	
 	-- nothing
 end
 
@@ -532,7 +546,8 @@ function window(redraw)
 
 	if redraw then
 		--Note("redraw")
-
+font_size = GetVariable("font_size") or 15  
+font_name = GetVariable("font_name") or "Fixedsys"  
 		WindowDelete("winid")
 		WindowCreate(winid, pos_x, pos_y, win_width, win_height, 0, 0, ColourNameToRGB(bg_color))
 		WindowPosition(winid, pos_x, pos_y, 0, 2)
@@ -567,6 +582,9 @@ function OnPluginSaveState ()
 	SetVariable("enemy_color", enemy_color) -- enemy color
 	SetVariable("super_color", super_color) -- super color
 	SetVariable("exp_color", exp_color) -- enemy color
+    SetVariable("font_size", font_size) -- font_size
+	SetVariable("font_name", font_name)
+	SetVariable("GAUGE_HEIGHT", GAUGE_HEIGHT)
 end -- OnPluginSaveState
 
 
