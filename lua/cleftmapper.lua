@@ -1555,7 +1555,7 @@ function draw (uid)
   -- end -- if
 
 --   if show_timing then
-      print("Time elapsed drawing ", utils.timer()-outer_time)
+      --print("Time elapsed drawing ", utils.timer()-outer_time)
 --   end
 
    CallPlugin("abc1a0944ae4af7586ce88dc", "BufferedRepaint")
@@ -1691,7 +1691,7 @@ function right_click_menu()
 end
 
 function zoom_in ()
-   if last_drawn and ROOM_SIZE < 40 then
+   if last_drawn and ROOM_SIZE < 400 then
       ROOM_SIZE = ROOM_SIZE + 2
       DISTANCE_TO_NEXT_ROOM = DISTANCE_TO_NEXT_ROOM + 2
       build_room_info ()
