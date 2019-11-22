@@ -1555,7 +1555,7 @@ function draw (uid)
   -- end -- if
 
 --   if show_timing then
-      --print("Time elapsed drawing ", utils.timer()-outer_time)
+      print("Time elapsed drawing ", utils.timer()-outer_time)
 --   end
 
    CallPlugin("abc1a0944ae4af7586ce88dc", "BufferedRepaint")
