@@ -779,6 +779,8 @@ function right_click_menu()
   str = str.."|-|Bring to Front"
 
   str = str.."|-|Send to Back"
+ 
+  str = str.."|-|Change Font"
 
 	opt = WindowMenu(winid, x, y, str)
 
@@ -842,7 +844,13 @@ elseif opt == 12 then -- Send to back
         CallPlugin("462b665ecb569efbf261422f","dropMe", winid)
       --  print("Sent to Back")
         SaveState()
-      end
+elseif opt == 13 then -- Change Font
+         wanted_font = utils.fontpicker (font_name, font_size) --font dialog
+         if wanted_font then
+            font_name = wanted_font.name
+            font_size = wanted_font.size
+            end
+            end
 	window(true)
 end
 
@@ -879,6 +887,8 @@ end
 function OnPluginSaveState()
 	SetVariable("pos_x", pos_x)
 	SetVariable("pos_y", pos_y)
+    SetVariable("font_name", font_name)
+    SetVariable("font_size", font_size)
 	SetVariable("win_width", win_width)
 	SetVariable("win_height", win_height)
 	SetVariable("show_minions", from_bool(show_minions)) -- show minions
