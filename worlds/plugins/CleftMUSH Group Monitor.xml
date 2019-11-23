@@ -208,11 +208,11 @@ local show_moves = to_bool[GetVariable("show_moves") or "1"] -- show moves
 local last_refresh = 1 -- last window refresh
 local pos_x = GetVariable("pos_x") or 100
 local pos_y = GetVariable("pos_y") or 100
-local font_size = 8
+local font_size = GetVariable("font_size") or 8
 local font_name = "Lucida Console"
 local window_visible = true -- always start out with visible window
 local title = "Group Info: Use LOOK to draw the bars, or if this is your first time using the window type setup prompt"
-local bar_height = 12 -- height of bars
+local bar_height = font_size+4 -- height of bars
 local bar_width = tonumber(GetVariable("bar_width")) or 200 -- width of bars
 local bar_ticks = 9 -- number of ticks to show on bar
 local bar_border = "#777777" -- bar surrounding the gauges
@@ -222,6 +222,7 @@ local mana_color = GetVariable("mana_color") or "#3333ff" -- color of bar
 local moves_color = GetVariable("moves_color") or "#ffff66" -- color of bar
 local win_height = GetVariable("win_height") or 400
 local win_width = GetVariable("win_width") or 440
+local top = GetVariable("top") or 17
 local grip_resize = 10 -- resize grip size
 function toggle()
 	window_visible = not window_visible
@@ -510,7 +511,10 @@ if is_tank(player.tags) or (not show_minions and player.minion == 0) or show_min
             local box_top, box_right, box_bottom = top, 1, nil
             across = across + 1 -- how many players fit across window
            --local isleader = leader
-
+top = GetVariable("font_size") + box_top - 6 or 17
+box_top = top
+--print("Box_Top: ", box_top)
+--print("Box_Bottom: ", box_bottom)
             local x
             if isPlayerOrEnemy and bar_width == 100 then
                 x = WindowText(winid, "f1", player.level, left, top + 3, 0, 0, ColourNameToRGB(level_color), false) + left -- label and padding
@@ -526,7 +530,7 @@ if is_tank(player.tags) or (not show_minions and player.minion == 0) or show_min
                 x = WindowText(winid, "f1", player.level, left, top + 3, 0, 0, ColourNameToRGB(level_color), false) + left -- label and padding
                 x = WindowText(winid, "f1", truncate(player.name), left + 22, top + 3, 0, 0, ColourNameToRGB(player_color), false) + left + 18 + 6 -- player name truncated
                 x = WindowText(winid, "f1", "E", x, top + 3, 0, 0, ColourNameToRGB(tank_color), false) -- show if enemy
-end
+           end
             if isPlayerOrEnemy and bar_width == 200 then
                 x = WindowText(winid, "f1", "Lv["..player.level.."]", left, top + 3, 0, 0, ColourNameToRGB(level_color), false) + left -- label and padding
                 x = x + WindowText(winid, "f1", abbreviate(player.name), left + 50, top + 3, 0, 0, ColourNameToRGB(player_color), false) + left + 18 + 8 -- player name
@@ -551,7 +555,10 @@ end
                     x = x + WindowText(winid, "f1", "L", left+210, top + 3, 0, 0, ColourNameToRGB(leader_color), false) + 2 -- show if leader
            end
                 if group_leader == player.name and isPlayerOrEnemy and bar_width == 200 and show_numbers then
-                    x = x + WindowText(winid, "f1", "[LEADER]", left+219	, top + 3, 0, 0, ColourNameToRGB(leader_color), false) -- show if leader -- used to be left+240
+			--	print("TOPGROUP: ", top)
+			--	print("LEFT: ", left)
+			--	print("BAR+LEFT+19 ",bar_width+left+19) 
+                    x = x + WindowText(winid, "f1", "[LEADER]", bar_width+left+19, top + 3, 0, 0, ColourNameToRGB(leader_color), false) -- show if leader -- used to be left+240
            end
 
             if is_minion(player.tags) and isPlayerOrEnemy then
@@ -577,7 +584,12 @@ end
                 end
                    if is_pet(player.tags)and show_numbers then
                 if bar_width == 200 then
-                    x = x + WindowText(winid, "f1", "[PET]", left + 219, top + 3, 0, 0, ColourNameToRGB(pet_color), false) -- show if pet
+			--	print("TOPGROUP: ", top)
+			--	print("LEFT: ", left)
+			--	print("BAR WIDTH: ", bar_width)
+			--	print("BAR+LEFT+19 ",bar_width+left+19)
+            --    print("POS_Y: ", pos_y)				
+                    x = x + WindowText(winid, "f1", "[PET]", bar_width+left+19	, top + 3, 0, 0, ColourNameToRGB(pet_color), false) -- show if pet
                 end
            end
             if is_no_melee(player.tags) then
@@ -594,8 +606,10 @@ end
             --        x = x + WindowText(winid, "f1", "[TANK]", left + 260, top + 3, 0, 0, ColourNameToRGB(tank_color), false) -- show if tank
            --     end
           -- end
-
-            top = top + 16 -- player line height
+           top = GetVariable("font_size") * 3 + 10 or 17
+           -- top = top + 16 -- player line heightheight
+		--	print("TopNEW: ", top)
+			--print("Box_RIGHT:", box_right)
            if isPlayerOrEnemy then
             x = WindowText(winid, "f1", "HP", left, top, 0, 0, ColourNameToRGB(hp_label_color), false) + left -- label and padding
             gauge(winid, "HP for "..player.name, tonumber(player.hp), tonumber(player.hp_max), x + 3, top, bar_width, bar_height, ColourNameToRGB(hp_color), 0x000000, bar_ticks, ColourNameToRGB(bar_border), ColourNameToRGB(bar_border), nil, flat_gauges==1) -- hp gauge
@@ -847,8 +861,17 @@ elseif opt == 12 then -- Send to back
 elseif opt == 13 then -- Change Font
          wanted_font = utils.fontpicker (font_name, font_size) --font dialog
          if wanted_font then
+		 print("Bar Height1: ", bar_height)
+		 print("Top1: ", top)
             font_name = wanted_font.name
             font_size = wanted_font.size
+			SetVariable("font_size", font_size)
+			bar_height = font_size + 4
+			top = top + bar_height * 2 + rows+1	
+            SetVariable("top", top)			
+			--SetVariable("bar_height", bar_height)		
+print("Bar Height2: ", bar_height)	
+print("Top2: ", top)		
             end
             end
 	window(true)
@@ -901,6 +924,7 @@ function OnPluginSaveState()
 	SetVariable("mana_color", mana_color) -- mana color
 	SetVariable("moves_color", moves_color) -- moves color
 	SetVariable("bar_width", bar_width) -- bar width
+	SetVariable("top", top)
 end
 
 function loaded()
