@@ -606,7 +606,13 @@ box_top = top
             --        x = x + WindowText(winid, "f1", "[TANK]", left + 260, top + 3, 0, 0, ColourNameToRGB(tank_color), false) -- show if tank
            --     end
           -- end
-           top = GetVariable("font_size") * 3 + 10 or 17
+--		  print("Top: ", top)
+		  
+--print("Box Top: ", box_top)
+--print("Box Bottom: ", box_bottom)
+        --   top = GetVariable("font_size") * 3 + 10 or 17
+		top = top + bar_height + 4 
+--		   print("Top2: ", top)
            -- top = top + 16 -- player line heightheight
 		--	print("TopNEW: ", top)
 			--print("Box_RIGHT:", box_right)
@@ -654,6 +660,7 @@ end
             end
 
                 box_bottom = top + 1
+--				print("TOP 3: ", top)
 --if player.minion == 0 then
 if isPlayerOrEnemy then
             WindowRectOp(winid, 1, left - 3, box_top, box_right, box_bottom, ColourNameToRGB(player_border_color)) -- player border
@@ -672,8 +679,8 @@ if isPlayerOrEnemy then
                 across = 0
                 left = 7
                 top = top + 3
-
 -- Debug Stuff
+--print("Top: ", top)
 --print("Box Top: ", box_top)
 --print("Box Bottom: ", box_bottom)
 --print("Box Right: ", box_right)
