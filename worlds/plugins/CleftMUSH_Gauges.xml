@@ -141,7 +141,7 @@ require "mw_theme_base"
 require "tprint"
 
 NUMBER_OF_TICKS = 9
-font_size = GetVariable("font_size") or 15
+font_size = GetVariable("font_size") or 9
 GAUGE_HEIGHT = GetVariable("GAUGE_HEIGHT") or 15
 FONT_COLOUR = ColourNameToRGB "white"
 
@@ -480,10 +480,12 @@ function right_click_menu()
 		elseif opt == 7 then -- Bring to Front
         CallPlugin("462b665ecb569efbf261422f","boostMe", winid)
       --  print("Bring to Front")
+        SendNoEcho("pbust %")			  
         SaveState()
 elseif opt == 8 then -- Send to back
         CallPlugin("462b665ecb569efbf261422f","dropMe", winid)
       --  print("Sent to Back")
+        SendNoEcho("pbust %")				
         SaveState()
 elseif opt == 9 then -- Change Font
      wanted_font = utils.fontpicker (font_name, font_size) --font dialog
@@ -546,7 +548,7 @@ function window(redraw)
 
 	if redraw then
 		--Note("redraw")
-font_size = GetVariable("font_size") or 15  
+font_size = GetVariable("font_size") or 9  
 font_name = GetVariable("font_name") or "Fixedsys"  
 		WindowDelete("winid")
 		WindowCreate(winid, pos_x, pos_y, win_width, win_height, 0, 0, ColourNameToRGB(bg_color))
