@@ -1,6 +1,6 @@
 -- Copy this file to create your own custom themes, but please do not modify this file.
 
--- Asmodeus 3D midnight theme
+-- Asmodeus 3D bob-bomb theme
 return {
    LOGO_OPACITY = 0.03,
 
@@ -12,9 +12,9 @@ return {
    CLICKABLE = 0x000000,
    CLICKABLE_HOVER = 0x422527,             -- Color when hovering over the tab with mouse
    CLICKABLE_HOT = 0x000000,               -- Color when you have an unread message
-   CLICKABLE_TEXT = 0xFFFFFF,
-   CLICKABLE_HOVER_TEXT = 0xFFFFFF,
-   CLICKABLE_HOT_TEXT = 0x8CE6F0,
+   CLICKABLE_TEXT = 0xFFFFFF,              -- Color of tab text
+   CLICKABLE_HOVER_TEXT = 0xFFFFFF,        -- Color of tab text when hovering over it
+   CLICKABLE_HOT_TEXT = 0x8CE6F0,          -- Color of tab text when you have an unread message
 
    TITLE_PADDING = 2,
 
