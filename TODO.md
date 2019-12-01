@@ -195,6 +195,12 @@ Black Cauldron on cooldown for 2 seconds.
 
 
 
+You sure are BLEEDING!
+
+
+Gocial: Funslash jumps into the air, and performs the ever-exciting triple backspring half-twist layout high five with himself!
+
+Lilly has restored you.
 
 ========================= MAP ICONS DO SECTION ================================
 
