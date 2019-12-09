@@ -54,120 +54,68 @@ PUT IDEAS OF THINGS TO DO  IN  HERE, ALONG WITH A PRIORITY
 
 -- ALL SOUNDS GO IN THE CLEFTMUSH COD_HANDLER PLUGIN
 
-"DONE"  DO  [LEENE BELL SOUND]
+- [x]  [LEENE BELL SOUND]
 Ding, dong, ding, dong. Leene's Bell reverberates through the city.
 
-TODO  [OWLITE ACTIVATION SOUND]
-
+- [ ]  [OWLITE ACTIVATION SOUND]
 dingadingling
-
-TODO  [SAILNG SOUND]
-
+- [ ]  [SAILNG SOUND]
   NO STRING YET
-
-TODO  [Docking/Trip Successful Sound]
-
-Sunsnug's:
-
+- [ ]  [SunSnug Docking/Trip Successful Sound]
 Against all odds, the barrel boat arrives safely in one piece!
-
-TODO  [Slot Machine: Begin, Success, Failure]
-
-  NO STRING YET
-
-"DONE"  DO  [Bambino Bombs]
-
+- [ ]  [Slot Machine: Begin, Success, Failure]
+NO STRING YET
+- [x] [Bambino Bombs]
  ^The Bambino Bomb violently explodes\!\!\!$
-
-TODO  [NAYRU'S LOVE SOUND]
-
+- [ ]  [NAYRU'S LOVE SOUND]
 HelloWorld is surrounded by an aura that reflects his character.
-
 You are surrounded by an aura that reflects your character.
-
 (We could make a trigger that anchors the end of the line " surrounded by an aura that reflects your character."
-
 or make a more complex one roughly like "^%w (is|are) surrounded by an aura that reflects (his|her|...) character.$"
-
 or two simple ones "^%w is surrounded by an aura that reflects (his|her|...) character.$" and "^You are surrounded by an aura that reflects your character.$")
-
-TODO [ZOMBIFY HEAL SOUND]
-
+- [ ] [ZOMBIFY HEAL SOUND]
 A Sanguine Ahriman is annihilated by your healing!!! (366)
-
 A Sanguine Ahriman is annihilated by Abaril's healing!!! (366)
-
 Abaril's healing annihilates a Sanguine Ahriman!!! (323)
-
-TODO [PROTECT SOUND]
-
-   NO STRING YET
-
-TODO [FIRA SOUND]
-
+- [ ] [PROTECT SOUND]
+NO STRING YET
+- [ ] [FIRA SOUND]
 A fireball flies towards Santa Claws and explodes!!!
 Your blast of flame burns away at a green imp!!!
-
-TODO [BETTER SYPHON SOUND]
-
-TODO  Add [Mining Sounds]
-
+- [ ] [BETTER SYPHON SOUND]
+- [ ]  Add [Mining Sounds]
 You stop your digging, having found nothing.
-
 You notice something in the large stalactite and stop your digging.
-
 Something shrieks as you strike it with your tool!
-
-TODO Add merchant ship docking sound or chobin squeakin sound
-
+- [ ] Add merchant ship docking sound or chobin squeakin sound
 A merchant's ship docks at the island.
-
 A chobin in a large hat hops off the boat and begins squeaking orders.
-
--- TODO Add hop on sound
-
+- [ ] Add hop on sound
 The chobin captain says 'Fine, get on the boat, if it will shut you up.'
-
--- sound for ship horn or something
-
+- [ ] Add sound for ship horn or something
 The chobin captain says 'Let's get this ship on its way! Today, please!'
-
 The crew members scramble and set the ship sailin'.
-
--- TODO Add more Boat Sounds for Palico Boat
-
+- [ ] Add more Boat Sounds for Palico Boat
 The chobin captain hops off the boat and begins squeaking orders.
-
 You say 'let me off the boat.'
-
 A chobin sailor says 'All righty. We're docked at the Rat Cantina.'
-
 A palico drops a box with a loud THUD!
-
 The palico captain says 'Nya! Watch mewrself!'
-
 The palico yowls while picking up the dropped box and scurrying away.
-
 The palico captain says 'Meowll right, let's purrack it up and move meowt!'
-
 The palico captain and all the sailors board the ship and it immediately heads out to the open ocean.
-
 A strange boat made up of a bunch of barrels tied together docks at the island.
-
 A cat with an eyepatch hops off of the boat and begins meowing orders at scrambling sailors.
-
 A whirlwind swooshes by, carrying you away into the air.
-
-TODO Add strings "You sure are BLEEDING!"
+- [ ] Add strings "You sure are BLEEDING!"
 "Gocial: Funslash jumps into the air, and performs the ever-exciting triple backspring half-twist layout high five with himself!"
 "Lilly has restored you."
 
 ========================= MAP ICONS DO SECTION ================================
-TODO Add TICKET TAKER tile
-TODO Add TICKET SHOP tile
-TODO Add FERRY tile
+- [ ] Add TICKET TAKER tile
+- [ ] Add TICKET SHOP tile
+- [ ] Add FERRY tile
 "======================================================================================="
-
 - [x] (5) DO Add Bring to front/send to back functionality to all windows
 
  Below is the code that goes in the right click menu of each plugin.
