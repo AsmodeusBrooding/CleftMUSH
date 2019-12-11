@@ -193,7 +193,7 @@ BACKGROUND_COLOUR             = { name = "Area Background",  colour =  ColourNam
 ROOM_COLOUR                   = { name = "Room",             colour =  ColourNameToRGB "#dcdcdc"}
 EXIT_COLOUR                   = { name = "Exit",             colour =  ColourNameToRGB "#e0ffff"}
 EXIT_COLOUR_UP_DOWN           = { name = "Exit up/down",     colour =  ColourNameToRGB "#ffb6c1"}
-NOTE_ROOM_COLOUR              = { name = "Room notes",       colour =  tonumber(GetPluginVariable("7c54b861a8cd3c4745c28834", "NOTE_ROOM_COLOUR")) or 0xFF }
+NOTE_ROOM_COLOUR              = { name = "Room notes",       colour =  tonumber(GetPluginVariable("7c54b861a8cd3c4745c28834", "NOTE_ROOM_COLOUR")) or 0x90EE90 }
 UNKNOWN_ROOM_COLOUR           = { name = "Unknown room",     colour =  ColourNameToRGB "#8b0000"}
 DIFFERENT_AREA_COLOUR         = { name = "Another area",     colour =  ColourNameToRGB "#ff0000"}
 PK_BORDER_COLOUR              = { name = "PK border",        colour =  ColourNameToRGB "red"}
@@ -795,7 +795,7 @@ area = GetPluginVariable("dd07d6dbe73fe0bd02ddb62c", "area") or "<No_Area>"
 	      WindowDrawImage (win, "rock", left, top, right, bottom, miniwin.image_stretch)  -- stretch to fill
 		  		  		  	 elseif string.match (room.fillcolour, "65280") then
 	      WindowDrawImage (win, "field", left, top, right, bottom, miniwin.image_stretch)  -- stretch to fill
-		  		  		  		 elseif string.match (room.fillcolour, "6316128") and room.area == "Brigantes Castle" then
+		  		  		  	 elseif string.match (room.fillcolour, "6316128") and room.area == "Brigantes Castle" then
 	      WindowDrawImage (win, "inside_brigantes", left, top, right, bottom, miniwin.image_stretch)  -- stretch to fill\		              
 		  		  		  	 elseif string.match (room.fillcolour, "6316128") and room.area ~= "Brigantes Castle" then
 	      WindowDrawImage (win, "building", left, top, right, bottom, miniwin.image_stretch)  -- stretch to fill
@@ -821,15 +821,15 @@ area = GetPluginVariable("dd07d6dbe73fe0bd02ddb62c", "area") or "<No_Area>"
 	      WindowDrawImage (win, "hill", left, top, right, bottom, miniwin.image_stretch)  -- stretch to fill
 		  		  		  	 elseif string.match (room.fillcolour, "15790240") then
 	      WindowDrawImage (win, "wasteland", left, top, right, bottom, miniwin.image_stretch)  -- stretch to fill	
-		  		  		  		  	 elseif string.match (room.fillcolour, "12632256") then
+		  		  		  	 elseif string.match (room.fillcolour, "12632256") then
 	      WindowDrawImage (win, "mountain", left, top, right, bottom, miniwin.image_stretch)  -- stretch to fill
-		  		  		  		  	 elseif string.match (room.fillcolour, "1262987") then
+		  		  		  	 elseif string.match (room.fillcolour, "1262987") then
 	      WindowDrawImage (win, "road", left, top, right, bottom, miniwin.image_stretch)  -- stretch to fill
-		  		  		  		  	 elseif string.match (room.fillcolour, "8413280") then
+		  		  		  	 elseif string.match (room.fillcolour, "8413280") then
 	      WindowDrawImage (win, "ruins", left, top, right, bottom, miniwin.image_stretch)  -- stretch to fill	
-		  		  		  		  	 elseif string.match (room.fillcolour, "138860") then
+		  		  		  	 elseif string.match (room.fillcolour, "138860") then
 	      WindowDrawImage (win, "developed", left, top, right, bottom, miniwin.image_stretch)  -- stretch to fill	
-		  		  		  		  	 elseif string.match (room.fillcolour, "255") then
+		  		  		  	 elseif string.match (room.fillcolour, "255") then
 	      WindowDrawImage (win, "lava", left, top, right, bottom, miniwin.image_stretch)  -- stretch to fill	
 		  
 	 end -- if
@@ -866,6 +866,7 @@ area = GetPluginVariable("dd07d6dbe73fe0bd02ddb62c", "area") or "<No_Area>"
 										 			     		elseif string.match (room.info, "weaponshop") then
                                          special_room = true
 		 	                             WindowDrawImage (win, "weaponshop", left, top, right, bottom, miniwin.image_stretch)  -- stretch to fill
+										 --WindowDrawImageAlpha (win, "weaponshop", left, top, right, bottom)
 				                         WindowCircleOp (win, miniwin.circle_rectangle, left-2-room.borderpenwidth, top-2-room.borderpenwidth,
                                          right+2+room.borderpenwidth, bottom+2+room.borderpenwidth,REGULAR_FILL_COLOUR.colour,
                                          room.borderpen, room.borderpenwidth,-1,miniwin.brush_null)
@@ -873,6 +874,15 @@ area = GetPluginVariable("dd07d6dbe73fe0bd02ddb62c", "area") or "<No_Area>"
 										                		elseif string.match (room.info, "armorshop") then
                                          special_room = true
 		 	                             WindowDrawImage (win, "armorshop", left, top, right, bottom, miniwin.image_stretch)  -- stretch to fill
+										 --WindowDrawImageAlpha (win, "armorshop", left, top, right, bottom)
+				                         WindowCircleOp (win, miniwin.circle_rectangle, left-2-room.borderpenwidth, top-2-room.borderpenwidth,
+                                         right+2+room.borderpenwidth, bottom+2+room.borderpenwidth,REGULAR_FILL_COLOUR.colour,
+                                         room.borderpen, room.borderpenwidth,-1,miniwin.brush_null)
+                                         room.fillbrush = 8  -- medium pattern
+										 				     	elseif string.match (room.info, "petshop") then
+                                         special_room = true
+		 	                             --WindowDrawImage (win, "petshop", left, top, right, bottom, miniwin.image_stretch)  -- stretch to fill
+										 WindowDrawImageAlpha (win, "petshop", left, top, right, bottom)
 				                         WindowCircleOp (win, miniwin.circle_rectangle, left-2-room.borderpenwidth, top-2-room.borderpenwidth,
                                          right+2+room.borderpenwidth, bottom+2+room.borderpenwidth,REGULAR_FILL_COLOUR.colour,
                                          room.borderpen, room.borderpenwidth,-1,miniwin.brush_null)
@@ -900,15 +910,18 @@ area = GetPluginVariable("dd07d6dbe73fe0bd02ddb62c", "area") or "<No_Area>"
                                          room.fillbrush = 8  -- medium pattern											 
 										 						elseif string.match (room.info, "inn") then
                                          special_room = true
-		 	                             WindowDrawImage (win, "inn", left, top, right, bottom, miniwin.image_stretch)  -- stretch to fill
+		 	                             WindowDrawImage (win, "inn", left, top, right, bottom, 3) 
+										 --WindowDrawImage (win, "inn", left, top, right, bottom, miniwin.image_stretch)  -- stretch to fill
+										 --WindowDrawImageAlpha (win, "inn", left, top, right, bottom)
 				                         WindowCircleOp (win, miniwin.circle_rectangle, left-2-room.borderpenwidth, top-2-room.borderpenwidth,
                                          right+2+room.borderpenwidth, bottom+2+room.borderpenwidth,INN_FILL_COLOUR.colour,
                                          room.borderpen, room.borderpenwidth,-1,miniwin.brush_null)
                                          room.fillbrush = 8  -- medium pattern
 										 				        elseif string.match (room.info, "tavern") then
                                          special_room = true
-		 	                             --WindowDrawImage (win, "tavern", left, top, right, bottom, miniwin.image_stretch)  -- stretch to fill
-										 WindowDrawImageAlpha (win, "tavern", left, top, right, bottom)
+									     --WindowDrawImage (winalpha, "tavern", left, top, right, bottom, miniwin.image_stretch)
+										 WindowDrawImage (win, "tavern", left, top, right, bottom, miniwin.image_transparent_copy)
+										-- WindowDrawImageAlpha (winalpha, "tavern", left, top, right, bottom)
 				                         WindowCircleOp (win, miniwin.circle_rectangle, left-2-room.borderpenwidth, top-2-room.borderpenwidth,
                                          right+2+room.borderpenwidth, bottom+2+room.borderpenwidth,INN_FILL_COLOUR.colour,
                                          room.borderpen, room.borderpenwidth,-1,miniwin.brush_null)
@@ -1373,6 +1386,7 @@ function draw (uid)
 	      WindowLoadImage (win, "moti", "worlds\\plugins\\images\\moti.png")                               --Moti Tile		
 	      WindowLoadImage (win, "weaponshop", "worlds\\plugins\\images\\weaponshop.png")                   --Weapon Shop Tile				  
 	      WindowLoadImage (win, "armorshop", "worlds\\plugins\\images\\armorshop.png")                     --Armor Shop Tile	
+	      WindowLoadImage (win, "petshop", "worlds\\plugins\\images\\petshop.png")                         --Pet Shop Tile			  
 	      WindowLoadImage (win, "itemshop", "worlds\\plugins\\images\\itemshop.png")                       --Item Shop Tile		
 	      WindowLoadImage (win, "foodshop", "worlds\\plugins\\images\\foodshop.png")                       --Food Shop Tile	
 	      WindowLoadImage (win, "lightshop", "worlds\\plugins\\images\\lightshop.png")                     --Light Shop Tile			  
@@ -1462,7 +1476,7 @@ function draw (uid)
          title_bottom,    -- top
          "ID: "..uid, false, false)
    end
-      if config.SHOW_ROOM_NOTES then
+      if config.SHOW_ROOM_NOTES and room.notes ~= nil and room.notes ~= "" then
       Theme.DrawTextBox(win, FONT_ID,
          (config.WINDOW.width - WindowTextWidth (win, FONT_ID, "Note: "..room.notes)) / 2,   -- left
          title_bottom,    -- top
@@ -1599,9 +1613,11 @@ function init (t)
 
    win = GetPluginID () .. "_mapper"
    config_win = GetPluginID () .. "_z_config_win"
+   winalpha = GetPluginID () .. "_alphaimages"
 
    WindowCreate (win, 0, 0, 0, 0, 0, 0, 0)
    WindowCreate(config_win, 0, 0, 0, 0, 0, 0, 0)
+   WindowCreate(winalpha, 0, 0, 0, 0, 0, 0, 0)
 
    -- add the fonts
    WindowFont (win, FONT_ID, config.FONT.name, config.FONT.size)
