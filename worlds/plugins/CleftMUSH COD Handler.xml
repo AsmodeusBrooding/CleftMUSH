@@ -147,7 +147,7 @@ keep_evaluating="y"
    sequence="100"
   >
 <send>Sound("volume=%1")
-   ColourNote ("yellow", "", "Volume changed to %1.")
+   ColourNote ("yellow", "", "Volume changed to %1 percent.")
 </send>
 </alias> 
 </aliases>
@@ -654,7 +654,9 @@ function clefthelp()
       util.print("")
 	  util.print(" {D[{x099Map Window{D: {Ymapper help{D] {D[{x099Chat Window{D: {Ychat help{D] {D[{x099Affects Window{D: {Yaffect help{D] ")
 	  util.print("")
-	  util.print(" {D[{x099Action Bar{D: {Yaction help{D] {D[{x099Code Credit{D:   {Ycredits{D]")
+	  util.print(" {D[{x099Action Bar{D: {Yaction help{D] {D[{x099Code Credit{D:   {Ycredits{D] {D[{x099Main Output{D:    {Youtput help{D]")
+	  util.print("")
+	  util.print(" {D[{x099MW Layout{D:  {Ywindow help{D] {D[{x099Change Theme{D:  {Ytheme change{D]")
       util.print("{R----------------------------------------------------------------------------------")
       util.print("")
 end
