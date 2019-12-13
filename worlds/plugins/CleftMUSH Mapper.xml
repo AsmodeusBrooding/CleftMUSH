@@ -1165,7 +1165,15 @@ end
 ------------------------------------------
 
 function updateRoomInfo(name, line, wildcards)
-   local valid_flags = {["waypoint"]="waypoint", ["bank"]="bank", ["alchemyguild"]="alchemyguild", ["priest"]="priest", ["forge"]="forge", ["weaponshop"]="weaponshop", ["armorshop"]="armorshop", ["petshop"]="petshop", ["itemshop"]="itemshop", ["foodshop"]="foodshop", ["tavern"]="tavern", ["morgue"]="morgue", ["quest"]="quest", ["fountain"]="fountain", ["gato"]="gato", ["moti"]="moti", ["inn"]="inn"}
+   local valid_flags = {
+   ["waypoint"]="waypoint", ["bank"]="bank", ["alchemyguild"]="alchemyguild", 
+   ["priest"]="priest", ["forge"]="forge", ["weaponshop"]="weaponshop", 
+   ["armorshop"]="armorshop", ["petshop"]="petshop", ["itemshop"]="itemshop", 
+   ["foodshop"]="foodshop", ["tavern"]="tavern", ["morgue"]="morgue", ["quest"]="quest", 
+   ["fountain"]="fountain", ["gato"]="gato", ["moti"]="moti", ["inn"]="inn",
+   ["owlite"]="owlite", ["enchanter"]="enchanter", ["mage"]="mage"
+   }
+   
    local roomtype, room, roomuid, matchFound = wildcards[1], wildcards[2], current_room or 0, false
    new_flags = {}
    for word in wildcards[1]:gmatch("%w+") do table.insert(new_flags, word) end
@@ -1591,6 +1599,7 @@ Simulate("\n[UID]: ", uid)
 --print("Exits: ", exits_str)
 printexits = exits_str
 Simulate("\nLast Dir: ", last_direction_moved)
+--print("Last DIRECTION: ", last_direction_moved)
 
 
   -- add to table if not known
@@ -1623,7 +1632,7 @@ Simulate("\nLast Dir: ", last_direction_moved)
 --end
    if shownotes and rooms[uid] and rooms[uid].notes ~= nil and rooms[uid].notes ~= "" then
       --AnsiNote(ColoursToANSI("{R[{WMapper Notes for room" ..name.. ..rooms[uid].notes.."{W]"))
-   AnsiNote(ColoursToANSI("{R[{WNotes - {Y"..name.." {W- "..rooms[uid].notes.."{R]{w"))
+   AnsiNote(ColoursToANSI("{R[{WNotes - {Y"..name.." {W- "..rooms[uid].notes.."{R]{w")) 
 end
   -- call mapper to draw this room
   mapper.draw (uid)
@@ -1635,24 +1644,24 @@ end
   -- return
 end -- process_exits
 
-function fix_up_exit ()
-   local room = rooms [from_room]
-
-   run_sql(string.format ("UPDATE exits SET touid = %s WHERE fromuid = %s AND dir = %s;",
-        fix_sql  (current_room),     -- destination room
-        fix_sql  (from_room),       -- from previous room
-        fix_sql  (last_direction_moved)  -- direction (eg. "n")
-   ))
-
+--function fix_up_exit ()
+--   local room = rooms [from_room]
+--
+--   run_sql(string.format ("UPDATE exits SET touid = %s WHERE fromuid = %s AND dir = %s;",
+--        fix_sql  (current_room),     -- destination room
+--        fix_sql  (from_room),       -- from previous room
+--        fix_sql  (last_direction_moved)  -- direction (eg. "n")
+--   ))
+--
 --   if show_database_mods then
-      mapper.mapprint ("Fixed exit", last_direction_moved, "from room", from_room, "to be to", current_room)
+--      mapper.mapprint ("Fixed exit", last_direction_moved, "from room", from_room, "to be to", current_room)
 --   end -- if
-
-   room.exits [last_direction_moved] = current_room
-
-   last_direction_moved = nil
-   from_room = nil
-end -- fix_up_exit
+--
+--   room.exits [last_direction_moved] = current_room
+--
+--   last_direction_moved = nil
+--   from_room = nil
+--end -- fix_up_exit
 
 -- -----------------------------------------------------------------
 -- for converting things like ^ $ * etc. into "escaped" sequences
@@ -1690,14 +1699,15 @@ function get_room (uid)
   end -- if
   --room.area = "Cleft of Dimensions"  -- assume every room is in this area
   room.hovermessage = string.format (
-"%s\tExits: %s\nRoom: %s\nDescription: %s \nArea: %s\nTerrain:%s \nNotes: %s",
+"%s\tExits: %s\nRoom: %s\nDescription: %s \nArea: %s\nTerrain:%s \nNotes: %s \nRoom Flags: %s",
       room.name,
       table.concat (texits, ", "),
       uid,
       room.desc,
       room.area,
-      terrain,
-      room.notes
+      terrain, -- fix this to be proper per room: currently it shows the same terrain as room you're in, but the other rooms aren't proper. this is due to the way I coded it: TODO: FIX THIS
+      room.notes,
+	  room.info
       -- depth,
       -- table.concat (path, ",")
       )
@@ -1706,6 +1716,7 @@ function get_room (uid)
 	    -- SPECIAL ROOM COLOUR FILLS: Marking a room as "special" makes the border get thicker when you walk into a room
 special_room = false
 shop = false
+
                          if room.info and room.info ~= "" then
                          if string.match (room.info, "waypoint") then
                                          special_room = true
@@ -1747,7 +1758,6 @@ shop = false
                                          special_room = true			
                          elseif string.match (room.info, "inn") then
                                          special_room = true	 								 
-                 
 										end
 end -- if
 					     if uid == current_room and special_room then
@@ -1799,7 +1809,7 @@ return
    end -- if still not there
 
   local function checkmark (which)
-    if rooms [uid] [which] then
+    if rooms[uid][which] then
       return "+"
     else
       return ""
@@ -1823,7 +1833,7 @@ return
       { name = checkmark ("shop")  .. "Mark as Item Shop",     func = room_toggle_itemshop } ,
       { name = checkmark ("shop")  .. "Mark as Pet Shop",      func = room_toggle_petshop } ,
       { name = checkmark ("shop")  .. "Mark as Tavern",        func = room_toggle_tavern } ,
-	  { name = checkmark ("shop")  .. "Mark as Bank",          func = room_toggle_bank } ,
+	  { name = checkmark ("bank")  .. "Mark as Bank",          func = room_toggle_bank } ,
       { name = checkmark ("shop")  .. "Mark as Inn",           func = room_toggle_inn } ,
      } -- handlers
 
@@ -2777,6 +2787,7 @@ temp_exit = chosen_exit
 
       -- update in-memory table
       rooms [uid].exits [temp_exit] = exit_destination
+	   add_update_room(uid, rooms[uid])
       mapper.draw (current_room)
    else
       mapper.mapprint ("Destination unchanged for exit '"..temp_exit.."'.")
