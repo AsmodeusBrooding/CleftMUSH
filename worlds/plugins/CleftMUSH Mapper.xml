@@ -328,6 +328,13 @@ util.print("{R--------------------------------------------------")
   sequence="100"
   script="updateRoomUid">
 </alias>
+<alias
+  match="^mapper areaname$"
+  enabled="y" 
+  regexp="y" 
+  sequence="100"
+  script="updateRoomArea">
+</alias>
 
 <alias
   match="^mapper draw room$"
@@ -1231,6 +1238,15 @@ print("New NAME: ", newname)
   add_update_room(newname, rooms[current_room])
 print("current_room: ", current_room)
 print("Name: ", name)
+  mapper.draw(current_room)
+end
+function updateRoomArea()
+   areaname = utils.inputbox ("Enter area name for " .. name, name)
+print("Area Name: ", areaname)
+  rooms[current_room].area = areaname
+  add_update_room(areaname, rooms[current_room])
+print("current_room: ", current_room)
+print("Area: ", area)
   mapper.draw(current_room)
 end
 function updateRoomUid()
