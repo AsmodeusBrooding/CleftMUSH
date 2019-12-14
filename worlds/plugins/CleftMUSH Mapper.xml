@@ -1241,13 +1241,15 @@ print("Name: ", name)
   mapper.draw(current_room)
 end
 function updateRoomArea()
-   areaname = utils.inputbox ("Enter area name for " .. name, name)
-print("Area Name: ", areaname)
-  rooms[current_room].area = areaname
-  add_update_room(areaname, rooms[current_room])
-print("current_room: ", current_room)
-print("Area: ", area)
-  mapper.draw(current_room)
+   newarea = utils.inputbox ("Enter area name for " .. name, name)
+--print("Area Name: ", newarea)
+   rooms[uid].area = newarea
+   add_update_room(current_room, rooms[current_room])
+   --print("Area Name: ", newarea)
+    --  add_update_room(newarea, rooms[area])
+--print("current_room: ", current_room)
+--print("Area: ", area)
+   mapper.draw(current_room)
 end
 function updateRoomUid()
    newuid = utils.inputbox ("Enter new UID for " .. current_room, uid)
@@ -1265,7 +1267,6 @@ function update_uid(newuid, olduid)
     sql = [[UPDATE rooms SET uid = ']]..newuid..[[' WHERE uid = ']]..olduid..[[']]
     run_sql(sql)
 end
-
 
 -----------------------------------------
 -- NOTE CODE GOES HERE
