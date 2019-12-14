@@ -667,10 +667,8 @@ function stampAndLog(styles)
 
    timestamp = os.date(date_format)
    
-
    if (log_to_file == 1) then
       text = StylesToColours(styles)
-
       if (log_timestamps == 1) then
          log_text = "{W"..timestamp..text
       else
@@ -729,6 +727,10 @@ function storeFromOutside(msg, tab)
       if should_redraw == true then
          drawTabs()
       end
+   end
+
+   if(msg ~= nil) then
+      stampAndLog(ColoursToStyles(msg))
    end
 
    if should_redraw ~= nil then
