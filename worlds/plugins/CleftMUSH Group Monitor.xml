@@ -27,24 +27,34 @@
    match="^(?P<leader>\w+)'s group:$"
    keep_evaluating="y"
    script="start_group"
-   omit_from_output="y"
+   omit_from_output="n"
    send_to="14"
    sequence="100"
-  ><send>
-</send>
+  >
  </trigger>
   <trigger
-   enabled="y"
+   enabled="n"
    regexp="y"
    name="leadertrig"
    match="^(?P<leader>\w+)'s group:$"
    script="istheleader"
    keep_evaluating="y"
-   omit_from_output="y"
+   omit_from_output="n"
    send_to="14"
    sequence="100"
-  ><send>
-</send>
+  >
+ </trigger>
+  <trigger
+   enabled="y"
+   regexp="y"
+   name="my_name"
+   match="^\[NAME: (?P<name>\w+)\]$"
+   script="my_name"
+   keep_evaluating="y"
+   omit_from_output="n"
+   send_to="14"
+   sequence="100"
+  >
  </trigger>
   <trigger
    group="group"
@@ -54,7 +64,7 @@
    keep_evaluating="y"
    match="^\[(\s+|)(?<level>\d+)\s+(?<tags>[^\s]+)\]\s+(?<name>(\[\w+\]\s+\w+.*\w+|\(\w+\)\s+\w+.*\w+|\w+.*\w+))\s+(?<hp>\d+)\/(\s+|)(?<hp_max>\d+)\s+hp\s+(?<mana>(-\d+|\d+|\?))\/(\s+|)(?<mana_max>(-\d+|\d+|\?))\s+mana\s+(?<moves>\d+)\/(\s+|)(?<moves_max>\d+)\s+mv\s+(?<exp>\d+)\s+xp$"
    script="player_line"
-   omit_from_output="y"
+   omit_from_output="n"
    sequence="100"
   >
   </trigger>
@@ -64,7 +74,7 @@
    match="^Enemy group:$"
    keep_evaluating="y"
    script="start_enemy_group"
-   omit_from_output="y"
+   omit_from_output="n"
    sequence="100"
   >
   </trigger>
@@ -75,17 +85,7 @@
    keep_evaluating="y"
    match="^\[(\s+|)(?<level>\d+)\s+(?<tags>[^\s]+)\]\s+(?<name>\w+.*\w+)\s+(?<hp>\d+)\/(\s+|)(?<hp_max>\d+)\s+hp\s+(?<mana>(-\d+|\d+|\?))\/(\s+|)(?<mana_max>(-\d+|\d+|\?))\s+mana\s+(?<moves>\d+)\/(\s+|)(?<moves_max>\d+)\s+mv\s+(?<exp>\d+)\s+xp$"
    script="enemy_line"
-   omit_from_output="y"
-   sequence="100"
-  >
-  </trigger>
-  <trigger
-   enabled="y"
-   regexp="y"
-   match="^(?<name>.+)'s group:$"
-   keep_evaluating="y"
-   script="my_name"
-   omit_from_output="y"
+   omit_from_output="n"
    sequence="100"
   >
   </trigger>
@@ -94,11 +94,11 @@
    regexp="y"
    match="^\[G_End\]$"
    script="end_group"
-   omit_from_output="y"
+   omit_from_output="n"
    sequence="100"
   >
   </trigger>
-<trigger
+  <trigger
    enabled="y"
    match="| HP:*/* | MP:*/* | MV:*/* | Enemy:None! | TNL:* | SUPER: * | "
    keep_evaluating="y"
@@ -107,9 +107,9 @@
    sequence="100"
   >
   <send>
-enemy_group = nil
-window(true)
-</send>
+    enemy_group = nil
+    window(true)
+  </send>
   </trigger>
 </triggers>
 
@@ -325,8 +325,7 @@ function split(n, t)
     local tags = {}
     for i = 1, #t do
     local tag = string.sub(t, i)
-    --(t, i, i)
-    --print("Tag: ", tag)
+    print("Tag: ", tag)
     if tag == "L" then
 	group_leader = n
     end
@@ -374,6 +373,7 @@ function is_no_melee(tags)
 end
 
 function istheleader(name, line, wildcards)
+    Note("wildcards.leader:"..wildcards.leader)
     isleader = wildcards.leader
 end
 
