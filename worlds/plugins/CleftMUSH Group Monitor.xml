@@ -140,6 +140,14 @@
    script="simulate_group"
   >
   </alias>
+  <alias
+   regexp="y"
+   match="^group debug$"
+   enabled="y"
+   sequence="100"
+   script="ToggleDebug"
+   >
+  </alias>
 </aliases>
 
 <!--  Script  -->
@@ -224,6 +232,28 @@ local win_height = GetVariable("win_height") or 400
 local win_width = GetVariable("win_width") or 440
 local top = GetVariable("top") or 20
 local grip_resize = 10 -- resize grip size
+local debug_state = GetVariable("debug_state") or false
+
+function ToggleDebug()
+   debug_state = not debug_state
+   NotifyNote("Debug is now " .. tostring(debug_state))
+   SaveState()
+end
+
+function NotifyNote(mesage)
+   ColourNote ("Green", "", message)
+end
+
+function ErrorNote(message)
+   ColourNote ("Red", "", message)
+end
+
+function DebugNote(message)
+   if(debug_state) then
+      Note(message)
+   end
+end
+
 function toggle()
     window_visible = not window_visible
     if not window_visible then -- remove window
@@ -325,7 +355,7 @@ function split(n, t)
     local tags = {}
     for i = 1, #t do
     local tag = string.sub(t, i)
-    print("Tag: ", tag)
+    DebugNote("Tag:  " .. tag)
     if tag == "L" then
 	group_leader = n
     end
@@ -938,6 +968,7 @@ function OnPluginSaveState()
     SetVariable("moves_color", moves_color) -- moves color
     SetVariable("bar_width", bar_width) -- bar width
     SetVariable("top", top)
+    SetVariable("debug_state", tostring(debug_state))
 end
 
 function loaded()
