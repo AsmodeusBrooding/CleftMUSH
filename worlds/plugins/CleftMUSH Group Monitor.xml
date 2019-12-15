@@ -575,11 +575,9 @@ function drawPlayer(player, i, isPlayerOrEnemy)
 	    if show_numbers then
 	       x = WindowText(winid, "f1", player.level, left, top + 3, 0, 0, ColourNameToRGB(level_color), false) + left -- label and padding
 	       x = WindowText(winid, "f1", truncate(player.name), left + 22, top + 3, 0, 0, ColourNameToRGB(player_color), false) + left + 18 + 6 -- player name truncated
-	       x = x + WindowText(winid, "f1", "[ENEMY]", x, top + 3, 0, 0, ColourNameToRGB(tank_color), false) + 2 -- show if enemy
 	    else
 	       x = WindowText(winid, "f1", player.level, left, top + 3, 0, 0, ColourNameToRGB(level_color), false) + left -- label and padding
 	       x = WindowText(winid, "f1", truncate(player.name), left + 22, top + 3, 0, 0, ColourNameToRGB(player_color), false) + left + 18 + 6 -- player name truncated
-	       x = WindowText(winid, "f1", "E", x, top + 3, 0, 0, ColourNameToRGB(tank_color), false) -- show if enemy
 	    end
 
 	    if group_leader == player.name then
