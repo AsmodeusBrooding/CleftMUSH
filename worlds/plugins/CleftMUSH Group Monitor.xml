@@ -27,31 +27,31 @@
    match="^(?P<leader>\w+)'s group:$"
    keep_evaluating="y"
    script="start_group"
-   omit_from_output="n"
+   omit_from_output="y"
    send_to="14"
    sequence="100"
   >
  </trigger>
   <trigger
-   enabled="n"
+   enabled="y"
    regexp="y"
    name="leadertrig"
    match="^(?P<leader>\w+)'s group:$"
    script="istheleader"
    keep_evaluating="y"
-   omit_from_output="n"
+   omit_from_output="y"
    send_to="14"
    sequence="100"
   >
  </trigger>
   <trigger
-   enabled="n"
+   enabled="y"
    regexp="y"
    name="my_name"
    match="^\[NAME: (?P<name>\w+)\]$"
    script="my_name"
    keep_evaluating="y"
-   omit_from_output="n"
+   omit_from_output="y"
    send_to="14"
    sequence="100"
   >
@@ -64,7 +64,7 @@
    keep_evaluating="y"
    match="^\[(\s+|)(?<level>\d+)\s+(?<tags>[^\s]+)\]\s+(?<name>(\[\w+\]\s+\w+.*\w+|\(\w+\)\s+\w+.*\w+|\w+.*\w+))\s+(?<hp>\d+)\/(\s+|)(?<hp_max>\d+)\s+hp\s+(?<mana>(-\d+|\d+|\?))\/(\s+|)(?<mana_max>(-\d+|\d+|\?))\s+mana\s+(?<moves>\d+)\/(\s+|)(?<moves_max>\d+)\s+mv\s+(?<exp>\d+)\s+xp$"
    script="player_line"
-   omit_from_output="n"
+   omit_from_output="y"
    sequence="100"
   >
   </trigger>
@@ -74,7 +74,7 @@
    match="^Enemy group:$"
    keep_evaluating="y"
    script="start_enemy_group"
-   omit_from_output="n"
+   omit_from_output="y"
    sequence="100"
   >
   </trigger>
@@ -85,7 +85,7 @@
    keep_evaluating="y"
    match="^\[(\s+|)(?<level>\d+)\s+(?<tags>[^\s]+)\]\s+(?<name>\w+.*\w+)\s+(?<hp>\d+)\/(\s+|)(?<hp_max>\d+)\s+hp\s+(?<mana>(-\d+|\d+|\?))\/(\s+|)(?<mana_max>(-\d+|\d+|\?))\s+mana\s+(?<moves>\d+)\/(\s+|)(?<moves_max>\d+)\s+mv\s+(?<exp>\d+)\s+xp$"
    script="enemy_line"
-   omit_from_output="n"
+   omit_from_output="y"
    sequence="100"
   >
   </trigger>
@@ -94,7 +94,7 @@
    regexp="y"
    match="^\[G_End\]$"
    script="end_group"
-   omit_from_output="n"
+   omit_from_output="y"
    sequence="100"
   >
   </trigger>
@@ -184,7 +184,7 @@ local group = {}
 local to_bool = {["0"] = false, ["1"] = true}
 
 local winid = "win_"..GetPluginID()
-local myname = "" -- my name
+local myname = GetVariable("myname") or "" -- my name
 local group_leader = "" -- group leader
 local group_name = "" -- group name
 local show_minions = to_bool[GetVariable("show_minions") or "1"] -- show minions
@@ -202,6 +202,7 @@ local tank_color = "#ff3300" -- tank tag color
 local minion_color = "#009999" -- minion tag color
 local no_melee_color = "#cc00cc" -- no melee tag color
 local pet_color = "#ffff66" -- pet mob color
+local you_color = "#0066dd" -- you color
 local hp_label_color = "#00ff00" -- hp label color
 local enemy_hp_label_color = "#00ff00" -- enemy hp label color
 local mana_label_color = "#3333ff" -- mana label color
@@ -280,21 +281,30 @@ function start_enemy_group()
 end
 
 function player_line(name, line, args)
-    --tprint(args)
-    table.insert(group, {hp = args.hp, hp_max = args.hp_max, mana = args.mana, mana_max = args.mana_max, moves = args.moves, moves_max = args.moves_max, tags = split(args.name, args.tags), name = args.name, level = args.level})
+    tmp_tags = split(args.name, args.tags)
+    -- Insert YOU tag
+    DebugNote("myname:" .. myname)
+    DebugNote("args.name:" .. args.name)
+    if(args.name == myname) then
+       table.insert(tmp_tags, "Y")
+       DebugNote("INSERTING TAG")
+    end
+    table.insert(group, {hp = args.hp, hp_max = args.hp_max, mana = args.mana, mana_max = args.mana_max, moves = args.moves, moves_max = args.moves_max, tags = tmp_tags, name = args.name, level = args.level})
 end
+
 function enemy_line(name, line, args)
     --tprint(args)
-    table.insert(enemy_group, {hp = args.hp, hp_max = args.hp_max, mana = args.mana, mana_max = args.mana_max, moves = args.moves, moves_max = args.moves_max, tags = split(args.name, args.tags), name = args.name, level = args.level})
+    table.insert(enemy_group, {hp = args.hp, hp_max = args.hp_max, mana = args.mana, mana_max = args.mana_max, moves = args.moves, moves_max = args.moves_max, tags = tmp_tags, name = args.name, level = args.level})
 end
 function my_name(name, line, args)
-    myname = args.name
-    group_leader = args.name
+   DebugNote("my_name trigger:" .. args.name)
+   myname = args.name
+   SaveState()
 end
 
 function prompt_line(name, line, args)
     if myname == "" then -- my name isnt set so dont try to update group stats
-    Note("My name is not set yet. Going to toggle ctriggers. This probably only happens when re-installing the group plugin.")
+    NotifyNote("My name is not set yet. Going to toggle ctriggers. This probably only happens when re-installing the group plugin.")
     SendNoEcho("pbust Playername: %n")
     --SendNoEcho("set ctrigger on")
     return
@@ -352,15 +362,12 @@ function get_biggest_number()
 end
 
 function split(n, t)
-    local tags = {}
-    for i = 1, #t do
-    local tag = string.sub(t, i)
-    if tag == "L" then
-	group_leader = n
-    end
-    table.insert(tags, tag)
-    end
-    return tags
+   local tags = {}
+   for i = 1, #t do
+      local tag = string.sub(t, i)
+      table.insert(tags, tag)
+   end
+   return tags
 end
 
 
@@ -382,14 +389,14 @@ function is_pet(tags)
     return false
 end
 
---function is_leader(tags)
---	for i, tag in ipairs(tags) do
---		if tag == "L" then
---			return true
---		end
---	end
---	return false
---end
+function is_you(tags)
+   for i, tag in ipairs(tags) do
+      if tag == "Y" then
+	 return true
+      end
+   end
+   return false
+end
 
 
 function is_no_melee(tags)
@@ -402,35 +409,32 @@ function is_no_melee(tags)
 end
 
 function istheleader(name, line, wildcards)
-    Note("wildcards.leader:"..wildcards.leader)
-    isleader = wildcards.leader
+    group_leader = wildcards.leader
 end
 
-
-
 function is_tank(tags)
-    for i, tag in ipairs(tags) do
-    if tag == "T" then
-	return true
-    end
-    end
-    return false
+   for i, tag in ipairs(tags) do
+      if tag == "T" then
+	 return true
+      end
+   end
+   return false
 end
 
 
 function set_order()
-    for i, player in ipairs(group) do
-    if is_minion(player.tags) then
-	player.minion = 3
-    elseif is_pet(player.tags) then
-	player.minion = 2
-    elseif isleader then
-	player.minion = 1
-    else
-	player.minion = 0
-    end
-    end
-
+   DebugNote("set_order")
+   for i, player in ipairs(group) do
+      if is_minion(player.tags) then
+	 player.minion = 3
+      elseif is_pet(player.tags) then
+	 player.minion = 2
+      elseif is_you(player.tags) then
+	 player.minion = 1
+      else
+	 player.minion = 0
+      end
+   end
 end
 
 function by_player(a, b)
@@ -535,33 +539,25 @@ function limit_n(num) --function nlim(num) --Yeah, I keep shortening things
 end
 
 function drawPlayer(player, i, isPlayerOrEnemy)
+   DebugNote("player.minion" .. player.minion)
    if is_tank(player.tags) or (not show_minions and player.minion == 0) or show_minions then
       local box_top, box_right, box_bottom = top, 1, nil
       across = across + 1 -- how many players fit across window
-      --local isleader = leader
-      -- print("Box_Top1: ", box_top)
-      --  print("Top1: ", top)
-      --box_top = top
-      --	   box_top = top
       box_top = top + font_size/2
       top = GetVariable("font_size")/3 + box_top or 17
-      -- print("Top2: ", top)
-      -- print("Box_Top2: ", box_top)
-      --print("Box_Top: ", box_top)
-      --print("Box_Bottom: ", box_bottom)
       local x
-      DebugNote("i:"..i)
-      DebugNote("isPlayerOrEnemy:"..tostring(isPlayerOrEnemy))
-      for k,v in pairs(player) do
-	 if(type(v) ~= 'table') then
-	    DebugNote(k..":"..v)
-	 else
-	    DebugNote("Starting table:"..k)
-	    for k1,v1 in pairs(v) do
-	       DebugNote(k1..":"..v1)
-	    end
-	 end
-      end
+      --DebugNote("i:"..i)
+      --DebugNote("isPlayerOrEnemy:"..tostring(isPlayerOrEnemy))
+      -- for k,v in pairs(player) do
+      -- 	 if(type(v) ~= 'table') then
+      -- 	    DebugNote(k..":"..v)
+      -- 	 else
+      -- 	    DebugNote("Starting table:"..k)
+      -- 	    for k1,v1 in pairs(v) do
+      -- 	       DebugNote(k1..":"..v1)
+      -- 	    end
+      -- 	 end
+      -- end
 
       ---- DRAW TEXT FOR SMALL/LARGE BARS ----
       if isPlayerOrEnemy then
@@ -628,8 +624,6 @@ function drawPlayer(player, i, isPlayerOrEnemy)
 
       ---- PETS ---->>
       if is_pet(player.tags) then
-	 Note("bar_width:" .. bar_width)
-	 Note("show_numbers:" .. tostring(show_numbers))
 	 if bar_width == 100 then
 	    x = x + WindowText(winid, "f1", "P", x, top + 3, 0, 0, ColourNameToRGB(pet_color), false) + 2 -- show if pet
 	 end
@@ -641,6 +635,24 @@ function drawPlayer(player, i, isPlayerOrEnemy)
 	 if show_numbers then
 	    if bar_width == 200 then
 	       x = x + WindowText(winid, "f1", "[PET]", bar_width+left+19, top + 3, 0, 0, ColourNameToRGB(pet_color), false) -- show if pet
+	    end
+	 end
+      end
+
+      ---- YOU ---->>
+      DebugNote("YOU section")
+      if is_you(player.tags) then
+	 if bar_width == 100 then
+	    x = x + WindowText(winid, "f1", "Y", x, top + 3, 0, 0, ColourNameToRGB(you_color), false) + 2 -- show if pet
+	 end
+
+	 if not show_numbers and bar_width == 200 then
+	    x = x + WindowText(winid, "f1", "Y", left + 210, top + 3, 0, 0, ColourNameToRGB(you_color), false) + 2 -- show if pet
+	 end
+
+	 if show_numbers then
+	    if bar_width == 200 then
+	       x = x + WindowText(winid, "f1", "[YOU]", bar_width+left+19, top + 3, 0, 0, ColourNameToRGB(you_color), false) -- show if pet
 	    end
 	 end
       end
@@ -735,62 +747,40 @@ function drawPlayer(player, i, isPlayerOrEnemy)
 end
 
 function show_group()
-    WindowRectOp(winid, 2, 2, 1, -2, -2, ColourNameToRGB(bg_color)) -- blank canvas
-    --WindowRectOp(winid, 2, 0, 0, 0, 22, ColourNameToRGB(title_bg_color)) -- title background
-    --WindowRectOp(winid, 1, 0, 0, 0, 0, ColourNameToRGB(border_color)) -- border
-    --Theme.Draw3DRect(winid, 0, 0, 0, 0, depressed) -- themed window
+   WindowRectOp(winid, 2, 2, 1, -2, -2, ColourNameToRGB(bg_color)) -- blank canvas
+   --WindowRectOp(winid, 2, 0, 0, 0, 22, ColourNameToRGB(title_bg_color)) -- title background
+   --WindowRectOp(winid, 1, 0, 0, 0, 0, ColourNameToRGB(border_color)) -- border
+   --Theme.Draw3DRect(winid, 0, 0, 0, 0, depressed) -- themed window
 
-    title = "Group Info: Use LOOK to draw the bars, or if this is your first time using the window type setup prompt" -- default title
-    if group_leader ~= "" then -- group leader
-    title = "Group Leader: "..group_leader
-    end
-    Theme.DrawTitleBar(winid, "f1", title, "center") -- them window title (has to be drawn before border) This is the title bar that says the leader name
-    Theme.DrawBorder(winid) -- theme window border
+   title = "Group Info: Use LOOK to draw the bars, or if this is your first time using the window type setup prompt" -- default title
+   if group_leader ~= "" then -- group leader
+      title = "Group Leader: "..group_leader
+   end
+   Theme.DrawTitleBar(winid, "f1", title, "center") -- them window title (has to be drawn before border) This is the title bar that says the leader name
+   Theme.DrawBorder(winid) -- theme window border
 
-    left, top = 7, 17 -- bar location
-    across = 0
-    rows = 0
-    -- [L][M][O][N][TANK]  green, dark cyan, white, magenta, red
-    for i, player in ipairs(group) do
-       drawPlayer(player, i, true)
-    end
+   left, top = 7, 17 -- bar location
+   across = 0
+   rows = 0
+   -- [L][M][O][N][TANK]  green, dark cyan, white, magenta, red
+   -- Find YOU in group list and put YOU first.
+   for k, v in pairs(group) do
+      if (v.name == myname) then
+	 group[k], group[1] = group[1], group[k]
+      end
+   end
+   
+   for i, player in ipairs(group) do
+      drawPlayer(player, i, true)
+   end
 
-    if enemy_group then
-    for i,player in ipairs(enemy_group) do
-	drawPlayer(player, i, false)
-    end
-    end
-    Theme.AddResizeTag(winid, 2, nil, nil, "MouseDown", "ResizeMoveCallback", "ResizeReleaseCallback") -- resize grip
+   if enemy_group then
+      for i,player in ipairs(enemy_group) do
+	 drawPlayer(player, i, false)
+      end
+   end
+   Theme.AddResizeTag(winid, 2, nil, nil, "MouseDown", "ResizeMoveCallback", "ResizeReleaseCallback") -- resize grip
 end -- DrawPlayer
-
-function show_group()
-    WindowRectOp(winid, 2, 2, 1, -2, -2, ColourNameToRGB(bg_color)) -- blank canvas
-    --WindowRectOp(winid, 2, 0, 0, 0, 22, ColourNameToRGB(title_bg_color)) -- title background
-    --WindowRectOp(winid, 1, 0, 0, 0, 0, ColourNameToRGB(border_color)) -- border
-    --Theme.Draw3DRect(winid, 0, 0, 0, 0, depressed) -- themed window
-
-    title = "Group Info: Use LOOK to draw the bars, or if this is your first time using the window type setup prompt" -- default title
-    if group_leader ~= "" then -- group leader
-    title = "Group Leader: "..group_leader
-    end
-    Theme.DrawTitleBar(winid, "f1", title, "center") -- them window title (has to be drawn before border) This is the title bar that says the leader name
-    Theme.DrawBorder(winid) -- theme window border
-
-    left, top = 7, 17 -- bar location
-    across = 0
-    rows = 0
-    -- [L][M][O][N][TANK]  green, dark cyan, white, magenta, red
-    for i, player in ipairs(group) do
-       drawPlayer(player, i, true)
-    end
-
-    if enemy_group then
-    for i,player in ipairs(enemy_group) do
-	drawPlayer(player, i, false)
-    end
-    end
-    Theme.AddResizeTag(winid, 2, nil, nil, "MouseDown", "ResizeMoveCallback", "ResizeReleaseCallback") -- resize grip
-end
 
 function ResizeMoveCallback()
     --Note("ResizeMoveCallback")
@@ -989,6 +979,7 @@ function from_bool(v)
 end
 
 function OnPluginSaveState()
+    SetVariable("myname", myname)
     SetVariable("pos_x", pos_x)
     SetVariable("pos_y", pos_y)
     SetVariable("font_name", font_name)
