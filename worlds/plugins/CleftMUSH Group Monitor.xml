@@ -630,21 +630,20 @@ function drawPlayer(player, i, isPlayerOrEnemy)
 
       ---- PETS ---->>
       if is_pet(player.tags) then
-	 if show_numbers then
-	    if bar_width == 100 then
-	       x = x + WindowText(winid, "f1", "P", x, top + 3, 0, 0, ColourNameToRGB(pet_color), false) + 2 -- show if pet
-	    end
+	 Note("bar_width:" .. bar_width)
+	 Note("show_numbers:" .. tostring(show_numbers))
+	 if bar_width == 100 then
+	    x = x + WindowText(winid, "f1", "P", x, top + 3, 0, 0, ColourNameToRGB(pet_color), false) + 2 -- show if pet
+	 end
 
+	 if not show_numbers and bar_width == 200 then
+	    x = x + WindowText(winid, "f1", "P", left + 210, top + 3, 0, 0, ColourNameToRGB(pet_color), false) + 2 -- show if pet
+	 end
+
+	 if show_numbers then
 	    if bar_width == 200 then
-	       --	print("TOPGROUP: ", top)
-	       --	print("LEFT: ", left)
-	       --	print("BAR WIDTH: ", bar_width)
-	       --	print("BAR+LEFT+19 ",bar_width+left+19)
-	       --    print("POS_Y: ", pos_y)
-	       x = x + WindowText(winid, "f1", "[PET]", bar_width+left+19	, top + 3, 0, 0, ColourNameToRGB(pet_color), false) -- show if pet
+	       x = x + WindowText(winid, "f1", "[PET]", bar_width+left+19, top + 3, 0, 0, ColourNameToRGB(pet_color), false) -- show if pet
 	    end
-	 else
-	       x = x + WindowText(winid, "f1", "P", left + 210, top + 3, 0, 0, ColourNameToRGB(pet_color), false) + 2 -- show if pet
 	 end
       end
 
