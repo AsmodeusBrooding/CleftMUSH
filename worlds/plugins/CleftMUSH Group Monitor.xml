@@ -240,7 +240,7 @@ function ToggleDebug()
    SaveState()
 end
 
-function NotifyNote(mesage)
+function NotifyNote(message)
    ColourNote ("Green", "", message)
 end
 
