@@ -235,23 +235,23 @@ local grip_resize = 10 -- resize grip size
 local debug_state = GetVariable("debug_state") or false
 
 function ToggleDebug()
-   debug_state = not debug_state
-   NotifyNote("Debug is now " .. tostring(debug_state))
-   SaveState()
+    debug_state = not debug_state
+    NotifyNote("Debug is now " .. tostring(debug_state))
+    SaveState()
 end
 
 function NotifyNote(message)
-   ColourNote ("Green", "", message)
+    ColourNote ("Green", "", message)
 end
 
 function ErrorNote(message)
-   ColourNote ("Red", "", message)
+    ColourNote ("Red", "", message)
 end
 
 function DebugNote(message)
-   if(debug_state) then
-      Note(message)
-   end
+    if(debug_state) then
+    Note(message)
+    end
 end
 
 function toggle()
@@ -536,7 +536,6 @@ function limit_n(num) --function nlim(num) --Yeah, I keep shortening things
 end
 
 function drawPlayer(player, i, isPlayerOrEnemy)
-
     if is_tank(player.tags) or (not show_minions and player.minion == 0) or show_minions then
     local box_top, box_right, box_bottom = top, 1, nil
     across = across + 1 -- how many players fit across window
