@@ -7,7 +7,7 @@
 <muclient>
 <plugin
    name="CleftMUSH_Group_Window"
-   author="Asmodeus"
+   author="Asmodeus, Elisius"
    id="353de94ba6c42060d839e256"
    language="Lua"
    purpose="Group monitor"
@@ -283,11 +283,8 @@
       function player_line(name, line, args)
 	 tmp_tags = split(args.name, args.tags)
 	 -- Insert YOU tag
-	 DebugNote("myname:" .. myname)
-	 DebugNote("args.name:" .. args.name)
 	 if(args.name == myname) then
 	    table.insert(tmp_tags, "Y")
-	    DebugNote("INSERTING TAG")
 	 end
 	 table.insert(group, {hp = args.hp, hp_max = args.hp_max, mana = args.mana, mana_max = args.mana_max, moves = args.moves, moves_max = args.moves_max, tags = tmp_tags, name = args.name, level = args.level})
       end
@@ -298,7 +295,6 @@
       end
 
       function my_name(name, line, args)
-	 DebugNote("my_name trigger:" .. args.name)
 	 myname = args.name
 	 SaveState()
       end
@@ -540,8 +536,8 @@
       end
 
       function drawPlayer(player, i, isPlayerOrEnemy)
-	 DebugNote("player.minion" .. player.minion)
 	 if is_tank(player.tags) or (not show_minions and player.minion == 0) or show_minions then
+	    local padding = 3
 	    local box_top, box_right, box_bottom = top, 1, nil
 	    across = across + 1 -- how many players fit across window
 	    box_top = top + font_size/2
@@ -554,100 +550,69 @@
 	       if bar_width == 100 then
 		  --Thing 1
 		  -- Draw player
-		  x = WindowText(winid, "f1", player.level, left, top + 3, 0, 0, ColourNameToRGB(level_color), false) + left -- label and padding
-		  x = WindowText(winid, "f1", truncate(player.name), left + 22, top + 3, 0, 0, ColourNameToRGB(player_color), false) + left + 18 + 6 -- player name truncated
+		  x = WindowText(winid, "f1", player.level, left, top + padding, 0, 0, ColourNameToRGB(level_color), false) + left -- label and padding
+		  x = WindowText(winid, "f1", truncate(player.name), left + 22, top + padding, 0, 0, ColourNameToRGB(player_color), false) + left + 18 + 6 -- player name truncated
 		  WindowAddHotspot(winid, "player"..i, left + 18, top + 2, left + 100, top + 16, "", "", "", "", "", player.name, 0, 0) -- show title for truncated player
 
 		  if show_numbers then
-		     x = WindowText(winid, "f1", player.level, left, top + 3, 0, 0, ColourNameToRGB(level_color), false) + left -- label and padding
-		     x = WindowText(winid, "f1", truncate(player.name), left + 22, top + 3, 0, 0, ColourNameToRGB(player_color), false) + left + 18 + 6 -- player name truncated
+		     x = WindowText(winid, "f1", player.level, left, top + padding, 0, 0, ColourNameToRGB(level_color), false) + left -- label and padding
+		     x = WindowText(winid, "f1", truncate(player.name), left + 22, top + padding, 0, 0, ColourNameToRGB(player_color), false) + left + 18 + 6 -- player name truncated
 		  else
-		     x = WindowText(winid, "f1", player.level, left, top + 3, 0, 0, ColourNameToRGB(level_color), false) + left -- label and padding
-		     x = WindowText(winid, "f1", truncate(player.name), left + 22, top + 3, 0, 0, ColourNameToRGB(player_color), false) + left + 18 + 6 -- player name truncated
+		     x = WindowText(winid, "f1", player.level, left, top + padding, 0, 0, ColourNameToRGB(level_color), false) + left -- label and padding
+		     x = WindowText(winid, "f1", truncate(player.name), left + 22, top + padding, 0, 0, ColourNameToRGB(player_color), false) + left + 18 + 6 -- player name truncated
 		  end
 
-		  if group_leader == player.name then
-		     x = x + WindowText(winid, "f1", "L", x, top + 3, 0, 0, ColourNameToRGB(leader_color), false) + 2
-		  end
 
 		  if is_no_melee(player.tags) then
-		     x = x + WindowText(winid, "f1", "N", x, top + 3, 0, 0, ColourNameToRGB(no_melee_color), false) + 2 -- show if no melee
+		     x = x + WindowText(winid, "f1", "N", x, top + padding, 0, 0, ColourNameToRGB(no_melee_color), false) + 2 -- show if no melee
 		  end
 	       elseif bar_width == 200 then
-		  x = WindowText(winid, "f1", "Lv["..player.level.."]", left, top + 3, 0, 0, ColourNameToRGB(level_color), false) + left -- label and padding
-		  x = x + WindowText(winid, "f1", abbreviate(player.name), left + 50, top + 3, 0, 0, ColourNameToRGB(player_color), false) + left + 18 + 8 -- player name truncated
+		  x = WindowText(winid, "f1", "Lv["..player.level.."]", left, top + padding, 0, 0, ColourNameToRGB(level_color), false) + left -- label and padding
+		  x = x + WindowText(winid, "f1", abbreviate(player.name), left + 50, top + padding, 0, 0, ColourNameToRGB(player_color), false) + left + 18 + 8 -- player name truncated
 
-		  if group_leader == player.name then
-		     if show_numbers then
-			--	print("TOPGROUP: ", top)
-			--	print("LEFT: ", left)
-			--	print("BAR+LEFT+19 ",bar_width+left+19)
-			x = x + WindowText(winid, "f1", "[LEADER]", bar_width+left+19, top + 3, 0, 0, ColourNameToRGB(leader_color), false) -- show if leader -- used to be left+240
-		     else
-			x = x + WindowText(winid, "f1", "L", left+210, top + 3, 0, 0, ColourNameToRGB(leader_color), false) + 2 -- show if leader
-		     end
-		  end
 
 		  if is_minion(player.tags) and not show_numbers then
-		     x = x + WindowText(winid, "f1", "C", left+210, top + 3, 0, 0, ColourNameToRGB(minion_color), false) + 2 -- show if minion
+		     x = x + WindowText(winid, "f1", "C", left+210, top + padding, 0, 0, ColourNameToRGB(minion_color), false) + 2 -- show if minion
 		  end
 
 		  if is_no_melee(player.tags) then
-		     x = x + WindowText(winid, "f1", "[N]", x, top + 3, 0, 0, ColourNameToRGB(no_melee_color), false) -- show if no melee
+		     x = x + WindowText(winid, "f1", "[N]", x, top + padding, 0, 0, ColourNameToRGB(no_melee_color), false) -- show if no melee
 		  end
 	       end
 	    else -- isPlayerOrEnemy
 	       if bar_width == 200 then
 		  if show_numbers then
 		     --x = WindowRectOp(winid, 2, left - 3, top, 307, 198, ColourNameToRGB(enemy_background_color))
-		     x = WindowText(winid, "f1", "Lv["..player.level.."]", left, top + 3, 0, 0, ColourNameToRGB(level_color), false) + left -- label and padding
-		     x = x + WindowText(winid, "f1", abbreviate(player.name), left + 50, top + 3, 0, 0, ColourNameToRGB(player_color), false) + left + 18 + 8 -- player name
-		     x = WindowText(winid, "f1", "[ENEMY]", left + 219, top + 3, 0, 0, ColourNameToRGB(tank_color), false) -- show if enemy
+		     x = WindowText(winid, "f1", "Lv["..player.level.."]", left, top + padding, 0, 0, ColourNameToRGB(level_color), false) + left -- label and padding
+		     x = x + WindowText(winid, "f1", abbreviate(player.name), left + 50, top + padding, 0, 0, ColourNameToRGB(player_color), false) + left + 18 + 8 -- player name
+		     x = WindowText(winid, "f1", "[ENEMY]", left + 219, top + padding, 0, 0, ColourNameToRGB(tank_color), false) -- show if enemy
 		  else
-		     x = WindowText(winid, "f1", "Lv["..player.level.."]", left, top + 3, 0, 0, ColourNameToRGB(level_color), false) + left -- label and padding
-		     x = x + WindowText(winid, "f1", nonumberabbreviate(player.name), left + 50, top + 3, 0, 0, ColourNameToRGB(player_color), false) + left + 18 + 8 -- player name
-		     x = WindowText(winid, "f1", "E", left + 210, top + 3, 0, 0, ColourNameToRGB(tank_color), false) -- show if enemy
+		     x = WindowText(winid, "f1", "Lv["..player.level.."]", left, top + padding, 0, 0, ColourNameToRGB(level_color), false) + left -- label and padding
+		     x = x + WindowText(winid, "f1", nonumberabbreviate(player.name), left + 50, top + padding, 0, 0, ColourNameToRGB(player_color), false) + left + 18 + 8 -- player name
+		     x = WindowText(winid, "f1", "E", left + 210, top + padding, 0, 0, ColourNameToRGB(tank_color), false) -- show if enemy
 		  end
 	       end
 	    end -- if isPlayerOrEnemy
 	    ---- END DRAW TEXT FOR SMALL/LARGE BARS ----------------------------------
 	    ---- <><><><><><><><><><>><><><><><><><><><><><><><><><><><><><><><><><><>
 
-	    ---- <><><><><><><><><><>><><><><><><><><><><><><><><><><><><><><><><><><>
-	    ---- PETS ----------------------------------------------------------------
-	    if is_pet(player.tags) then
-	       if bar_width == 100 then
-		  x = x + WindowText(winid, "f1", "P", x, top + 3, 0, 0, ColourNameToRGB(pet_color), false) + 2 -- show if pet
-	       end
-
-	       if not show_numbers and bar_width == 200 then
-		  x = x + WindowText(winid, "f1", "P", left + 210, top + 3, 0, 0, ColourNameToRGB(pet_color), false) + 2 -- show if pet
-	       end
-
-	       if show_numbers then
-		  if bar_width == 200 then
-		     x = x + WindowText(winid, "f1", "[PET]", bar_width+left+19, top + 3, 0, 0, ColourNameToRGB(pet_color), false) -- show if pet
-		  end
-	       end
-	    end
-	    ---- END PETS ------------------------------------------------------------
-	    ---- <><><><><><><><><><>><><><><><><><><><><><><><><><><><><><><><><><><>
-
+	    local no_num_bar_width_100_x = bar_width + WindowTextWidth(winid, "f1", "**", false)
 	    ---- <><><><><><><><><><>><><><><><><><><><><><><><><><><><><><><><><><><>
 	    ---- YOU -----------------------------------------------------------------
-	    DebugNote("YOU section")
 	    if is_you(player.tags) then
 	       if bar_width == 100 then
-		  x = x + WindowText(winid, "f1", "Y", x, top + 3, 0, 0, ColourNameToRGB(you_color), false) + 2 -- show if pet
+		  if show_numbers then
+		     x = x + WindowText(winid, "f1", "Y", x + bar_width + left + 19, top + padding, 0, 0, ColourNameToRGB(you_color), false) + 2 -- show if you
+		  else
+		     x = x + WindowText(winid, "f1", "Y", no_num_bar_width_100_x + padding*2, top + padding, 0, 0, ColourNameToRGB(you_color), false) + 2 -- show if you
+		  end
 	       end
 
-	       if not show_numbers and bar_width == 200 then
-		  x = x + WindowText(winid, "f1", "Y", left + 210, top + 3, 0, 0, ColourNameToRGB(you_color), false) + 2 -- show if pet
-	       end
-
-	       if show_numbers then
-		  if bar_width == 200 then
-		     x = x + WindowText(winid, "f1", "[YOU]", bar_width+left+19, top + 3, 0, 0, ColourNameToRGB(you_color), false) -- show if pet
+	       if bar_width == 200 then
+		  if show_numbers then
+		     x = x + WindowText(winid, "f1", "[YOU]", bar_width+left+19, top + padding, 0, 0, ColourNameToRGB(you_color), false) -- show if you
+		  else
+		     x = x + WindowText(winid, "f1", "Y", left + 210, top + padding, 0, 0, ColourNameToRGB(you_color), false) + 2 -- show if you
 		  end
 	       end
 	    end
@@ -655,17 +620,71 @@
 	    ---- <><><><><><><><><><>><><><><><><><><><><><><><><><><><><><><><><><><>
 
 	    ---- <><><><><><><><><><>><><><><><><><><><><><><><><><><><><><><><><><><>
+	    ---- LEADER --------------------------------------------------------------
+	    if group_leader == player.name then
+		  if bar_width == 100 then
+		     if show_numbers then
+			x = x + WindowText(winid, "f1", "L", x, top + padding, 0, 0, ColourNameToRGB(leader_color), false) + 2
+		     else
+			x = x + WindowText(winid, "f1", "L", left + no_num_bar_width_100_x - 1, top + padding, 0, 0, ColourNameToRGB(leader_color), false) + 2
+		     end
+		  end
+
+		  if bar_width == 200 then
+		     if show_numbers then
+			x = x + WindowText(winid, "f1", "[LEADER]", bar_width+left+19, top + padding, 0, 0, ColourNameToRGB(leader_color), false) -- show if leader -- used to be left+240
+		     else
+			x = x + WindowText(winid, "f1", "L", left+210, top + padding, 0, 0, ColourNameToRGB(leader_color), false) + 2 -- show if leader
+		     end
+		  end
+	    end
+	    ---- END LEADER =---------------------------------------------------------
+	    ---- <><><><><><><><><><>><><><><><><><><><><><><><><><><><><><><><><><><>
+
+	    ---- <><><><><><><><><><>><><><><><><><><><><><><><><><><><><><><><><><><>
+	    ---- PETS ----------------------------------------------------------------
+	    if is_pet(player.tags) then
+	       DebugNote(bar_width)
+	       DebugNote(show_numbers)
+	       DebugNote(x)
+	       DebugNote(no_num_bar_width_100_x)
+	       if bar_width == 100 then
+		  if show_numbers then
+		     x = x + WindowText(winid, "f1", "P", x, top + padding, 0, 0, ColourNameToRGB(pet_color), false) + 2 -- show if pet
+		  else
+		     x = x + WindowText(winid, "f1", "P", left + no_num_bar_width_100_x - 1, top + padding, 0, 0, ColourNameToRGB(pet_color), false) + 2 -- show if pet
+		  end
+	       end
+
+	       if bar_width == 200 then
+		  if show_numbers then
+		     x = x + WindowText(winid, "f1", "[PET]", bar_width+left+19, top + padding, 0, 0, ColourNameToRGB(pet_color), false) -- show if pet
+		  else
+		     x = x + WindowText(winid, "f1", "P", left + 210, top + padding, 0, 0, ColourNameToRGB(pet_color), false) + 2 -- show if pet
+		  end
+	       end
+	    end
+	    ---- END PETS ------------------------------------------------------------
+	    ---- <><><><><><><><><><>><><><><><><><><><><><><><><><><><><><><><><><><>
+
+	    ---- <><><><><><><><><><>><><><><><><><><><><><><><><><><><><><><><><><><>
 	    ---- MINIONS -------------------------------------------------------------
 	    if is_minion(player.tags) and isPlayerOrEnemy then
 	       if bar_width == 100 then
-		  x = x + WindowText(winid, "f1", "C", x, top + 3, 0, 0, ColourNameToRGB(minion_color), false) + 2 -- show if minion
+		  if show_numbers then
+		     x = x + WindowText(winid, "f1", "C", x, top + padding, 0, 0, ColourNameToRGB(minion_color), false) + 2 -- show if minion
+		  else
+		     x = x + WindowText(winid, "f1", "C", x + padding*4 - 1, top + padding, 0, 0, ColourNameToRGB(minion_color), false) + 2 -- show if minion
+		  end
 	       end
-	       if is_minion(player.tags) and isPlayerOrEnemy and bar_width == 200 and show_numbers then
-		  x = x WindowText(winid, "f1", "[CHARM]", left+219, top + 3, 0, 0, ColourNameToRGB(minion_color), false)  -- show if minion
-		  --box_right is usually 307 (vertical) or 611 (horizontal)
+	       if bar_width == 200 then
+		  if show_numbers then
+		     x = x WindowText(winid, "f1", "[CHARM]", left+219, top + padding, 0, 0, ColourNameToRGB(minion_color), false)  -- show if minion
+		  else
+		     x = x + WindowText(winid, "f1", "C", left + 210, top + padding, 0, 0, ColourNameToRGB(you_color), false) + 2 -- show if you
+		  end
 	       end
 	    end
-	    ---- END MINIONS ---->>
 	    ---- END MINIONS ---------------------------------------------------------
 
 	    -- Magic
@@ -675,10 +694,10 @@
 	    ---- DRAW BARS -----------------------------------------------------------
 	    if isPlayerOrEnemy then
 	       x = WindowText(winid, "f1", "HP", left, top, 0, 0, ColourNameToRGB(hp_label_color), false) + left -- label and padding
-	       gauge(winid, "HP for "..player.name, tonumber(player.hp), tonumber(player.hp_max), x + 3, top, bar_width, bar_height, ColourNameToRGB(hp_color), 0x000000, bar_ticks, ColourNameToRGB(bar_border), ColourNameToRGB(bar_border), nil, flat_gauges==1) -- hp gauge
+	       gauge(winid, "HP for "..player.name, tonumber(player.hp), tonumber(player.hp_max), x + padding, top, bar_width, bar_height, ColourNameToRGB(hp_color), 0x000000, bar_ticks, ColourNameToRGB(bar_border), ColourNameToRGB(bar_border), nil, flat_gauges==1) -- hp gauge
 	    elseif not isPlayerOrEnemy then
 	       x = WindowText(winid, "f1", "HP", left, top, 0, 0, ColourNameToRGB(enemy_hp_label_color), false) + left -- label and padding
-	       gauge(winid, "HP for "..player.name, tonumber(player.hp), tonumber(player.hp_max), x + 3, top, bar_width, bar_height, ColourNameToRGB(enemy_hp_color), 0x000000, bar_ticks, ColourNameToRGB(bar_border), ColourNameToRGB(bar_border), nil, flat_gauges==1) -- hp gauge
+	       gauge(winid, "HP for "..player.name, tonumber(player.hp), tonumber(player.hp_max), x + padding, top, bar_width, bar_height, ColourNameToRGB(enemy_hp_color), 0x000000, bar_ticks, ColourNameToRGB(bar_border), ColourNameToRGB(bar_border), nil, flat_gauges==1) -- hp gauge
 	    end
 	    if overlay_pct then
 	       outlined_text(winid, "s1", math.floor(player.hp / player.hp_max * 100).."%", x + 6, top + 2, 0, 0, ColourNameToRGB(overlay_color), false) -- hp %
@@ -693,7 +712,7 @@
 
 	    if show_mana then
 	       x = WindowText(winid, "f1", "MN", left, top, 0, 0, ColourNameToRGB(mana_label_color), false) + left -- label and padding
-	       gauge(winid, "Mana for "..player.name, tonumber(player.mana), tonumber(player.mana_max), x + 3, top, bar_width, bar_height, ColourNameToRGB(mana_color), 0x000000, bar_ticks, ColourNameToRGB(bar_border), ColourNameToRGB(bar_border), nil, flat_gauges==1) -- mana gauge
+	       gauge(winid, "Mana for "..player.name, tonumber(player.mana), tonumber(player.mana_max), x + padding, top, bar_width, bar_height, ColourNameToRGB(mana_color), 0x000000, bar_ticks, ColourNameToRGB(bar_border), ColourNameToRGB(bar_border), nil, flat_gauges==1) -- mana gauge
 	       local is_number = tonumber(player.mana) and tonumber(player.mana_max)
 	       if (is_number and overlay_pct) then
 		  outlined_text(winid, "s1", math.floor(player.mana / player.mana_max * 100).."%", x + 6, top + 2, 0, 0, ColourNameToRGB(overlay_color), false) -- mana %
@@ -705,7 +724,7 @@
 
 	       if show_moves then
 		  x = WindowText(winid, "f1", "MV", left, top, 0, 0, ColourNameToRGB(moves_label_color), false) + left -- label and padding
-		  gauge(winid, "Moves for "..player.name, tonumber(player.moves), tonumber(player.moves_max), x + 3, top, bar_width, bar_height, ColourNameToRGB(moves_color), 0x000000, bar_ticks, ColourNameToRGB(bar_border), ColourNameToRGB(bar_border), nil, flat_gauges==1) -- moves gauge
+		  gauge(winid, "Moves for "..player.name, tonumber(player.moves), tonumber(player.moves_max), x + padding, top, bar_width, bar_height, ColourNameToRGB(moves_color), 0x000000, bar_ticks, ColourNameToRGB(bar_border), ColourNameToRGB(bar_border), nil, flat_gauges==1) -- moves gauge
 		  if overlay_pct then
 		     outlined_text(winid, "s1", math.floor(player.moves / player.moves_max * 100).."%", x + 6, top + 2, 0, 0, ColourNameToRGB(overlay_color), false) -- moves %
 		  end
@@ -733,7 +752,6 @@
 	    ---- <><><><><><><><><><>><><><><><><><><><><><><><><><><><><><><><><><><>
 	    ---- Row Calculations ----------------------------------------------------
 	    if win_width - box_right - (box_right - left + 5) > 0 then -- keep drawing across
-	       DebugNote("keep going across")
 	       left = left + (box_right - left) + 4
 	       top = 17 + (rows * (box_bottom - box_top + 2))
 	    else -- start new row
@@ -742,12 +760,6 @@
 	       across = 0
 	       left = 7
 	       top = 17 + (rows * (box_bottom - box_top + 2))
-	       DebugNote("Top: " .. top)
-	       DebugNote("Box Top: " .. box_top)
-	       DebugNote("Box Bottom: " .. box_bottom)
-	       DebugNote("Box Right: " .. box_right)
-	       DebugNote("Box Left: " .. box_left)
-	       DebugNote("Bar Width: " .. bar_width)
 	    end
 	    ---- END Row Calculations ------------------------------------------------
 	    ---- <><><><><><><><><>><><><><><><><><><><><><><><><><><><><><><><><><><>
