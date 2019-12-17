@@ -44,6 +44,9 @@ PUT IDEAS OF THINGS TO DO  IN  HERE, ALONG WITH A PRIORITY
 
 - [ ] \(5\)\[Y\] TODO Make volume settings save  Use SetVariable and GetVariable
 
+- [ ] \(5\)\[Y\] TODO Mapper: make use of the numbers listed on FIND search results, via go <number>
+clear list after you move, and make use of nx
+
   Will need to GetVariable every time you logon or reconnect, so it
 
   can set the volume when you reconnect or login
