@@ -188,12 +188,12 @@ end -- build_room_info
 
 -- assorted colours
 --Note ("OURROOMCOLOR", GetPluginVariable("7c54b861a8cd3c4745c28834", "OUR_ROOM_COLOUR"))
-OUR_ROOM_COLOUR               = { name = "Our Room Colour",  colour =  tonumber(GetPluginVariable("7c54b861a8cd3c4745c28834", "OUR_ROOM_COLOUR")) or 0xFF }
+OUR_ROOM_COLOUR               = { name = "Our Room Colour",  colour =  tonumber(GetPluginVariable("dd07d6dbe73fe0bd02ddb62c", "OUR_ROOM_COLOUR")) or 0xFF }
 BACKGROUND_COLOUR             = { name = "Area Background",  colour =  ColourNameToRGB "#111111"}
 ROOM_COLOUR                   = { name = "Room",             colour =  ColourNameToRGB "#dcdcdc"}
 EXIT_COLOUR                   = { name = "Exit",             colour =  ColourNameToRGB "#e0ffff"}
 EXIT_COLOUR_UP_DOWN           = { name = "Exit up/down",     colour =  ColourNameToRGB "#ffb6c1"}
-NOTE_ROOM_COLOUR              = { name = "Room notes",       colour =  tonumber(GetPluginVariable("7c54b861a8cd3c4745c28834", "NOTE_ROOM_COLOUR")) or 0x90EE90 }
+NOTE_ROOM_COLOUR              = { name = "Room notes",       colour =  tonumber(GetPluginVariable("dd07d6dbe73fe0bd02ddb62c", "NOTE_ROOM_COLOUR")) or 0x90EE90 }
 UNKNOWN_ROOM_COLOUR           = { name = "Unknown room",     colour =  ColourNameToRGB "#8b0000"}
 DIFFERENT_AREA_COLOUR         = { name = "Another area",     colour =  ColourNameToRGB "#ff0000"}
 PK_BORDER_COLOUR              = { name = "PK border",        colour =  ColourNameToRGB "red"}
