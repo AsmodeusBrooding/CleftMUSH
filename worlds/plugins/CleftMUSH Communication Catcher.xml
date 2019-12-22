@@ -666,6 +666,7 @@ print("Date Format: ", date_format)
 <trigger
     enabled="n"
     match="You tell * '*'"
+    name = "send_tell"
    script="tells"
     omit_from_output="n"
     sequence="100"
@@ -843,6 +844,8 @@ end
 function muteall()
 if GetTriggerOption ("send_yell", "omit_from_output") == 1 then
 SetTriggerOption ("send_yell", "omit_from_output", 0)
+SetTriggerOption ("send_tell", "omit_from_output", 0)
+SetTriggerOption ("get_tell", "omit_from_output", 0)
 SetTriggerOption ("get_yell", "omit_from_output", 0)
 SetTriggerOption ("send_shout", "omit_from_output", 0)
 SetTriggerOption ("get_shout", "omit_from_output", 0)
@@ -879,6 +882,8 @@ SetVariable("all_visible", "Yes")
 util.print("{GAll channels are now visible in the main output.")
 elseif GetTriggerOption ("send_yell", "omit_from_output") == 0 then
 SetTriggerOption ("send_yell", "omit_from_output", 1)
+SetTriggerOption ("send_tell", "omit_from_output", 1)
+SetTriggerOption ("get_tell", "omit_from_output", 1)
 SetTriggerOption ("get_yell", "omit_from_output", 1)
 SetTriggerOption ("send_shout", "omit_from_output", 1)
 SetTriggerOption ("get_shout", "omit_from_output", 1)
