@@ -203,6 +203,7 @@
       local no_melee_color = "#cc00cc" -- no melee tag color
       local pet_color = "#ffff66" -- pet mob color
       local you_color = "#0066dd" -- you color
+	  local team_color = "#00FFFF" -- you color
       local hp_label_color = "#00ff00" -- hp label color
       local enemy_hp_label_color = "#00ff00" -- enemy hp label color
       local mana_label_color = "#3333ff" -- mana label color
@@ -238,6 +239,7 @@
       function ToggleDebug()
 	 debug_state = not debug_state
 	 NotifyNote("Debug is now " .. tostring(debug_state))
+	 SetVariable("debug_state", debug_state)
 	 SaveState()
       end
 
@@ -539,7 +541,8 @@
 	    local box_top, box_right, box_bottom = top, 1, nil
 	    across = across + 1 -- how many players fit across window
 	    box_top = top + font_size/2
-	    top = GetVariable("font_size")/3 + box_top or 17
+	--	print("Font Size: ", font_size)
+	    top = font_size/3 + box_top or 17
 	    local x = 0
 
 	    ---- <><><><><><><><><><>><><><><><><><><><><><><><><><><><><><><><><><><>
@@ -601,6 +604,28 @@
 	       end
 	    end
 	    ---- END YOU -------------------------------------------------------------
+	    ---- <><><><><><><><><><>><><><><><><><><><><><><><><><><><><><><><><><><>
+	    ---- TEAM-MATE -----------------------------------------------------------------
+	    if not is_you(player.tags) and not (group_leader == player.name) and not is_minion(player.tags) and not is_pet(player.tags) then
+	       if bar_width == 100 then
+           if show_numbers then
+		     x = x + WindowText(winid, "f1", "T", show_numbers_100_x, top + padding, 0, 0, ColourNameToRGB(team_color), false) + 2 -- show if you
+		--  else
+		--     x = x + WindowText(winid, "f1", "Y", no_num_bar_width_100_x + padding*2, top + padding, 0, 0, ColourNameToRGB(you_color), false) + 2 -- show if you
+		  end
+	       end
+		   if bar_width == 100 and not show_numbers then 
+		     x = x + WindowText(winid, "f1", "T", left + 110, top + padding, 0, 0, ColourNameToRGB(team_color), false) + 2 -- show if minion
+		   end
+	       if bar_width == 200 then
+		  if show_numbers then
+		     x = x + WindowText(winid, "f1", "[TEAM]", bar_width+left+19, top + padding, 0, 0, ColourNameToRGB(team_color), false) -- show if you
+		  else
+		     x = x + WindowText(winid, "f1", "T", left + 210, top + padding, 0, 0, ColourNameToRGB(team_color), false) + 2 -- show if you
+		  end
+	       end
+	    end
+	    ---- END TEAM-MATE -------------------------------------------------------------
 	    ---- <><><><><><><><><><>><><><><><><><><><><><><><><><><><><><><><><><><>
 
 	    ---- <><><><><><><><><><>><><><><><><><><><><><><><><><><><><><><><><><><>
@@ -680,7 +705,7 @@
 
 	    ---- <><><><><><><><><><>><><><><><><><><><><><><><><><><><><><><><><><><>
 	    ---- ENEMIES -------------------------------------------------------------
-	    if not isPlayerOrEnemy then
+	    if not isPlayerOrEnemy and not is_you(player.tags) then
 	       if bar_width == 100 then
 		  if show_numbers then
 		     x = x + WindowText(winid, "f1", player.level, left, top + padding, 0, 0, ColourNameToRGB(level_color), false) + left -- label and padding
@@ -810,7 +835,7 @@
 	       group[k], group[1] = group[1], group[k]
 	    end
 	 end
-
+	 
 	 for i, player in ipairs(group) do
 	    drawPlayer(player, i, true)
 	 end
