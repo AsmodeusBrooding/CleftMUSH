@@ -2152,8 +2152,8 @@ end -- desc_find
 function map_goto (name, line, wildcards)
   local wanted = wildcards [1]
   -- check valid string
-  if string.match (wanted, "%D") then
-    mapper.maperror ("Room number must be numeric, you entered: " .. wanted)
+  if not string.match (wanted, "%w+") then
+    mapper.maperror ("You entered an invalid UID. Try using mapper print, and copying the room uid of the desired room: " .. wanted)
     return
   end -- if
 
