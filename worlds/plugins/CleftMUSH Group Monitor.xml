@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 <?xml version="1.0" encoding="iso-8859-1"?>
 <!DOCTYPE muclient>
 <!-- Saved on Sunday, July 03 2019 .06-pre -->
@@ -593,7 +592,7 @@
 		--     x = x + WindowText(winid, "f1", "Y", no_num_bar_width_100_x + padding*2, top + padding, 0, 0, ColourNameToRGB(you_color), false) + 2 -- show if you
 		  end
 	       end
-		   if bar_width == 100 and not show_numbers then 
+		   if bar_width == 100 and not show_numbers then
 		     x = x + WindowText(winid, "f1", "Y", left + 110, top + padding, 0, 0, ColourNameToRGB(you_color), false) + 2 -- show if minion
 		   end
 	       if bar_width == 200 then
@@ -615,7 +614,7 @@
 		--     x = x + WindowText(winid, "f1", "Y", no_num_bar_width_100_x + padding*2, top + padding, 0, 0, ColourNameToRGB(you_color), false) + 2 -- show if you
 		  end
 	       end
-		   if bar_width == 100 and not show_numbers then 
+		   if bar_width == 100 and not show_numbers then
 		     x = x + WindowText(winid, "f1", "T", left + 110, top + padding, 0, 0, ColourNameToRGB(team_color), false) + 2 -- show if minion
 		   end
 	       if bar_width == 200 then
@@ -639,7 +638,7 @@
 		  --x = x + WindowText(winid, "f1", "L", left + no_num_bar_width_100_x - 1, top + padding, 0, 0, ColourNameToRGB(leader_color), false) + 2
 		     end
 		  end
-		  if bar_width == 100 and not show_numbers then 
+		  if bar_width == 100 and not show_numbers then
 		    x = x + WindowText(winid, "f1", "L", left + 110, top + padding, 0, 0, ColourNameToRGB(leader_color), false) + 2 -- show if minion
 			 end
 
@@ -665,7 +664,7 @@
 		 --   x = x + WindowText(winid, "f1", "P", left + bar_width - 1, top + padding, 0, 0, ColourNameToRGB(pet_color), false) + 2 -- show if pet
 		  end
 	       end
-		   		   if bar_width == 100 and not show_numbers then 
+		   		   if bar_width == 100 and not show_numbers then
 		   		     x = x + WindowText(winid, "f1", "P", left + 110, top + padding, 0, 0, ColourNameToRGB(pet_color), false) + 2 -- show if minion
 					 end
 
@@ -690,10 +689,10 @@
 		   --  x = x + WindowText(winid, "f1", "C", x + padding - 1, top + padding, 0, 0, ColourNameToRGB(minion_color), false) + 2 -- show if minion
 		  end
 	       end
-		   if bar_width == 100 and not show_numbers then 
+		   if bar_width == 100 and not show_numbers then
 		   		     x = x + WindowText(winid, "f1", "C", left + 110, top + padding, 0, 0, ColourNameToRGB(minion_color), false) + 2 -- show if minion
 					 end
-					 
+
 	       if bar_width == 200 then
 		  if show_numbers then
 		     x = x WindowText(winid, "f1", "[CHARM]", left + 219, top + padding, 0, 0, ColourNameToRGB(minion_color), false)  -- show if minion
@@ -714,7 +713,7 @@
 		     x = WindowText(winid, "f1", "E", show_numbers_100_x, top + padding, 0, 0, ColourNameToRGB(tank_color), false) -- show if enemy
 		  end
 		  end
-		  if bar_width == 100 and not show_numbers then 
+		  if bar_width == 100 and not show_numbers then
 		     x = x + WindowText(winid, "f1", player.level, left, top + padding, 0, 0, ColourNameToRGB(level_color), false) + left -- label and padding
 		     x = x + WindowText(winid, "f1", truncate(player.name), left + 22, top + padding, 0, 0, ColourNameToRGB(player_color), false) + left + 18 + 8 -- player name
 		   	 x = x + WindowText(winid, "f1", "E", left + 110, top + padding, 0, 0, ColourNameToRGB(tank_color), false) + 2 -- show if minion
@@ -836,7 +835,7 @@
 	       group[k], group[1] = group[1], group[k]
 	    end
 	 end
-	 
+
 	 for i, player in ipairs(group) do
 	    drawPlayer(player, i, true)
 	 end
@@ -1680,7 +1679,7 @@
 		--     x = x + WindowText(winid, "f1", "Y", no_num_bar_width_100_x + padding*2, top + padding, 0, 0, ColourNameToRGB(you_color), false) + 2 -- show if you
 		  end
 	       end
-		   if bar_width == 100 and not show_numbers then 
+		   if bar_width == 100 and not show_numbers then
 		     x = x + WindowText(winid, "f1", "Y", left + 110, top + padding, 0, 0, ColourNameToRGB(you_color), false) + 2 -- show if minion
 		   end
 	       if bar_width == 200 then
@@ -1702,7 +1701,7 @@
 		--     x = x + WindowText(winid, "f1", "Y", no_num_bar_width_100_x + padding*2, top + padding, 0, 0, ColourNameToRGB(you_color), false) + 2 -- show if you
 		  end
 	       end
-		   if bar_width == 100 and not show_numbers then 
+		   if bar_width == 100 and not show_numbers then
 		     x = x + WindowText(winid, "f1", "T", left + 110, top + padding, 0, 0, ColourNameToRGB(team_color), false) + 2 -- show if minion
 		   end
 	       if bar_width == 200 then
@@ -1726,7 +1725,7 @@
 		  --x = x + WindowText(winid, "f1", "L", left + no_num_bar_width_100_x - 1, top + padding, 0, 0, ColourNameToRGB(leader_color), false) + 2
 		     end
 		  end
-		  if bar_width == 100 and not show_numbers then 
+		  if bar_width == 100 and not show_numbers then
 		    x = x + WindowText(winid, "f1", "L", left + 110, top + padding, 0, 0, ColourNameToRGB(leader_color), false) + 2 -- show if minion
 			 end
 
@@ -1752,7 +1751,7 @@
 		 --   x = x + WindowText(winid, "f1", "P", left + bar_width - 1, top + padding, 0, 0, ColourNameToRGB(pet_color), false) + 2 -- show if pet
 		  end
 	       end
-		   		   if bar_width == 100 and not show_numbers then 
+		   		   if bar_width == 100 and not show_numbers then
 		   		     x = x + WindowText(winid, "f1", "P", left + 110, top + padding, 0, 0, ColourNameToRGB(pet_color), false) + 2 -- show if minion
 					 end
 
@@ -1777,10 +1776,10 @@
 		   --  x = x + WindowText(winid, "f1", "C", x + padding - 1, top + padding, 0, 0, ColourNameToRGB(minion_color), false) + 2 -- show if minion
 		  end
 	       end
-		   if bar_width == 100 and not show_numbers then 
+		   if bar_width == 100 and not show_numbers then
 		   		     x = x + WindowText(winid, "f1", "C", left + 110, top + padding, 0, 0, ColourNameToRGB(minion_color), false) + 2 -- show if minion
 					 end
-					 
+
 	       if bar_width == 200 then
 		  if show_numbers then
 		     x = x WindowText(winid, "f1", "[CHARM]", left + 219, top + padding, 0, 0, ColourNameToRGB(minion_color), false)  -- show if minion
@@ -1801,7 +1800,7 @@
 		     x = WindowText(winid, "f1", "E", show_numbers_100_x, top + padding, 0, 0, ColourNameToRGB(tank_color), false) -- show if enemy
 		  end
 		  end
-		  if bar_width == 100 and not show_numbers then 
+		  if bar_width == 100 and not show_numbers then
 		     x = x + WindowText(winid, "f1", player.level, left, top + padding, 0, 0, ColourNameToRGB(level_color), false) + left -- label and padding
 		     x = x + WindowText(winid, "f1", truncate(player.name), left + 22, top + padding, 0, 0, ColourNameToRGB(player_color), false) + left + 18 + 8 -- player name
 		   	 x = x + WindowText(winid, "f1", "E", left + 110, top + padding, 0, 0, ColourNameToRGB(tank_color), false) + 2 -- show if minion
