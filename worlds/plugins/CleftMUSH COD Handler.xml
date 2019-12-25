@@ -140,16 +140,33 @@ keep_evaluating="y"
 -- SOUNDS SECTION 
 -----------------------------------------------------------------------------------
   <aliases>
-<alias
-   match="volume *"
-        send_to="12"
+  <alias
+   name="volumesetting"
+   match="^vol(|u|um|ume) (?P<volumenumber>\d+)$"
+   regexp="y"
+   ignore_case="y"
+   send_to="12"
    enabled="y"
    sequence="100"
   >
-<send>Sound("volume=%1")
-   ColourNote ("yellow", "", "Volume changed to %1 percent.")
+<send>
+Sound("volume=%2")
+volume = %2
+SetVariable("volume", volume)
+--print("Volume: ", volume)
+util.print("{YVolume changed to {R" .. (GetVariable("volume") or 100) .. "{Y percent.")
+   SaveState()
 </send>
 </alias> 
+<alias
+ enabled="y"
+ match="show volume"
+ regexp="n"
+ send_to="12"
+ sequence="100">
+ <send>util.print("{YThe current volume is{R " .. (GetVariable("volume") or 100))
+ </send>
+ </alias>
 </aliases>
 <triggers>
 <trigger
@@ -567,6 +584,7 @@ Execute("prompt {R[{WLast_Dir: %d {R]%c{c%1[G_End]%c{D| {WRemort: %L {D| {WLevel
 end -- function setup_prompt
 
 function OnPluginInstall()
+volume = GetVariable("volume") or 100
   uid=GetVariable("id")
   if(uid==NIL) then
     uid=GetUniqueID()
