@@ -181,7 +181,7 @@
       -- Tag 'N' - no-melee mode
       -- Tag '-' - not present in the room with you
 
-      local to_bool = {["0"] = false, ["1"] = true}
+      local to_bool = {["0"] = false, ["1"] = true, ["true"] = true, ["false"] = false}
 
       local winid = "win_"..GetPluginID()
       local myname = GetVariable("myname") or "" -- my name
@@ -234,12 +234,11 @@
       local win_width = GetVariable("win_width") or 440
       local top = GetVariable("top") or 20
       local grip_resize = 10 -- resize grip size
-      local debug_state = GetVariable("debug_state") or false
+      local debug_state = to_bool[GetVariable("debug_state")] or false
 
       function ToggleDebug()
 	 debug_state = not debug_state
 	 NotifyNote("Debug is now " .. tostring(debug_state))
-	 SetVariable("debug_state", tostring(debug_state))
 	 SaveState()
       end
 
