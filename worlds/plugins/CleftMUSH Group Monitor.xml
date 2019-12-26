@@ -286,7 +286,7 @@
 	 tmp_tags = split(args.name, args.tags)
 	 -- Insert YOU tag
 	 if(args.name == myname) then
-	    table.insert(tmp_tags, "Y")
+	    table.insert(tmp_tags, "You")
 	 end
 	 table.insert(group, {hp = args.hp, hp_max = args.hp_max, mana = args.mana, mana_max = args.mana_max, moves = args.moves, moves_max = args.moves_max, tags = tmp_tags, name = args.name, level = args.level})
       end
@@ -372,7 +372,7 @@
 
       function is_minion(tags)
 	 for i, tag in ipairs(tags) do
-	    if tag == "O" or tag == "Mob" then
+	    if tag == "Mob" then
 	       return true
 	    end
 	 end
@@ -390,7 +390,7 @@
 
       function is_you(tags)
 	 for i, tag in ipairs(tags) do
-	    if tag == "Y" then
+	    if tag == "You" then
 	       return true
 	    end
 	 end
@@ -547,7 +547,7 @@
 
 	    ---- <><><><><><><><><><>><><><><><><><><><><><><><><><><><><><><><><><><>
 	    ---- DRAW TEXT FOR SMALL/LARGE BARS --------------------------------------
-	    if isPlayerOrEnemy then
+	    if isPlayerOrEnemy or not isPlayerOrEnemy then
 	       if bar_width == 100 then
 		  --Thing 1
 		  -- Draw player
@@ -584,7 +584,7 @@
       local show_numbers_100_x = left + 180 + font_size - 2
 	    ---- <><><><><><><><><><>><><><><><><><><><><><><><><><><><><><><><><><><>
 	    ---- YOU -----------------------------------------------------------------
-	    if is_you(player.tags) and not (group_leader == player.name) then
+	    if is_you(player.tags) and not (group_leader == player.name) and not is_minion(player.tags) and isPlayerOrEnemy then
 	       if bar_width == 100 then
            if show_numbers then
 		     x = x + WindowText(winid, "f1", "Y", show_numbers_100_x, top + padding, 0, 0, ColourNameToRGB(you_color), false) + 2 -- show if you
@@ -695,7 +695,7 @@
 					 
 	       if bar_width == 200 then
 		  if show_numbers then
-		     x = x WindowText(winid, "f1", "[CHARM]", left + 219, top + padding, 0, 0, ColourNameToRGB(minion_color), false)  -- show if minion
+		     x = x + WindowText(winid, "f1", "[CHARM]", left + 219, top + padding, 0, 0, ColourNameToRGB(minion_color), false)  -- show if minion
 		  else
 		     x = x + WindowText(winid, "f1", "C", left + 210, top + padding, 0, 0, ColourNameToRGB(minion_color), false) + 2 -- show if minion
 		  end
@@ -705,7 +705,7 @@
 
 	    ---- <><><><><><><><><><>><><><><><><><><><><><><><><><><><><><><><><><><>
 	    ---- ENEMIES -------------------------------------------------------------
-	    if not isPlayerOrEnemy and not is_you(player.tags) then
+	    if not isPlayerOrEnemy then
 	       if bar_width == 100 then
 		  if show_numbers then
 		     x = x + WindowText(winid, "f1", player.level, left, top + padding, 0, 0, ColourNameToRGB(level_color), false) + left -- label and padding
@@ -720,6 +720,8 @@
 		  end
 		   if bar_width == 200 then
 		  if show_numbers then
+--		  print("Player Name: ", player.name)
+--		  print("Player Level: ", player.level)
 		     --x = WindowRectOp(winid, 2, left - 3, top, 307, 198, ColourNameToRGB(enemy_background_color))
 		     x = WindowText(winid, "f1", "Lv["..player.level.."]", left, top + padding, 0, 0, ColourNameToRGB(level_color), false) + left -- label and padding
 		     x = x + WindowText(winid, "f1", abbreviate(player.name), left + 50, top + padding, 0, 0, ColourNameToRGB(player_color), false) + left + 18 + 8 -- player name
