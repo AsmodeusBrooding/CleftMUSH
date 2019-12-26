@@ -748,27 +748,46 @@
 	       x = WindowText(winid, "f1", "HP", left, top, 0, 0, ColourNameToRGB(enemy_hp_label_color), false) + left -- label and padding
 	       gauge(winid, "HP for "..player.name, tonumber(player.hp), tonumber(player.hp_max), x + padding, top, bar_width, bar_height, ColourNameToRGB(enemy_hp_color), 0x000000, bar_ticks, ColourNameToRGB(bar_border), ColourNameToRGB(bar_border), nil, flat_gauges==1) -- hp gauge
 	    end
+
 	    if overlay_pct then
 	       outlined_text(winid, "s1", math.floor(player.hp / player.hp_max * 100).."%", x + 6, top + 2, 0, 0, ColourNameToRGB(overlay_color), false) -- hp %
 	    end
+
 	    if show_numbers then
 	       box_right = x + bar_width + WindowTextWidth(winid, "b1", string.rep("X", biggest_number).."/"..string.rep("X", biggest_number)) + 14 -- set max size of hp/mana/moves on side of gauge
 	       WindowText(winid, "f1", limit_n(player.hp).."/"..limit_n(player.hp_max), x + 6 + bar_width, top, 0, 0, ColourNameToRGB(overlay_color), false) -- hp
 	    else
 	       box_right = x + bar_width + 6
 	    end
+
 	    top = top + bar_height + 2
 
 	    if show_mana then
 	       x = WindowText(winid, "f1", "MN", left, top, 0, 0, ColourNameToRGB(mana_label_color), false) + left -- label and padding
 	       gauge(winid, "Mana for "..player.name, tonumber(player.mana), tonumber(player.mana_max), x + padding, top, bar_width, bar_height, ColourNameToRGB(mana_color), 0x000000, bar_ticks, ColourNameToRGB(bar_border), ColourNameToRGB(bar_border), nil, flat_gauges==1) -- mana gauge
 	       local is_number = tonumber(player.mana) and tonumber(player.mana_max)
+	       --Note(player.name)
+	       --Note(player.mana)
+	       --Note(tonumber(player.mana))
+
 	       if (is_number and overlay_pct) then
-		  outlined_text(winid, "s1", math.floor(player.mana / player.mana_max * 100).."%", x + 6, top + 2, 0, 0, ColourNameToRGB(overlay_color), false) -- mana %
+		  local mana_per = math.floor(player.mana / player.mana_max * 100)
+		  --Note(mana_per)
+		  if (mana_per ~= mana_per) then
+		     mana_per = "NO MANA"
+		  elseif (mana_per == 1/0 or mana_per == -1/0) then
+		     mana_per = "NEG MANA"
+		  else
+		     mana_per = mana_per .. "%"
+		  end
+		  --Note(mana_per)
+		  outlined_text(winid, "s1", mana_per, x + padding, top + 2, 0, 0, ColourNameToRGB(overlay_color), false) -- mana %
 	       end
+
 	       if show_numbers then
 		  WindowText(winid, "f1", player.mana.."/"..player.mana_max, x + 6 + bar_width, top, 0, 0, ColourNameToRGB(overlay_color), false) -- mana
 	       end
+
 	       top = top + bar_height + 2
 
 	       if show_moves then
@@ -1077,6 +1096,7 @@
 	 table.insert(group, {level = 90, hp = "140", hp_max = "275", mana = "150", mana_max = "250", moves = "160", moves_max = "170", tags = {"O"}, name = "A clay man 2"})
 	 table.insert(group, {level = 100, hp = "140", hp_max = "275", mana = "150", mana_max = "250", moves = "160", moves_max = "1700", tags = {"M"}, name = "An ornary woman 2"})
 	 table.insert(group, {level = 100, hp = "44000", hp_max = "50000", mana = "150", mana_max = "250", moves = "160", moves_max = "170", tags = {"M", "T", "-"}, name = "The coolest dude you know"})
+	 table.insert(group, {level = 100, hp = "44000", hp_max = "50000", mana = "-5", mana_max = "0", moves = "-160", moves_max = "170", tags = {"M", "T", "-"}, name = "NEGATIVE MANA/MOVES TEST"})
 
 	 end_group()
       end
