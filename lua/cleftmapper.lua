@@ -192,7 +192,7 @@ OUR_ROOM_COLOUR               = { name = "Our Room Colour",  colour =  tonumber(
 BACKGROUND_COLOUR             = { name = "Area Background",  colour =  ColourNameToRGB "#111111"}
 ROOM_COLOUR                   = { name = "Room",             colour =  ColourNameToRGB "#dcdcdc"}
 EXIT_COLOUR                   = { name = "Exit",             colour =  ColourNameToRGB "#e0ffff"}
-EXIT_COLOUR_UP_DOWN           = { name = "Exit up/down",     colour =  ColourNameToRGB "#ffb6c1"}
+EXIT_COLOUR_UP_DOWN           = { name = "Exit up/down",     colour =  ColourNameToRGB "lime"}
 NOTE_ROOM_COLOUR              = { name = "Room notes",       colour =  tonumber(GetPluginVariable("dd07d6dbe73fe0bd02ddb62c", "NOTE_ROOM_COLOUR")) or 0x90EE90 }
 UNKNOWN_ROOM_COLOUR           = { name = "Unknown room",     colour =  ColourNameToRGB "#8b0000"}
 DIFFERENT_AREA_COLOUR         = { name = "Another area",     colour =  ColourNameToRGB "#ff0000"}
@@ -1134,7 +1134,9 @@ function draw_next_batch_of_rooms()
       end -- for each existing room
       depth = depth + 1
       if (#rooms_to_draw_next > 0 and utils.timer()-draw_elapsed > 0.08) then
-         if not running then
+	  		 print("NOT CURRENT_SPEEDWALK")
+         if not current_speedwalk then
+		 --current_speedwalk
             AddTimer("draw_next_batch_of_rooms"..depth, 0, 0, 0.1, "mapper.draw_next_batch_of_rooms()", timer_flag.Enabled + timer_flag.OneShot + timer_flag.Replace + timer_flag.Temporary, "")
             SetTimerOption("draw_next_batch_of_rooms"..depth, "send_to", sendto.script)
          end
@@ -1172,13 +1174,13 @@ function draw_next_batch_of_rooms()
  -- draw_edge()
 
    -- timing stuff
+
    if timing then
       local count= 0
       for k in pairs (drawn_uids) do
          count = count + 1
       end
       print (string.format ("Time to draw %i rooms = %0.3f seconds, search depth = %i", count, end_time - start_time, depth))
-
       total_times_drawn = total_times_drawn + 1
       total_time_taken = total_time_taken + end_time - start_time
 
@@ -1547,7 +1549,7 @@ function draw (uid)
    local end_time = utils.timer ()
 
    -- timing stuff
-   if timing then
+ --  if timing then
       local count= 0
       for k in pairs (drawn) do
          count = count + 1
@@ -1560,8 +1562,8 @@ function draw (uid)
       print (string.format ("Total times map drawn = %i, average time to draw = %0.3f seconds",
          total_times_drawn,
          total_time_taken / total_times_drawn))
-		             draw_next_batch_of_rooms()
-   end -- if
+--		             draw_next_batch_of_rooms()
+ --  end -- if
 
    -- let them move it around
    movewindow.add_drag_handler (win, 0, 0, 0, title_bottom)
@@ -1570,6 +1572,13 @@ function draw (uid)
 
 --   if show_timing then
       print("Time elapsed drawing ", utils.timer()-outer_time)
+	        print("DEPTH: ", depth)
+			if current_speedwalk then
+			print("Currently Speedwalking!")
+			else if not current_speedwalk then
+			print("NOT SPEEDWALKING!")
+			end
+			end
 --   end
 
    CallPlugin("abc1a0944ae4af7586ce88dc", "BufferedRepaint")
