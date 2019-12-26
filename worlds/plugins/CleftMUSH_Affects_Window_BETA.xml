@@ -114,6 +114,7 @@ version="0.7"
 	require "mw"
 	require "mw_theme_base"
 
+	local to_bool = {["0"] = false, ["1"] = true, ["true"] = true, ["false"] = false}
 	-- Miniwindow State
 	local winid = "win_"..GetPluginID()
 	local bg_color = "#000000"
@@ -148,7 +149,7 @@ version="0.7"
 	   ["thirsty"] = "thirsty"}
 
 	path_prefix = "worlds\\plugins\\images\\affects\\"
-	debug = GetVariable("debug") or false
+	debug = to_bool[GetVariable("debug")] or false
 	prompt_gag = GetVariable("prompt_gag") or false
 	pulse_length = 4
 
