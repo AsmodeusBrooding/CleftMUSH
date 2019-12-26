@@ -606,7 +606,7 @@
 	    ---- END YOU -------------------------------------------------------------
 	    ---- <><><><><><><><><><>><><><><><><><><><><><><><><><><><><><><><><><><>
 	    ---- TEAM-MATE -----------------------------------------------------------------
-	    if not is_you(player.tags) and not (group_leader == player.name) and not is_minion(player.tags) and not is_pet(player.tags) then
+	    if not is_you(player.tags) and not (group_leader == player.name) and not is_minion(player.tags) and not is_pet(player.tags) and isPlayerOrEnemy  then
 	       if bar_width == 100 then
            if show_numbers then
 		     x = x + WindowText(winid, "f1", "T", show_numbers_100_x, top + padding, 0, 0, ColourNameToRGB(team_color), false) + 2 -- show if you
