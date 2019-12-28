@@ -9,6 +9,7 @@
   <!ENTITY show_database_mods "true" > 
   <!ENTITY show_other_areas "true" > 
   <!ENTITY show_area_exits "true" > 
+  <!ENTITY show_door_exits "true" > 
   <!ENTITY show_up_down "false" > 
   <!ENTITY speedwalk_prefix "run" > 
 ]>

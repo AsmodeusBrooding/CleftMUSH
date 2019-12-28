@@ -250,6 +250,7 @@ default_config = {
    SHOW_ROOM_NOTES = false,
    --SHOW_TILES = GetPluginVariable("dd07d6dbe73fe0bd02ddb62c", "tile_mode") or "1",
 SHOW_AREA_EXITS = false
+SHOW_DOOR_EXITS = false
 }
 
 local expand_direction = {
@@ -522,7 +523,7 @@ local function draw_configuration ()
    WindowText(config_win, CONFIG_FONT_ID, "Show Area Exits", x, y, 0, 0, 0x000000)
    WindowText(config_win, CONFIG_FONT_ID_UL, ((config.SHOW_AREA_EXITS and "On") or "Off"), width + rh_size / 2 + box_size - WindowTextWidth(config_win, CONFIG_FONT_ID_UL, ((config.SHOW_AREA_EXITS and "On") or "Off"))/2, y, 0, 0, 0x808080)
 
-   -- show area exits hotspot
+  -- show area exits hotspot
    WindowAddHotspot(config_win,
       "$<area_exits>",
       x + GAP,
@@ -531,6 +532,22 @@ local function draw_configuration ()
       y + font_height,   -- rectangle
       "", "", "", "", "mapper.mouseup_change_show_area_exits",  -- mouseup
       "Click to toggle display of area exits",
+      miniwin.cursor_hand, 0)  -- hand cursor
+   y = y + font_height
+   
+         -- show door exits
+   WindowText(config_win, CONFIG_FONT_ID, "Show Door Exits", x, y, 0, 0, 0x000000)
+   WindowText(config_win, CONFIG_FONT_ID_UL, ((config.SHOW_DOOR_EXITS and "On") or "Off"), width + rh_size / 2 + box_size - WindowTextWidth(config_win, CONFIG_FONT_ID_UL, ((config.SHOW_DOOR_EXITS and "On") or "Off"))/2, y, 0, 0, 0x808080)
+   
+     -- show door exits hotspot
+   WindowAddHotspot(config_win,
+      "$<door_exits>",
+      x + GAP,
+      y,
+      x + frame_width,
+      y + font_height,   -- rectangle
+      "", "", "", "", "mapper.mouseup_change_show_door_exits",  -- mouseup
+      "Click to toggle display of door exits",
       miniwin.cursor_hand, 0)  -- hand cursor
    y = y + font_height
 
@@ -696,6 +713,8 @@ local function draw_room (uid, path, x, y)
                      if exit_time > (now - LAST_VISIT_TIME) and
                         this_time > (now - LAST_VISIT_TIME) then
                         linewidth = 2
+						--tprint(last_visited)
+						exit_line_colour = ColourNameToRGB("orange")
                      end -- if
                   end -- if
                end -- if
@@ -1085,6 +1104,14 @@ local function draw_zone_exit (exit)
    WindowLine (win, x + def.x1, y + def.y1, x + def.x2, y + def.y2, ColourNameToRGB("green"), miniwin.pen_solid + 0x0200, 1)
 end --  draw_zone_exit
 
+local function draw_doors_exit (exit)
+   local x, y, def = exit.x, exit.y, exit.def
+   local offset = ROOM_SIZE
+
+   WindowLine (win, x + def.x1, y + def.y1, x + def.x2, y + def.y2, ColourNameToRGB("yellow"), miniwin.pen_solid + 0x0200, 5)
+   WindowLine (win, x + def.x1, y + def.y1, x + def.x2, y + def.y2, ColourNameToRGB("green"), miniwin.pen_solid + 0x0200, 1)
+end --  draw_doors_exit
+
 
 ----------------------------------------------------------------------------------
 --  EXPOSED FUNCTIONS
@@ -1429,7 +1456,7 @@ function draw (uid)
 
    -- set up for initial room, in middle
   -- set up for initial room, in middle
-  drawn, drawn_coords, rooms_to_be_drawn, speedwalks, plan_to_draw, area_exits = {}, {}, {}, {}, {}, {}
+  drawn, drawn_coords, rooms_to_be_drawn, speedwalks, plan_to_draw, area_exits, door_exits = {}, {}, {}, {}, {}, {}, {}
   depth = 0
 
    -- insert initial room
@@ -1613,6 +1640,7 @@ function init (t)
    show_other_areas = t.show_other_areas  -- true to show other areas
    show_up_down = t.show_up_down        -- true to show up or down
    show_area_exits = t.show_area_exits  -- true to show area exits
+   show_door_exits = t.show_door_exits  -- true to show area exits
    speedwalk_prefix = t.speedwalk_prefix  -- how to speedwalk (prefix)
 
    -- force some config defaults if not supplied
@@ -2217,7 +2245,16 @@ function mouseup_change_show_area_exits (flags, hotspot_id)
       config.SHOW_AREA_EXITS = true
    end
    draw (current_room)
-end -- mouseup_change_area_textures
+end 
+
+function mouseup_change_show_door_exits (flags, hotspot_id)
+   if config.SHOW_DOOR_EXITS == true then
+      config.SHOW_DOOR_EXITS = false
+   else
+      config.SHOW_DOOR_EXITS = true
+   end
+   draw (current_room)
+end -- mouseup_show_door_Exits
 
 function zoom_map (flags, hotspot_id)
    if bit.band (flags, 0x100) ~= 0 then
