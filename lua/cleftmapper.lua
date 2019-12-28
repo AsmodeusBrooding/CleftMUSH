@@ -1595,7 +1595,6 @@ local credits = {
 
 -- call once to initialize the mapper
 function init (t)
-
    -- make copy of colours, sizes etc.
 
    config = t.config
@@ -1606,8 +1605,8 @@ function init (t)
 
    show_help = t.show_help     -- "help" function
    room_click = t.room_click   -- RH mouse-click function
-  room_mouseover = t.room_mouseover -- mouse-over function
-  room_cancelmouseover = t.room_cancelmouseover -- cancel mouse-over function
+   room_mouseover = t.room_mouseover -- mouse-over function
+   room_cancelmouseover = t.room_cancelmouseover -- cancel mouse-over function
    timing = t.timing           -- true for timing info
    show_completed = t.show_completed  -- true to show "Speedwalk completed." message
    show_other_areas = t.show_other_areas  -- true to show other areas
@@ -1669,7 +1668,6 @@ function init (t)
 
    WindowShow (win, not window_hidden)
    WindowShow (config_win, false)
-
 end -- init
 
 function MouseUp(flags, hotspot_id, win)
