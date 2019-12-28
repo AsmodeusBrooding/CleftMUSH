@@ -26,6 +26,22 @@ Multipurpose utility with sounds
 
 </plugin>
 <triggers>
+ <trigger
+   enabled="y"
+   match="^\<HP:\d+\/\d+ MP:\d+\/\d+ MV:\d+ Enemy:None! TNL:\d+\>(|\s+)$"
+   omit_from_log="y"
+   omit_from_output="y"
+   regexp="y"
+   send_to="14"
+   sequence="100"
+  >
+  <send>
+  util.print("{GInitializing {YC{yl{Ye{yf{Yt{RM{rU{RS{rH{G Auto Setup")
+  Execute("setup prompt")
+  Execute("look")
+  util.print("{GInitialization Complete, Happy Mudding!")
+  </send>
+  </trigger>
   <trigger
    enabled="y"
    group="linkify"
