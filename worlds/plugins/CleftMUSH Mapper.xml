@@ -939,6 +939,7 @@ OUR_ROOM_COLOUR = tonumber(GetVariable("OUR_ROOM_COLOUR")) or 0x0000FF
 NOTE_ROOM_COLOUR = tonumber(GetVariable("NOTE_ROOM_COLOUR")) or 0x90EE90
 shownotes = ((GetVariable("shownotes") or "1") == "1") -- default true
 tile_mode = ((GetVariable("tile_mode") or "1") == "1") -- default true
+local performing_maintenance = false
 count = 0
 roomcount = 0
 rooms = {}
@@ -1024,14 +1025,77 @@ directions = {
 running = false
 temp_scan_depth = 4
 
+forced_opened = false
+force_nests = 0
+function forceOpenDB()
+   force_nests = force_nests+1
+   if not db:isopen() then
+      forced_opened = true
+      -- print("Forcing open")
+      db = assert (sqlite3.open(GetInfo (66) .. sanitize_filename(WorldName()) .. ".db"))
+   end
+end
+
+function closeDBifForcedOpen()
+   force_nests = force_nests-1
+   if forced_opened and (force_nests <= 0) then
+      force_nests = 0
+      forced_opened = false
+      -- print("Forcing closed")
+      db:close()
+   end
+end
+
+function dbcheck (code, query)
+   if code ~= sqlite3.OK and    -- no error
+      code ~= sqlite3.ROW and   -- completed OK with another row of data
+      code ~= sqlite3.DONE then -- completed OK, no more rows
+	 local err = db:errmsg ()  -- the rollback will change the error message
+	 err = err.."\n\nCODE: "..code.."\nQUERY: "..query.."\n"
+	 db:exec ("ROLLBACK")      -- rollback any transaction to unlock the database
+	 error (err, 3)            -- show error in caller's context
+   end -- if
+end -- dbcheck
+
+function dbCheckExecute(query)
+   forceOpenDB()
+   local code = db:exec(query)
+   dbcheck(code, query)
+   closeDBifForcedOpen()
+end
+
+function DBisOpen(warn)
+   if db:isopen() then
+      return true
+   end
+   if warn then
+       Note("MAPPER ERROR: The map database is closed for safety when not connected to Aardwolf. If you want to change the DB, please connect to the game.")
+   end
+   return false
+end
+
+function dbnrowsWRAPPER(query)
+   forceOpenDB()
+   iter,vm,i = db:nrows(query)
+   local function itwrap(vm, i)
+      retval = iter(vm, i)
+      if not retval then
+	 closeDBifForcedOpen()
+	 return nil
+      end
+      return retval
+   end
+   return itwrap,vm,i
+end
+
 function activate_running(run)
     running = run
     if mapper.current_speedwalk then
 	print("MAPPER CURRENT SPEEDWALK: ", mapper.current_speedwalk)
-        temp_scan_depth = mapper.config.SCAN.depth
-        mapper.config.SCAN.depth = 4  -- or whatever
+	temp_scan_depth = mapper.config.SCAN.depth
+	mapper.config.SCAN.depth = 4  -- or whatever
     else
-        mapper.config.SCAN.depth = temp_scan_depth
+	mapper.config.SCAN.depth = temp_scan_depth
     end
     mapper.draw(current_room)
 end
@@ -1890,6 +1954,45 @@ return
 
 end -- room_click
 
+function sanitize_file_name(str)
+   str = string.gsub(str, "[^%w]", "")
+   return str
+end
+
+function checkDatabaseIntegrity(full_check, second_run)
+   Note("CHECKING MAP DATABASE INTEGRITY")
+   CallPlugin("abc1a0944ae4af7586ce88dc", "BufferedRepaint")
+   -- If needed, force wal_checkpoint databases to make sure everything gets written out
+   -- this is a harmless no-op if not using journal_mode=WAL
+   dbCheckExecute("PRAGMA wal_checkpoint(FULL);")
+   local integrityCheck = true
+   local integrity_check_pragma = "quick_check"
+   if full_check then
+      integrity_check_pragma = "integrity_check"
+   end
+   for row in dbnrowsWRAPPER("PRAGMA "..integrity_check_pragma..";") do
+      if row[integrity_check_pragma] ~= "ok" then
+	 tprint(row)
+	 integrityCheck = false
+      end
+   end
+   if integrityCheck == false and second_run ~= true then
+      ColourNote("yellow", "red", "MAPPER DB INTEGRITY CHECK FAILED. REBUILDING INDEXES AND TRYING AGAIN.")
+      dbCheckExecute("REINDEX")
+      return checkDatabaseIntegrity(true, true)
+   end
+   if not integrityCheck then
+      ColourNote("yellow", "red", "FAILED INTEGRITY CHECK. CLOSE MUSHCLIENT AND RESTORE A KNOWN GOOD DATABASE BACKUP IMMEDIATELY.")
+      utils.msgbox("FAILED MAPPER DB INTEGRITY CHECK. CLOSE MUSHCLIENT AND RESTORE A KNOWN GOOD DATABASE BACKUP IMMEDIATELY.", "Error!", "ok", "!", 1)
+      CorruptionAlert()
+      return false
+   end
+   Note("MAP DATABASE INTEGRITY CHECK PASSED")
+   if second_run then
+      ColourNote("white", "blue", "WHEW! LUCKY!")
+   end
+   return true
+end
 
 function room_toggle_weaponshop()
 Execute ("mapper flag weaponshop")
@@ -2414,20 +2517,79 @@ function OnPluginInstall ()
 
   -- new stuff for sql data
   check_create_db()
-  load_rooms()
 
   -- initialize mapper
-
   mapper.init { config = config,
-                get_room = get_room, findpath = findpath,
-                room_click = room_click,    -- called on RH click on room square,
-                show_help = mapperhelp,         -- to show help,
-                show_other_areas = show_other_areas,  -- want to see areas other than the current one?
-}
-      util.print("{YC{yl{Ye{yf{Yt{RM{rU{RS{rH {RG{Yr{Ga{Cp{Bh{Mi{mc{Ra{Yl {x238Mapper installed: {Gv" .. version)
+		get_room = get_room,
+		findpath = findpath,
+		room_click = room_click,    -- called on RH click on room square,
+		show_help = mapperhelp,         -- to show help,
+		show_other_areas = show_other_areas,  -- want to see areas other than the current one?
+  }
+
+  db = assert(sqlite3.open(GetInfo(66)..sanitize_file_name(WorldName())..".db"))
+  db:busy_timeout(100)
+
+  if not checkDatabaseIntegrity(true) then
+     return
+  end
+
+  dbCheckExecute("PRAGMA journal_mode=WAL;")
+
+  local db_user_version = 0
+  for row in dbnrowsWRAPPER("PRAGMA user_version") do
+     -- This is from aard's gmcp mapper plugin, feel like questionable.
+     -- What if update failed and one row is out of date?
+     db_user_version = tonumber(row.user_version)
+  end
+
+  if db_user_version < xml_entity_cur_db_version then
+     performing_maintenance = true
+     backup_db()
+     DoAfterSpecial(3, "update_db_schema(" .. db_user_version .. ")", sendto.script)
+  else
+     after_update_check()
+  end
+
+  load_rooms()
 
 
+  util.print("{YC{yl{Ye{yf{Yt{RM{rU{RS{rH {RG{Yr{Ga{Cp{Bh{Mi{mc{Ra{Yl {x238Mapper installed: {Gv" .. version)
 end -- OnPluginInstall
+
+function update_db_schema(db_user_version)
+   SetScroll(-1)
+   print("\nThe Cleft mapper database (CleftofDimensions.db) schema has been changed.\nYour map database will now be updated.\nThis process may take a while.\n")
+   utils.msgbox ("The Cleft mapper database (CleftofDimensions.db) schema has been changed.\nYour map database will now be updated.\nThis process may take a while.", "", "ok", "i")
+
+   -- Only go through the structure creation if we haven't done it already
+   -- to save time at startup.
+   if db_user_version < 2 then
+      print("Updating mapper database schema to v2...")
+   end
+
+   print("")
+   print("Converted database to new format. Verifying integrity.")
+   CallPlugin("abc1a0944ae4af7586ce88dc", "BufferedRepaint")
+   if not checkDatabaseIntegrity(true) then
+      return
+   end
+   dbCheckExecute("VACUUM;")
+   print("")
+   CallPlugin("abc1a0944ae4af7586ce88dc", "BufferedRepaint")
+   dbCheckExecute("PRAGMA user_version = 1;")
+
+   utils.msgbox ("Your map database schema update has completed.", "", "ok", "i")
+
+   after_update_check()
+
+   performing_maintenance = false
+   satisfy_broadcast_queue()
+end
+
+function after_update_check()
+   -- Do things after updating schema in update_db_schema
+end -- after_update_check
 
 
 ------------------------------------------------------------------------------------------------------------
@@ -2620,11 +2782,6 @@ function delete_area(a)
 	Note("Deleted ", cnt, " rooms in '", a, "' area.")
 end
 
-function clean_file_name(f)
-	f = string.gsub(f, "[^%w]", "")
-	return f
-end
-
 function fix_sql(s)
 	if not s then -- nil value
 		return ""
@@ -2633,7 +2790,7 @@ function fix_sql(s)
 end
 
 function run_sql(sql)
-	local db = assert(sqlite3.open(GetInfo(66)..clean_file_name(WorldName())..".db"))
+	db = assert(sqlite3.open(GetInfo(66)..sanitize_file_name(WorldName())..".db"))
 	--Note(sql)
 	rslt = db:exec(sql)
 	--Note(rslt)
@@ -2649,9 +2806,9 @@ run_sql(sql)
 	sql = [[
 		SELECT * FROM rooms ORDER BY uid ASC;
 	]]
-	local db = assert(sqlite3.open(GetInfo(66)..clean_file_name(WorldName())..".db"))
+	db = assert(sqlite3.open(GetInfo(66)..sanitize_file_name(WorldName())..".db"))
 	local cnt = 0
-	for row in db:nrows(sql) do
+	for row in dbnrowsWRAPPER(sql) do
 		cnt = cnt + 1
 		rooms[row.uid] = {
 			name = row.name,
@@ -2840,26 +2997,30 @@ end -- room_change_exit
 -- If you want to do manual backups, make an alias with: script="backup_db"
 ------------------------------------------
 
+-- Store last_backup in db
 function backup_db()
 	Note("Creating database backup.")
-	local bk_nm = GetInfo(66).."db_backups\\"..clean_file_name(WorldName())..".db."..os.date("%A")
-	ffi = require("ffi")
-	ffi.cdef[[
-		bool CreateDirectoryA(const char *lpPathName, void *lpSecurityAttributes);
-		bool CopyFileA(const char* lpExistingFileName, const char * lpNewFileName, bool bFailIfExists);
-		unsigned long GetLastError(void);
-	]]
+	local bk_nm = GetInfo(66).."db_backups\\"..sanitize_file_name(WorldName())..".db."..os.date("%c"):gsub("/", "_"):gsub(" ", "_"):gsub(":", "_")
+	require "cleft_lua_ffi"
 
-	succ = ffi.C.CreateDirectoryA(GetInfo(66).."db_backups\\", nil)
-	err_no = ffi.C.GetLastError()
-	if err_no and err_no ~= 183 and err_no ~= 127 then
-		Note("Error creating directory: ", err_no)
+	local dir = GetInfo(66).."db_backups\\"
+	succ = cleft_lua_ffi.CreateDirectory(dir, true)
+
+	if not succ then
+	   ColourNote("red", "", "Failed to create directory: " .. dir)
 	end
 
-	succ = ffi.C.CopyFileA(GetInfo(66)..clean_file_name(WorldName())..".db", bk_nm, false)
+	retry_count = 100
+	succ = cleft_lua_ffi.CopyFile(GetInfo(66)..sanitize_file_name(WorldName())..".db", bk_nm, nil, 10)
+
+	if not succ then
+	   ColourNote("red", "", "Could not copy file with " .. retry_count .. " retries.")
+	   ColourNote("red", "", "Contact CleftMUSH Maintainers")
+	end
 
 	Note("Backup created: ", bk_nm)
 	last_backup = os.time()
+	return true
 end
 
 ------------------------------------------
