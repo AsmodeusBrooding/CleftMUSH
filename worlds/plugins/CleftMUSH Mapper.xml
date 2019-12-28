@@ -89,16 +89,16 @@ mapper.gotoNextResult(Trim("%1"))
    sequence="100"
    script="map_resume"
   >
- 
-  </alias>  
+
+  </alias>
  <alias
    match="go"
    enabled="y"
    sequence="100"
    script="map_resume"
   >
- 
-  </alias>  
+
+  </alias>
  <alias
    match="mapper stop"
    enabled="y"
@@ -317,30 +317,30 @@ util.print("{R--------------------------------------------------")
 
 <alias
   match="^mapper flags? (.*)$"
-  enabled="y" 
-  regexp="y" 
+  enabled="y"
+  regexp="y"
   sequence="100"
   script="updateRoomInfo">
 </alias>
 <alias
   match="^mapper uid$"
-  enabled="y" 
-  regexp="y" 
+  enabled="y"
+  regexp="y"
   sequence="100"
   script="updateRoomUid">
 </alias>
 <alias
   match="^mapper areaname$"
-  enabled="y" 
-  regexp="y" 
+  enabled="y"
+  regexp="y"
   sequence="100"
   script="updateRoomArea">
 </alias>
 
 <alias
   match="^mapper draw room$"
-  enabled="y" 
-  regexp="y" 
+  enabled="y"
+  regexp="y"
   sequence="100"
   send_to="14">
 <send>mapper.draw (uid)</send>
@@ -348,8 +348,8 @@ util.print("{R--------------------------------------------------")
 
 <alias
   match="^mapper delete room$"
-  enabled="y" 
-  regexp="y" 
+  enabled="y"
+  regexp="y"
   sequence="100"
   send_to="14">
 <send>delete_room_click()</send>
@@ -358,40 +358,40 @@ util.print("{R--------------------------------------------------")
   <!-- MAPPER HELP STUFF -->
 <alias
   match="^mapper help$"
-  enabled="y" 
-  regexp="y" 
+  enabled="y"
+  regexp="y"
   sequence="100"
   send_to="14">
 <send>mapperhelp()</send>
 </alias>
 <alias
   match="^mapper help config$"
-  enabled="y" 
-  regexp="y" 
+  enabled="y"
+  regexp="y"
   sequence="100"
   send_to="14">
 <send>mapperhelpconfig()</send>
 </alias>
 <alias
   match="^mapper help exits$"
-  enabled="y" 
-  regexp="y" 
+  enabled="y"
+  regexp="y"
   sequence="100"
   send_to="14">
 <send>mapperhelpexits()</send>
 </alias>
 <alias
   match="^mapper help moving$"
-  enabled="y" 
-  regexp="y" 
+  enabled="y"
+  regexp="y"
   sequence="100"
   send_to="14">
 <send>mapperhelpmoving()</send>
 </alias>
 <alias
   match="^mapper help utils$"
-  enabled="y" 
-  regexp="y" 
+  enabled="y"
+  regexp="y"
   sequence="100"
   send_to="14">
 <send>mapperhelputils()</send>
@@ -688,7 +688,7 @@ result = string.gsub(result, "%]", "")
 
 for word in string.gmatch(result, "%w+") do
     if subTable[word] then
-        result = result:gsub(word, subTable[word], 1)
+	result = result:gsub(word, subTable[word], 1)
     end
 end
 Simulate("\\n[Exits2: " .. result .. "]\\n")</send>
@@ -878,12 +878,12 @@ Simulate("\\n[Exits2: " .. result .. "]\\n")</send>
    sequence="100"
   >
   </trigger>
-<trigger 
-   enabled="y" 
-   match="^{Where (.*)}\w{1,2}(?:.*->)?\s+(.*)$" 
-   regexp="y" 
-   name="InfoUpdate" 
-   script="updateRoomInfo" 
+<trigger
+   enabled="y"
+   match="^{Where (.*)}\w{1,2}(?:.*->)?\s+(.*)$"
+   regexp="y"
+   name="InfoUpdate"
+   script="updateRoomInfo"
    sequence="100"
 >
 </trigger>
@@ -1158,16 +1158,16 @@ end
 -- -----------------------------------------------------------------
 function process_room_name (name, line, wildcards, styles)
   local name = line
-  
+
   if debugging then
     ColourNote ("yellow", "", "process_room_name: " .. name)
   end -- if
-    
+
   -- ignore exits lines
   if string.match (name, "^%(] Exits: ") then
     return
   end -- if
-  
+
   -- ignore really long lines
   if #name > 75 then
     return
@@ -1176,10 +1176,10 @@ function process_room_name (name, line, wildcards, styles)
   --return
   --end -- if
   room_name = name
-  
+
   --EnableTrigger ("get_description_line", true)
   EnableTrigger ("get_room_name", false)
-  
+
   desc = {}
 --print("Name: ", name)
 --print("Desc: ", desc)
@@ -1194,39 +1194,39 @@ function process_description_line (name, line, wildcards)
   if Trim (line) == "" then
     return
   end -- if
-  
+
   if debugging then
     ColourNote ("yellow", "", "process_description_line: " .. line)
   end -- if
-  
+
   if not desc then
     ColourNote ("yellow", "", "No current description")
   end -- if
-  
+
   if just_got_room_name then
-  
+
     -- false alarm!
     if line:sub (1, 2) ~= "  " then
     --print("FALSE ALARM")
       just_got_room_name = false
       EnableTrigger ("get_description_line", false)
-      
+
       exits = nil
-     
-      return       
+
+      return
     end -- if
-    
+
   end -- if
-  
+
   just_got_room_name = false
-  
+
   -- add to the current description
   if Trim (line) ~= "" then
-    table.insert (desc, line)  
+    table.insert (desc, line)
   end -- if
       if line:match(".* is carrying%:") then
-        print("Line Matched It works")
-        return
+	print("Line Matched It works")
+	return
 else
 end
 
@@ -1254,14 +1254,14 @@ end
 
 function updateRoomInfo(name, line, wildcards)
    local valid_flags = {
-   ["waypoint"]="waypoint", ["bank"]="bank", ["alchemyguild"]="alchemyguild", 
-   ["priest"]="priest", ["forge"]="forge", ["weaponshop"]="weaponshop", 
-   ["armorshop"]="armorshop", ["petshop"]="petshop", ["itemshop"]="itemshop", 
-   ["foodshop"]="foodshop", ["tavern"]="tavern", ["morgue"]="morgue", ["quest"]="quest", 
+   ["waypoint"]="waypoint", ["bank"]="bank", ["alchemyguild"]="alchemyguild",
+   ["priest"]="priest", ["forge"]="forge", ["weaponshop"]="weaponshop",
+   ["armorshop"]="armorshop", ["petshop"]="petshop", ["itemshop"]="itemshop",
+   ["foodshop"]="foodshop", ["tavern"]="tavern", ["morgue"]="morgue", ["quest"]="quest",
    ["fountain"]="fountain", ["gato"]="gato", ["moti"]="moti", ["inn"]="inn",
    ["owlite"]="owlite", ["enchanter"]="enchanter", ["mage"]="mage"
    }
-   
+
    local roomtype, room, roomuid, matchFound = wildcards[1], wildcards[2], current_room or 0, false
    new_flags = {}
    for word in wildcards[1]:gmatch("%w+") do table.insert(new_flags, word) end
@@ -1342,7 +1342,7 @@ function updateRoomUid()
    print("UID: ", uid)
    mapper.draw(current_room)
 end
- 
+
 function update_uid(newuid, olduid)
 --tprint(rooms[current_room])
     sql = [[UPDATE rooms SET uid = ']]..newuid..[[' WHERE uid = ']]..olduid..[[']]
@@ -1423,9 +1423,9 @@ function map_cexits_delete (name, line, wildcards)
    run_sql(query)
    for k,v in pairs(rooms[current_room].exits) do
       if not directions[k] then
-         print("Found custom exit \""..k.."\" to room "..rooms[current_room].exits[k].." \""..rooms[rooms[current_room].exits[k]].name.."\"")
-         rooms[current_room].exits[k] = nil
-         --rooms[current_room].exit_locks[k] = nil
+	 print("Found custom exit \""..k.."\" to room "..rooms[current_room].exits[k].." \""..rooms[rooms[current_room].exits[k]].name.."\"")
+	 rooms[current_room].exits[k] = nil
+	 --rooms[current_room].exit_locks[k] = nil
       end
    end
    mapper.draw (current_room)
@@ -1437,10 +1437,10 @@ function map_cexits_purge (name, line, wildcards)
    run_sql(query)
    for k,v in pairs(rooms) do
       for l,w in pairs(v.exits) do
-         if not directions[l] then
-            rooms[k].exits[l] = nil
-            --rooms[k].exit_locks[l] = nil
-         end
+	 if not directions[l] then
+	    rooms[k].exits[l] = nil
+	    --rooms[k].exit_locks[l] = nil
+	 end
       end
    end
    mapper.draw (current_room)
@@ -1463,24 +1463,24 @@ function custom_exit_list (name, line, wildcards)
    else
       if area == "here" then
 
-         if current_room and current_area then
-            area = current_area
-         else
-            Note("CEXITS HERE ERROR: The mapper doesn't know where you are. Type 'LOOK' and try again.")
-            return
-         end
+	 if current_room and current_area then
+	    area = current_area
+	 else
+	    Note("CEXITS HERE ERROR: The mapper doesn't know where you are. Type 'LOOK' and try again.")
+	    return
+	 end
 
-         query = string.format("select uid, name, area, dir, touid from rooms inner join exits on rooms.uid = fromuid where lower(area) is %s and dir not in ('n','s','e','w','d','u','nw','ne','se','sw') and fromuid not in ('*','**') order by uid", fix_sql(area))
-         intro = "The following rooms in the current area have custom exits:"
+	 query = string.format("select uid, name, area, dir, touid from rooms inner join exits on rooms.uid = fromuid where lower(area) is %s and dir not in ('n','s','e','w','d','u','nw','ne','se','sw') and fromuid not in ('*','**') order by uid", fix_sql(area))
+	 intro = "The following rooms in the current area have custom exits:"
       elseif area == "thisroom" then
-         if not current_room then
-            Note("CEXITS THISROOM ERROR: The mapper doesn't know where you are. Type 'LOOK' and try again.")
-            return
-         end
-         query = string.format("select uid, name, area, dir, touid from rooms inner join exits on rooms.uid = fromuid where fromuid=%s and dir not in ('n','s','e','w','d','u','nw','ne','se','sw')", fix_sql(current_room))
-         intro = "The following custom exits are in this room:"
+	 if not current_room then
+	    Note("CEXITS THISROOM ERROR: The mapper doesn't know where you are. Type 'LOOK' and try again.")
+	    return
+	 end
+	 query = string.format("select uid, name, area, dir, touid from rooms inner join exits on rooms.uid = fromuid where fromuid=%s and dir not in ('n','s','e','w','d','u','nw','ne','se','sw')", fix_sql(current_room))
+	 intro = "The following custom exits are in this room:"
       else
-         intro = string.format("The following rooms in areas partially matching '%s' have custom exits:",area)
+	 intro = string.format("The following rooms in areas partially matching '%s' have custom exits:",area)
       end
    end
 
@@ -1489,13 +1489,12 @@ function custom_exit_list (name, line, wildcards)
 
    -- area - room name - room uid - direction - destination uid
    fmt = "| %10.10s | %-20.20s | %7.7s | %-14.14s | %7.7s |"
-   -- print ("Query: " .. query)
+   print ("Query: " .. query)
    world.Note ("\n"..intro)
    world.Note (hl)
    world.Note (hr)
    world.Note (hl)
-  -- for row in dbnrowsWRAPPER(query) do
-     for row in run_sql(query) do
+   for row in dbnrowsWRAPPER(query) do
 
       line = string.format(fmt,row.area, row.name, row.uid, row.dir, row.touid)
       Hyperlink(string.format("mapper goto %s",row.uid), line, string.format("%s",row.dir), "", "", false, NoUnderline_hyperlinks)
@@ -1524,19 +1523,19 @@ function ExecuteWithWaits(cexit_command)
       local partial_cexit_command = cexit_command
       local strbegin,strend = string.find(partial_cexit_command,";?wait%(%d*.?%d+%);?")
       while strbegin do
-         strbegin,strend = string.find(partial_cexit_command,";?wait%(%d*.?%d+%);?")
-         if strbegin ~= nil and strbegin ~= 1 then
-            Execute(string.sub(partial_cexit_command,1,strbegin-1))
-         end
-         if strend then
-            local wait_time = tonumber(string.match(string.sub(partial_cexit_command,strbegin,strend),"wait%((%d*.?%d+)%)"))
-            --SendNoEcho("echo {mapper_wait}wait("..wait_time..")")
-            line, wildcards = wait.regexp("^\\{mapper_wait\\}wait\\(([0-9]*\\.?[0-9]+)\\)",nil,trigger_flag.OmitFromOutput)
-            Note("CEXIT WAIT: waiting for "..wait_time.." seconds before continuing.")
-            CallPlugin("abc1a0944ae4af7586ce88dc", "BufferedRepaint")
-            wait.time(wait_time)
-            partial_cexit_command = string.sub(partial_cexit_command, strend+1)
-         end
+	 strbegin,strend = string.find(partial_cexit_command,";?wait%(%d*.?%d+%);?")
+	 if strbegin ~= nil and strbegin ~= 1 then
+	    Execute(string.sub(partial_cexit_command,1,strbegin-1))
+	 end
+	 if strend then
+	    local wait_time = tonumber(string.match(string.sub(partial_cexit_command,strbegin,strend),"wait%((%d*.?%d+)%)"))
+	    --SendNoEcho("echo {mapper_wait}wait("..wait_time..")")
+	    line, wildcards = wait.regexp("^\\{mapper_wait\\}wait\\(([0-9]*\\.?[0-9]+)\\)",nil,trigger_flag.OmitFromOutput)
+	    Note("CEXIT WAIT: waiting for "..wait_time.." seconds before continuing.")
+	    CallPlugin("abc1a0944ae4af7586ce88dc", "BufferedRepaint")
+	    wait.time(wait_time)
+	    partial_cexit_command = string.sub(partial_cexit_command, strend+1)
+	 end
       end
       Execute(partial_cexit_command)
       --SendNoEcho("echo {end running}")
@@ -1591,7 +1590,7 @@ function custom_exit (name, line, wildcards)
       local cexit_delay = temp_cexit_delay or BASE_CEXIT_DELAY
       local added_waits = 0
       for wait_secs in string.gmatch(cexit_command, "wait%((%d*.?%d+)%)") do
-         added_waits = added_waits + tonumber(wait_secs)
+	 added_waits = added_waits + tonumber(wait_secs)
       end
       world.Note("CEXIT: WAIT FOR CONFIRMATION BEFORE MOVING.\nThis should take about "..cexit_delay+added_waits.." seconds"..(((added_waits ~= 0) and " (includes "..added_waits.." seconds in added waits)") or "")..".")
       CallPlugin("abc1a0944ae4af7586ce88dc", "BufferedRepaint")
@@ -1601,35 +1600,35 @@ function custom_exit (name, line, wildcards)
       temp_cexit_delay = nil
       cexit_dest = current_room
       if cexit_dest then
-         if cexit_dest == "-1" then
-            world.Note ("CEXIT FAILED: You cannot link custom exits to unmappable rooms.")
-         elseif cexit_dest ~= cexit_start then
-            world.Note (string.format("Custom Exit CONFIRMED: %s (%s) -> %s", cexit_start, cexit_command, cexit_dest))
+	 if cexit_dest == "-1" then
+	    world.Note ("CEXIT FAILED: You cannot link custom exits to unmappable rooms.")
+	 elseif cexit_dest ~= cexit_start then
+	    world.Note (string.format("Custom Exit CONFIRMED: %s (%s) -> %s", cexit_start, cexit_command, cexit_dest))
 --print("Cexit Start: ", cexit_start)
 --print("Cexit Command: ", cexit_command)
 --print("Cexit Dest: ", cexit_dest)
-            run_sql(string.format ("INSERT OR REPLACE INTO exits (dir, fromuid, touid) VALUES (%s, %s, %s);",
-               fix_sql  (cexit_command),  -- direction (eg. "n")
-               fix_sql  (cexit_start),  -- from current room
-               fix_sql  (cexit_dest) -- destination room
-            ))
-                 -- update in-memory table
-            rooms[cexit_start].exits[cexit_command] = cexit_dest
-            --rooms[cexit_start].exit_locks[cexit_command] = "0"
-           -- update in-memory table
+	    run_sql(string.format ("INSERT OR REPLACE INTO exits (dir, fromuid, touid) VALUES (%s, %s, %s);",
+	       fix_sql  (cexit_command),  -- direction (eg. "n")
+	       fix_sql  (cexit_start),  -- from current room
+	       fix_sql  (cexit_dest) -- destination room
+	    ))
+		 -- update in-memory table
+	    rooms[cexit_start].exits[cexit_command] = cexit_dest
+	    --rooms[cexit_start].exit_locks[cexit_command] = "0"
+	   -- update in-memory table
       --rooms[uid].exits[cexit_command] = cexit_dest
   -- add_update_room(rooms[cexit_start].exits[cexit_command], rooms[uid])
     add_update_room(from_room, rooms[from_room])
-            mapper.draw (current_room)
+	    mapper.draw (current_room)
 --print("Cexit Start: ", cexit_start)
 --print("Cexit Command: ", cexit_command)
 --print("Cexit Dest: ", cexit_dest)
-          SaveState()
-         else
-            world.Note (string.format("CEXIT FAILED: Custom Exit %s leads back here!", cexit_command))
-         end
+	  SaveState()
+	 else
+	    world.Note (string.format("CEXIT FAILED: Custom Exit %s leads back here!", cexit_command))
+	 end
       else
-         world.Note ("CEXIT FAILED: Need to know where we ended up.")
+	 world.Note ("CEXIT FAILED: Need to know where we ended up.")
       end
    end)
 end -- custom_exit
@@ -1643,7 +1642,7 @@ last_area_requested = ""
 
 function process_exits (exits_str)
 local show_areas = GetVariable("show_areas") or "No"
-if show_areas == "Yes" then 
+if show_areas == "Yes" then
   EnableTrigger ("area_name", true)
   EnableTrigger ("area_name2", true)
 else
@@ -1668,7 +1667,7 @@ end
 
   -- generate a "room ID" by hashing the room name, description and exits
   uid = utils.tohex (utils.md5 (name .. desc .. terrain .. exits_str))
-  uid = uid:sub (1, 25) 
+  uid = uid:sub (1, 25)
   -- break up exits into individual directions
   exits = {}
 
@@ -1691,7 +1690,7 @@ Simulate("\n[UID]: ", uid)
 --print("Area: ", area)
 --print("Current Area: ", current_area)
 --print("Name: ", name)
---print("Desc: ", desc) 
+--print("Desc: ", desc)
 --print("Terrain: ", terrain)
 --print("Current Room: ", current_room)
 --print("Exits: ", exits_str)
@@ -1730,7 +1729,7 @@ Simulate("\nLast Dir: ", last_direction_moved)
 --end
    if shownotes and rooms[uid] and rooms[uid].notes ~= nil and rooms[uid].notes ~= "" then
       --AnsiNote(ColoursToANSI("{R[{WMapper Notes for room" ..name.. ..rooms[uid].notes.."{W]"))
-   AnsiNote(ColoursToANSI("{R[{WNotes - {Y"..name.." {W- "..rooms[uid].notes.."{R]{w")) 
+   AnsiNote(ColoursToANSI("{R[{WNotes - {Y"..name.." {W- "..rooms[uid].notes.."{R]{w"))
 end
   -- call mapper to draw this room
   mapper.draw (uid)
@@ -1773,8 +1772,6 @@ end -- fix_regexp_magic_characters
 -- -----------------------------------------------------------------
 
 function get_room (uid)
-
-
   if not rooms [uid] then
    return nil
   end -- if
@@ -1815,52 +1812,52 @@ function get_room (uid)
 special_room = false
 shop = false
 
-                         if room.info and room.info ~= "" then
-                         if string.match (room.info, "waypoint") then
-                                         special_room = true
-                         elseif string.match (room.info, "bank") then
-                                         special_room = true
-                         elseif string.match (room.info, "alchemyguild") then
-                                         special_room = true
-                         elseif string.match (room.info, "priest") then
-                                         special_room = true
-                         elseif string.match (room.info, "forge") then
-                                         special_room = true
-                         elseif string.match (room.info, "weaponshop") then
-                                         special_room = true
-                                                 shop = true
-                         elseif string.match (room.info, "armorshop") then
-                                         special_room = true
-                                                 shop = true
-                         elseif string.match (room.info, "petshop") then
-                                         special_room = true
-                                                 shop = true
-                         elseif string.match (room.info, "itemshop") then
-                                         special_room = true
-                                                 shop = true
-                         elseif string.match (room.info, "foodshop") then
-                                         special_room = true
-                                                 shop = true
-                         elseif string.match (room.info, "tavern") then
-                                         special_room = true
-                                                 shop = true
-				         elseif string.match (room.info, "morgue") then
-                                         special_room = true		
-                         elseif string.match (room.info, "quest") then
-                                         special_room = true			
-                         elseif string.match (room.info, "fountain") then
-                                         special_room = true		
-                         elseif string.match (room.info, "gato") then
-                                         special_room = true		
-                         elseif string.match (room.info, "moti") then
-                                         special_room = true			
-                         elseif string.match (room.info, "inn") then
-                                         special_room = true	 								 
+			 if room.info and room.info ~= "" then
+			 if string.match (room.info, "waypoint") then
+					 special_room = true
+			 elseif string.match (room.info, "bank") then
+					 special_room = true
+			 elseif string.match (room.info, "alchemyguild") then
+					 special_room = true
+			 elseif string.match (room.info, "priest") then
+					 special_room = true
+			 elseif string.match (room.info, "forge") then
+					 special_room = true
+			 elseif string.match (room.info, "weaponshop") then
+					 special_room = true
+						 shop = true
+			 elseif string.match (room.info, "armorshop") then
+					 special_room = true
+						 shop = true
+			 elseif string.match (room.info, "petshop") then
+					 special_room = true
+						 shop = true
+			 elseif string.match (room.info, "itemshop") then
+					 special_room = true
+						 shop = true
+			 elseif string.match (room.info, "foodshop") then
+					 special_room = true
+						 shop = true
+			 elseif string.match (room.info, "tavern") then
+					 special_room = true
+						 shop = true
+					 elseif string.match (room.info, "morgue") then
+					 special_room = true
+			 elseif string.match (room.info, "quest") then
+					 special_room = true
+			 elseif string.match (room.info, "fountain") then
+					 special_room = true
+			 elseif string.match (room.info, "gato") then
+					 special_room = true
+			 elseif string.match (room.info, "moti") then
+					 special_room = true
+			 elseif string.match (room.info, "inn") then
+					 special_room = true
 										end
 end -- if
 					     if uid == current_room and special_room then
-                                         room.bordercolour = mapper.OUR_ROOM_COLOUR.colour
-                                         room.borderpenwidth = 3		 
+					 room.bordercolour = mapper.OUR_ROOM_COLOUR.colour
+					 room.borderpenwidth = 3
    elseif room.area ~= current_area then
     room.bordercolour = ColourNameToRGB "red"
   end -- not in this area
@@ -1873,7 +1870,7 @@ function config_our_room_colour ()
 		local clr = PickColour(OUR_ROOM_COLOUR or 0)
 		if clr ~= -1 then
 			OUR_ROOM_COLOUR = clr
-            mapper.OUR_ROOM_COLOUR.colour = clr
+	    mapper.OUR_ROOM_COLOUR.colour = clr
 			SaveState()
 		end
 end
@@ -1882,7 +1879,7 @@ function config_note_colour ()
 		local clr = PickColour(NOTE_ROOM_COLOUR)
 		if clr ~= -1 then
 			NOTE_ROOM_COLOUR = clr
-            mapper.NOTE_ROOM_COLOUR.colour = clr
+	    mapper.NOTE_ROOM_COLOUR.colour = clr
 			SaveState()
 		end
 end
@@ -1942,9 +1939,9 @@ return
   end -- for
 
   local choice = WindowMenu (mapper.win,
-                            WindowInfo (mapper.win, 14),
-                            WindowInfo (mapper.win, 15),
-                            table.concat (t, "|"))
+			    WindowInfo (mapper.win, 14),
+			    WindowInfo (mapper.win, 15),
+			    table.concat (t, "|"))
 
   local f = tf [choice]
 
@@ -2096,7 +2093,7 @@ function map_find (name, line, wildcards)
     function (uid)
       local room = matches [uid]
       if room then
-        matches [uid] = nil
+	matches [uid] = nil
       end -- if
       return room, next (matches) == nil
     end,  -- function
@@ -2175,7 +2172,7 @@ function note_find (name, line, wildcards)
     function (uid)
       local room = matches [uid]
       if room then
-        matches [uid] = nil
+	matches [uid] = nil
       end -- if
       return room, next (matches) == nil
     end,  -- function
@@ -2255,7 +2252,7 @@ function desc_find (name, line, wildcards)
     function (uid)
       local room = matches [uid]
       if room then
-        matches [uid] = nil
+	matches [uid] = nil
       end -- if
       return room, next (matches) == nil
     end,  -- function
@@ -2295,24 +2292,24 @@ function map_goto (name, line, wildcards)
 end -- map_goto
 
 function map_resume (name, line, wildcards)
- 
+
   local wanted = mapper.last_hyperlink_uid or mapper.last_speedwalk_uid
- 
+
   if not wanted then
     mapper.print "No outstanding speedwalks or hyperlinks."
     return
   end -- if nothing to do
- 
+
   -- find desired room
   mapper.find (
     function (uid)
-      return uid == wanted, uid == wanted  
+      return uid == wanted, uid == wanted
     end,  -- function
     show_vnums,  -- show vnum?
     1,      -- how many to expect
     true    -- just walk there
     )
-       
+
 end -- map_resume
 
 -- -----------------------------------------------------------------
@@ -2328,10 +2325,10 @@ function map_where (name, line, wildcards)
     return
   end -- if
   local paths = mapper.find_paths (current_room,
-           function (uid)
-             return uid == wanted,  -- wanted room?
-                    uid == wanted   -- stop searching?
-            end)
+	   function (uid)
+	     return uid == wanted,  -- wanted room?
+		    uid == wanted   -- stop searching?
+	    end)
   local uid, item = next (paths, nil) -- extract first (only) path
   -- nothing? room not found
   if not item then
@@ -2349,13 +2346,13 @@ end -- map_where
 -- -----------------------------------------------------------------
 function cannot_walk (name, line, wildcards)
   mapper.cancel_speedwalk ()
-  just_got_room_name = false 
+  just_got_room_name = false
   last_direction_moved = nil
   EnableTrigger ("get_room_name", true)
   EnableTrigger ("get_description_line", false)
 
-  
-  
+
+
 --  mapper.mapprint ("Attempt to walk cancelled.")
 
 end -- cannot_walk
@@ -2376,7 +2373,7 @@ end -- check_for_cannot_go
 --      end -- if
     -- Note("expected exit for this direction is to room", expected_exit)
 --    end -- if
---  end -- if 
+--  end -- if
  --end -- function
 
 
@@ -2403,12 +2400,12 @@ local dirs =  {
   ['in'] = "in",
   out = "out",
   }  -- end of available
-  
+
   if last_direction_moved then
     Execute ("open " .. dirs [last_direction_moved])
     Execute (dirs [last_direction_moved])
   end -- if
-  
+
 end -- Door_Closed
 
 
@@ -2487,7 +2484,7 @@ terrain_color["air"]=tonumber("0x808080")--Air
 terrain_color["desert"]=tonumber("0x00ffff")--Desert (proper color)
 terrain_color["swamp"]=tonumber("0x406080")--Swamp
 terrain_color["road"]=ColourNameToRGB("saddlebrown")--Road
-terrain_color["enter"]=tonumber("0x606060")--Enter   
+terrain_color["enter"]=tonumber("0x606060")--Enter
 terrain_color["snow"]=ColourNameToRGB("navajowhite")--Snow
 terrain_color["rock"]=tonumber("0x808080")--Rock
 terrain_color["jungle"]=tonumber("0x20c040")--Jungle
@@ -2505,7 +2502,6 @@ end
 -- -----------------------------------------------------------------
 
 function OnPluginInstall ()
-
   config = {}  -- in case not found
   setup_terrain_colors()
 
@@ -2885,7 +2881,7 @@ function room_delete_exit (room, uid, exit)
 
       -- construct available exits list for display
       for k,v in pairs (room.exits) do
-         available [k] = k .. " --> " .. room.exits [k]
+	 available [k] = k .. " --> " .. room.exits [k]
       temp_room = k
 --print ("AvailableK: ", available [k])
 --print ("Available: ", available )
@@ -2896,17 +2892,17 @@ function room_delete_exit (room, uid, exit)
       end -- for
 
       if next (available) == nil then
-         utils.msgbox ("There are no exits from this room.", "No exits!", "ok", "!", 1)
-         return
+	 utils.msgbox ("There are no exits from this room.", "No exits!", "ok", "!", 1)
+	 return
       end -- not known
       local chosen_exit = utils.listbox ("Choose exit to delete", "Exits ...", available )
       if not chosen_exit then
-         return
+	 return
       end
    end
       print("Temp_Room: ", temp_room)
       print("AvailableK: ", available [k])
-      
+
     room.exits[temp_room] = nil -- setting table item to nil deletes it
 	run_sql([[DELETE FROM rooms WHERE uid = ']]..room.exits[temp_room]..[[']])
    mapper.mapprint ("Deleted exit '"..chosen_exit.."' from room "..uid.." from database.")
@@ -2927,18 +2923,18 @@ function room_change_exit (room, uid, exit)
 
       -- construct available exits list for display
       for k,v in pairs (room.exits) do
-         available [k] = k .. " --> " .. room.exits [k]
+	 available [k] = k .. " --> " .. room.exits [k]
       temp_room = k
       end -- for
 
       if next (available) == nil then
-         utils.msgbox ("There are no exits from this room.", "No exits!", "ok", "!", 1)
-         return
+	 utils.msgbox ("There are no exits from this room.", "No exits!", "ok", "!", 1)
+	 return
       end -- not known
 
       local chosen_exit = utils.listbox ("Choose exit to change destination of:", "Exits ...", available )
       if not chosen_exit then
-         return
+	 return
       end
 --print("Chosen_Exit: ", chosen_exit)
 --print ("Temp_Room: ", temp_room)
@@ -2971,11 +2967,11 @@ temp_exit = chosen_exit
 
    if exit_destination ~= room.exits[temp_exit] then
       run_sql(string.format ([[
-         UPDATE exits SET touid = %s WHERE dir = %s AND fromuid = %s;
-         ]],
-         fix_sql (exit_destination),
-         fix_sql (temp_exit),  -- direction (eg. "n")
-         fix_sql (uid)  -- from current room
+	 UPDATE exits SET touid = %s WHERE dir = %s AND fromuid = %s;
+	 ]],
+	 fix_sql (exit_destination),
+	 fix_sql (temp_exit),  -- direction (eg. "n")
+	 fix_sql (uid)  -- from current room
       ))
 
       mapper.mapprint ("Modified exit", temp_exit, "from room", uid, "to be to room", exit_destination, "in database.")
