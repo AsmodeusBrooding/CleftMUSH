@@ -474,7 +474,7 @@ version="0.7"
 	-- 16x16 at top, 32x32 below
 	-- Offsets due to window border
 	x_off = 2
-	y_off = 18
+	y_off = 2
 	gif_size = 32
 	-- --------------------------------------------------------------------
 	-- PlaceNewGif (filename, frames)
@@ -579,10 +579,11 @@ version="0.7"
 
 	   title = "Affects Window" -- default title
 
-	   Theme.DrawTitleBar(winid, "f1", title, "center") -- them window title (has to be drawn before border) This is the title bar that says the leader name
+	   --Theme.DrawTitleBar(winid, "f1", title, "center") -- them window title (has to be drawn before border) This is the title bar that says the leader name
 	   Theme.DrawBorder(winid) -- theme window border
 
-	   left, top = 7, 17 -- bar location
+	   --left, top = 7, 17 -- bar location
+	   left, top = 0, 0
 	   across = 0
 	   rows = 0
 	   Theme.AddResizeTag(winid, 2, nil, nil, "MouseDown", "ResizeMoveCallback", "ResizeReleaseCallback") -- resize grip
