@@ -8,7 +8,7 @@
 <plugin
 name="CleftMUSH_Affects_Window"
 author="Elisius, Asmodeus"
-id="353de94ba6c43260d839e256"
+id="40b1a67687e5619fea41b458"
 save_state="y"
 language="Lua"
 purpose="Affects Window"
