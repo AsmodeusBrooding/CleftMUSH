@@ -180,7 +180,7 @@ function outlined_text(win, font, text, startx, starty, endx, endy, color, utf8)
     WindowText(win, font, text, startx, starty+1, endx, endy, 0x000000, utf8)
     WindowText(win, font, text, startx+1, starty-1, endx, endy, 0x000000, utf8)
     WindowText(win, font, text, startx+1, starty, endx, endy, 0x000000, utf8)
-    WindowText(win, font, text, startx+1, starty+1, endx, endy, 0x000000, utf8)
+    WindowText(win, font, text, startx+4, starty+4, endx, endy, 0x000000, utf8)
     WindowText(win, font, text, startx, starty, endx, endy, color, utf8)
 end
 
