@@ -1013,7 +1013,7 @@ function ResizeMoveCallback()
     starty = GetInfo(280)
   end
   if (utils.timer() - lastRefresh > 0.0333) then
-    SetUpHotspotsAndDraw(false)
+    window(false)
     lastRefresh = utils.timer()
   end
 end
