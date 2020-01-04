@@ -191,8 +191,8 @@ font_name = ""
 
 default_x = 868
 default_y = 336
-default_height = 215
-default_width = 269
+default_height = 389
+default_width = 600
 height = tonumber (GetVariable ("height")) or default_height
 width = tonumber (GetVariable ("width")) or default_width
 GAP = 4
@@ -233,10 +233,10 @@ local line_height = font_size+4 -- height of bars
 local bar_width = tonumber(GetVariable("bar_width")) or 200 -- width of bars
 local bar_ticks = 9 -- number of ticks to show on bar
 local bar_border = "#777777" -- bar surrounding the gauges
-local enemy_hp_color = GetVariable("enemy_hp_color") or "#00ff00" -- color of bar
+local enemy_hp_color = GetVariable("enemy_hp_color") or "#FF0000" -- color of bar
 local hp_color = GetVariable("hp_color") or "#00ff00" -- color of bar
-local mana_color = GetVariable("mana_color") or "#3333ff" -- color of bar
-local moves_color = GetVariable("moves_color") or "#ffff66" -- color of bar
+local mana_color = GetVariable("mana_color") or "#0000FF" -- color of bar
+local moves_color = GetVariable("moves_color") or "#FFD700" -- color of bar
 local hp_label_color = hp_color -- hp label color
 local enemy_hp_label_color = enemy_hp_color -- enemy hp label color
 local mana_label_color = mana_color -- mana label color
@@ -492,25 +492,18 @@ function window(redraw)
     --WindowDelete("winid")
 
     local fonts = utils.getfontfamilies ()
-
     -- if Dina not there already, add it
-    if not fonts.Dina then
-      AddFont (GetInfo (66) .. "\\Dina.fon")
+    if not fonts ["Fixedsys Excelsior"] then
+      AddFont (GetInfo (66) .. "\\FSEX300.ttf")
+      print("ADDED FONT")
       fonts = utils.getfontfamilies ()
     end
 
-    if fonts ["Dina"] then
-      default_font_size = 8
-      default_font_name = "Dina"
-    elseif fonts["Courier New"] then
-      default_font_size = 9
-      default_font_name = "Courier New"
-    else
-      default_font_size = 9
-      default_font_name = "Lucida Console"
-    end
-    --  WindowCreate(winid, windowinfo.window_left, windowinfo.window_top, width, height, 0, 0, ColourNameToRGB(bg_color))
-    font_name = font_name or default_font_name
+      default_font_size = 12
+      default_font_name = "Fixedsys Excelsior"
+
+    font_id = "font"
+    font_name = GetVariable("font_name") or default_font_name
     font_size = tonumber(GetVariable("font_size")) or default_font_size
     --windowinfo = movewindow.install(winid, miniwin.pos_center, miniwin.create_absolute_location, false, nil, {mouseup=MouseUp, mousedown=LeftClickOnly, dragmove=LeftClickOnly, dragrelease=LeftClickOnly},{x=default_x, y=default_y})
     --WindowCreate(winid, windowinfo.window_left, windowinfo.window_top, width, height, windowinfo.window_mode, windowinfo.window_flags, Theme.SECONDARY_BODY)
@@ -1173,23 +1166,15 @@ end
 function OnPluginInstall()
 
   local fonts = utils.getfontfamilies ()
-
   -- if Dina not there already, add it
-  if not fonts.Dina then
-    AddFont (GetInfo (66) .. "\\Dina.fon")
+  if not fonts ["Fixedsys Excelsior"] then
+    AddFont (GetInfo (66) .. "\\FSEX300.ttf")
+    print("ADDED FONT")
     fonts = utils.getfontfamilies ()
   end
 
-  if fonts ["Dina"] then
-    default_font_size = 8
-    default_font_name = "Dina"
-  elseif fonts["Courier New"] then
-    default_font_size = 9
-    default_font_name = "Courier New"
-  else
-    default_font_size = 9
-    default_font_name = "Lucida Console"
-  end
+    default_font_size = 12
+    default_font_name = "Fixedsys Excelsior"
 
   font_id = "font"
   font_name = GetVariable("font_name") or default_font_name
