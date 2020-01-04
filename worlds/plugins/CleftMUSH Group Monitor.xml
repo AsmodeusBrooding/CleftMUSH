@@ -540,10 +540,10 @@ function trim(str)
 end
 
 function truncate(str)
-  if #str <= 12 then
+  if #str <= 17 then
     return str
   end
-  return trim(string.sub(str, 1, 10))..".."
+  return trim(string.sub(str, 1, 16))..".."
 end
 
 function bigtruncate(str)
