@@ -791,15 +791,12 @@ function drawPlayer(player, i, isPlayerOrEnemy)
       end
       if compact_mode == false then
         if show_numbers then
-          --		  print("Player Name: ", player.name)
-          --		  print("Player Level: ", player.level)
-          --x = WindowRectOp(winid, 2, left - 3, top, 307, 198, ColourNameToRGB(enemy_background_color))
-          x = WindowText(winid, font_id, "Lv["..player.level.."]", left, top + padding, 0, 0, ColourNameToRGB(level_color), false) + left -- label and padding
-          x = x + WindowText(winid, font_id, truncate(player.name), left + 50, top + padding, 0, 0, ColourNameToRGB(player_color), false) + left + 18 + 8 -- player name
+    --      x = WindowText(winid, font_id, "Lv["..player.level.."]", left, top + padding, 0, 0, ColourNameToRGB(level_color), false) + left -- label and padding
+    --      x = x + WindowText(winid, font_id, truncate(player.name), left + 50, top + padding, 0, 0, ColourNameToRGB(player_color), false) + left + 18 + 8 -- player name
           x = WindowText(winid, font_id, "[ENEMY]", bar_width+left+19+font_size*2.5-8, top + padding, 0, 0, ColourNameToRGB(tank_color), false) -- show if enemy
         else
-          x = WindowText(winid, font_id, "Lv["..player.level.."]", left, top + padding, 0, 0, ColourNameToRGB(level_color), false) + left -- label and padding
-          x = x + WindowText(winid, font_id, truncate(player.name), left + 50, top + padding, 0, 0, ColourNameToRGB(player_color), false) + left + 18 + 8 -- player name
+    --      x = WindowText(winid, font_id, "Lv["..player.level.."]", left, top + padding, 0, 0, ColourNameToRGB(level_color), false) + left -- label and padding
+    --      x = x + WindowText(winid, font_id, truncate(player.name), left + 50, top + padding, 0, 0, ColourNameToRGB(player_color), false) + left + 18 + 8 -- player name
           x = x + WindowText(winid, font_id, "E", left + 210, top + padding, 0, 0, ColourNameToRGB(tank_color), false) + 2 -- show if minion
         end
       end
