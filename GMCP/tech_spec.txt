@@ -1,0 +1,59 @@
+GMCP:
+  Character Info: For character stat monitoring and group plugins
+
+    char.base { "name": Carsanquay, "class": Priest, "evolution": Shaman, "race": Elf, "Affiliation": Staff, "pretitle": "Testing ", "perlevel": 1000, "remorts": 7 }
+    char.vitals { "hp": 1000, "mana": 1000, "moves": 1000, "super": 0 }
+    char.stats { "str": 18, "wis": 22, "con": 20, "int": 18, "dex": 16, "hr": 6, "dr": 12, "mr": 30, "saves": -13 }
+    char.status { "level": 210, "tnl": 1000, "hunger": 70, "thirst": 70, "align": 20, "state": X, "pos": "Standing" , "enemy": "an owl", "enemypct": 93 }``
+    char.maxstats { "maxhp": 2000, "maxmana": 2000, "maxmoves": 2000, "maxstr": 30, "maxwis": 30, "maxcon": 30, "maxint": 30, "maxdex": 30 }
+    char.worth { "gold": 40000, "silver": 1000000, "bank_gold": 100000, "bank_silver": 1000000, "trains": 6, "pracs": 14 }
+      State:
+      1 At login screen
+      2 At MOTD
+      3 Player Active
+      4 Player AFK
+
+  Group: For populating group window details.
+      group { "groupname": "group", "leader": "Carsanquay", "created": "28 Dec 14:05", "status": "Private", "count": 2, "kills": 0, "exp": 0, "members": <member array here> }
+      "members": [
+                    { "name": "Carsanquay", "info": { "hp": 10000, "mhp": 20000,"mn": 2000, "mmn": 20000, "mv": 20000, "mmv": 20000, "align": 40, "tnl": 2400, "lvl": 100, "here": 1 } } ,
+                    { "name": "Cooper", "info": { "hp": 10000, "mhp": 20000,"mn": 2000, "mmn": 20000, "mv": 20000, "mmv": 20000, "align": 40, "tnl": 2400, "lvl": 100, "here": 1 } } ,
+                 ]
+
+  Mapper: I know that Area Name and Room Number are currently staff only but having mud send this data is the cleanest way to make a proper mapper.
+
+      Room:
+        room.info { "num": 1234, "name": "Fountain", "area": "Truce", "terrain": "city", "details": "", "exits": { "ne": 1234} }
+        (Not mappable. Mazes, secrets, etc)
+        room.info { "num": -1, "name": "Hidden Encampment", "zone": "Behemoth's Skull", "terrain": "cave", "details": "", "exits": {} }
+
+  Channels/Communication: Chat Window
+
+      comm.channel { "chan": "ooc", "msg": "You [*OOC*] 'Hello World'", "player": "Carsanquay" }
+      comm.channel { "chan": "tell", "msg": "You tell Cooper 'Hi'", "player": "Carsanquay" }
+
+  Inventory: Sent on item entering/leaving inventory, including bags. An array of type inv.item is sent on request for inventory - This would allow for some level of item managment, unique item ID's would also massively aid in this.
+  
+      inv.item { "name": "a Warp Star", "flags": "glow hum identified" , "level": 20 , "type": "wand", "wear-loc": "held", "destination": "A Traveller's Backpack" }
+
+  Affects:
+      affect.event { "name": "Barrier", "duration": 40, "affect": "-40 AC", "level": 128, "event_type": X }
+        Event Type:
+        1 Affect ON
+        2 Affect OFF
+        3 Affect cast fail
+
+<-------------- QUESTIONABLE -------------------->
+  Spell: Not sure how I feel about this one.
+  spell.cast { "name": "Gatling Prayer", "level": 128, "event_type": X }
+
+  Event Type:
+  1 Cast Success
+  2 Cast Fail
+
+  Combat: This might be a bit much but combat rounds? Useful for damage tracker
+                combat.round {"members": <combat members here> }
+  "members": [
+                { "name": "Carsanquay", "info": { "hp": 10000, "mn": 2000, "mv": 20000, "lvl": 100, "target": "The Imp King", "melee_dmg": 340, "spell_skill_dmg": 2000 } } ,
+                { "name": "The Imp King", "info": { "hp": 10000, "mn": 2000, "mv": 20000, "lvl": 100, "target": "Carsanquay", "melee_dmg": 340, "spell_skill_dmg": 2000 } } ,
+             ]
