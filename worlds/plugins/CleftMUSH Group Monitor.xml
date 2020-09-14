@@ -7,7 +7,7 @@
 <muclient>
 <plugin
    name="CleftMUSH_Group_Window"
-   author="Asmodeus"
+   author="Asmodeus, Elisius"
    id="353de94ba6c42060d839e256"
    language="Lua"
    purpose="Group monitor"
@@ -30,8 +30,7 @@
    omit_from_output="y"
    send_to="14"
    sequence="100"
-  ><send>
-</send>
+  >
  </trigger>
   <trigger
    enabled="y"
@@ -43,8 +42,19 @@
    omit_from_output="y"
    send_to="14"
    sequence="100"
-  ><send>
-</send>
+  >
+ </trigger>
+  <trigger
+   enabled="y"
+   regexp="y"
+   name="my_name"
+   match="^\[NAME: (?P<name>\w+)\]$"
+   script="my_name"
+   keep_evaluating="y"
+   omit_from_output="y"
+   send_to="14"
+   sequence="100"
+  >
  </trigger>
   <trigger
    group="group"
@@ -82,34 +92,24 @@
   <trigger
    enabled="y"
    regexp="y"
-   match="^(?<name>.+)'s group:$"
-   keep_evaluating="y"
-   script="my_name"
-   omit_from_output="y"
-   sequence="100"
-  >
-  </trigger>
-  <trigger
-   enabled="y"
-   regexp="y"
    match="^\[G_End\]$"
    script="end_group"
    omit_from_output="y"
    sequence="100"
   >
   </trigger>
-<trigger
+  <trigger
    enabled="y"
-   match="| HP:*/* | MP:*/* | MV:*/* | Enemy:None! | TNL:* | SUPER: * | "
+   match="| HP:*/* | MP:*/* | MV:*/* | Enemy:None | TNL:* | SUPER: * | "
    keep_evaluating="y"
    regexp="n"
    send_to="14"
    sequence="100"
   >
   <send>
-enemy_group = nil
-window(true)
-</send>
+    enemy_group = nil
+    window(true)
+  </send>
   </trigger>
 </triggers>
 
@@ -140,835 +140,950 @@ window(true)
    script="simulate_group"
   >
   </alias>
+  <alias
+   regexp="y"
+   match="^group debug$"
+   enabled="y"
+   sequence="100"
+   script="ToggleDebug"
+   >
+  </alias>
 </aliases>
 
 <!--  Script  -->
 
 <script>
 <![CDATA[
-require "movewindow"
-require "gauge"
-require "mw"
-require "mw_theme_base"
-require "tprint"
-
-
--- ^\[(?<level>\d+) (?<tags>[^\s]+)\] (?<name>.+)\s+(?<hp>\d+)\/(?<hp_max>\d+) hp \s+(?<mana>\d+)\/\s+(?<mana_max>\d+) mana\s+ (?<moves>\d+)\/\s+(?<moves_max>\d+) mv\s+(?<exp>\d+) xp$
--- kxwt_group_start
--- kxwt_group 65 65 119 119 156 156 XL Alas
--- kxwt_group_end
--- kxwt_group <hp> <hp_max> <mana> <mana_max> <move> <move_max> <tag> <name>
-
-local group = {}
-
-
--- Tag 'X' - these are your stats.
--- Tag 'Pet' - this is a player.
--- Tag 'Mob' - this is one of your minions.
--- Tag 'O' - this is somebody else's minion.
--- Tag 'P' - any pet mob that doesn't fall into the categories above.
-
--- Tag 'L' - the group leader
--- Tag 'T' - in tanking mode
--- Tag 'N' - no-melee mode
--- Tag '-' - not present in the room with you
-
-local to_bool = {["0"] = false, ["1"] = true}
-
-local winid = "win_"..GetPluginID()
-local myname = "" -- my name
-local group_leader = "" -- group leader
-local group_name = "" -- group name
-local show_minions = to_bool[GetVariable("show_minions") or "1"] -- show minions
-local bg_color = "#000000"
-local level_color = "#FF00FF"
-local enemy_background_color = "#FF0000"
-local title_bg_color = "#303030"
-local border_color = "#303030"
-local player_border_color = "#AAAAAA"
-local enemy_border_color = "#FF0000"
-local title_color = "#FFFFFF" -- window title color
-local player_color = "#CCCCCC" -- player name color
-local leader_color = "#66ff33" -- leader tag color
-local tank_color = "#ff3300" -- tank tag color
-local minion_color = "#009999" -- minion tag color
-local no_melee_color = "#cc00cc" -- no melee tag color
-local pet_color = "#ffff66" -- pet mob color
-local hp_label_color = "#00ff00" -- hp label color
-local enemy_hp_label_color = "#00ff00" -- enemy hp label color
-local mana_label_color = "#3333ff" -- mana label color
-local moves_label_color = "#ffff66" -- moves label color
---hp_label_color, mana_label_color, moves_label_color = "#DDDDDD", "#DDDDDD", "#DDDDDD"
-local overlay_color = "#FFFFFF" -- % overlay color
-local biggest_number = 1 -- biggest number for hp/mana/moves, to set player box size
-local overlay_pct = to_bool[GetVariable("overlay_pct") or "1"] -- show % overlay
-local show_numbers = to_bool[GetVariable("show_numbers") or "1"] -- show numbers after gauge
-local show_mana = to_bool[GetVariable("show_mana") or "1"] -- show mana
-local show_moves = to_bool[GetVariable("show_moves") or "1"] -- show moves
-local last_refresh = 1 -- last window refresh
-local pos_x = GetVariable("pos_x") or 100
-local pos_y = GetVariable("pos_y") or 100
-local font_size = GetVariable("font_size") or 8
-local font_name = "Lucida Console"
-local window_visible = true -- always start out with visible window
-local title = "Group Info: Use LOOK to draw the bars, or if this is your first time using the window type setup prompt"
-local bar_height = font_size+4 -- height of bars
-local bar_width = tonumber(GetVariable("bar_width")) or 200 -- width of bars
-local bar_ticks = 9 -- number of ticks to show on bar
-local bar_border = "#777777" -- bar surrounding the gauges
-local enemy_hp_color = GetVariable("enemy_hp_color") or "#00ff00" -- color of bar
-local hp_color = GetVariable("hp_color") or "#00ff00" -- color of bar
-local mana_color = GetVariable("mana_color") or "#3333ff" -- color of bar
-local moves_color = GetVariable("moves_color") or "#ffff66" -- color of bar
-local win_height = GetVariable("win_height") or 400
-local win_width = GetVariable("win_width") or 440
-local top = GetVariable("top") or 20
-local grip_resize = 10 -- resize grip size
-function toggle()
-	window_visible = not window_visible
-	if not window_visible then -- remove window
-		WindowDelete(winid)
-	else
-		window(true)
-	end
-end
-
-function toggle_minions()
-	show_minions = not show_minions
-	window(false)
-end
-
-
-function start_group()
-	EnableTriggerGroup("group", true)
-	group = {}
-end
-function start_enemy_group()
-	EnableTriggerGroup("group", false)
-	EnableTriggerGroup("enemy_group", true)
-	enemy_group = {}
-end
-
-function player_line(name, line, args)
-	--tprint(args)
-	table.insert(group, {hp = args.hp, hp_max = args.hp_max, mana = args.mana, mana_max = args.mana_max, moves = args.moves, moves_max = args.moves_max, tags = split(args.name, args.tags), name = args.name, level = args.level})
-end
-function enemy_line(name, line, args)
-	--tprint(args)
-	table.insert(enemy_group, {hp = args.hp, hp_max = args.hp_max, mana = args.mana, mana_max = args.mana_max, moves = args.moves, moves_max = args.moves_max, tags = split(args.name, args.tags), name = args.name, level = args.level})
-end
-function my_name(name, line, args)
-	myname = args.name
-    group_leader = args.name
-end
-
-function prompt_line(name, line, args)
-	if myname == "" then -- my name isnt set so dont try to update group stats
-		Note("My name is not set yet. Going to toggle ctriggers. This probably only happens when re-installing the group plugin.")
-		SendNoEcho("pbust Playername: %n")
-		--SendNoEcho("set ctrigger on")
-		return
-	end
-	for i, player in ipairs(group) do
-		if string.lower(player.name) == string.lower(myname) then
-			player.hp = args.hp
-			player.hp_max = args.hp_max
-			player.mana = args.mana
-			player.mana_max = args.mana_max
-			player.moves = args.moves
-			player.moves_max = args.moves_max
-            player.level = args.level
-			window(false)
-			return
-		end
-	end
-	for i, player in ipairs(enemy_group) do
-		if string.lower(player.name) == string.lower(myname) then
-			player.hp = args.hp
-			player.hp_max = args.hp_max
-			player.mana = args.mana
-			player.mana_max = args.mana_max
-			player.moves = args.moves
-			player.moves_max = args.moves_max
-            player.level = args.level
-			window(false)
-			return
-		end
-end
-end
-
-function end_group()
-	EnableTriggerGroup("enemy_group", false)
-    set_order() -- flag as minion, pet, player
-	get_biggest_number() -- get longest hp/mana/moves number to format box size
-	table.sort(group, by_player)
-	window(true)
-end
-
-function get_biggest_number()
-	for i, player in ipairs(group) do
-		if (not show_minions and player.minion < 1) or show_minions then
-			if #player.hp_max > biggest_number then
-				biggest_number = #player.hp_max
-			end
-			if #player.mana_max > biggest_number then
-				biggest_number = #player.mana_max
-			end
-			if #player.moves_max > biggest_number then
-				biggest_number = #player.moves_max
-			end
-		end
-	end
-end
-
-function split(n, t)
-	local tags = {}
-	for i = 1, #t do
-		local tag = string.sub(t, i)
-		--(t, i, i)
-		--print("Tag: ", tag)
- if tag == "L" then
-			group_leader = n
-		end
-		table.insert(tags, tag)
-	end
-	return tags
-end
-
-
-function is_minion(tags)
-	for i, tag in ipairs(tags) do
-		if tag == "O" or tag == "Mob" then
-			return true
-		end
-	end
-	return false
-end
-
-function is_pet(tags)
-	for i, tag in ipairs(tags) do
-		if tag == "Pet" then
-			return true
-	end
-end
-	return false
-end
-
---function is_leader(tags)
---	for i, tag in ipairs(tags) do
---		if tag == "L" then
---			return true
---		end
---	end
---	return false
---end
-
-
-function is_no_melee(tags)
-	for i, tag in ipairs(tags) do
-		if tag == "N" then
-			return true
-		end
-	end
-	return false
-end
-
-function istheleader(name, line, wildcards)
-isleader = wildcards.leader
-end
-
-
-
-function is_tank(tags)
-	for i, tag in ipairs(tags) do
-		if tag == "T" then
-			return true
-		end
-	end
-	return false
-end
-
-
-function set_order()
-	for i, player in ipairs(group) do
-		if is_minion(player.tags) then
-			player.minion = 3
-		elseif is_pet(player.tags) then
-			player.minion = 2
-        elseif isleader then
-            player.minion = 1
-		else
-			player.minion = 0
-		end
-end
-
-end
-
-function by_player(a, b)
-	return a.minion < b.minion
-end
-
-function window(redraw)
-	if not window_visible then
-		return
-	end
-
-	if redraw then
-		--Note("redraw")
-		WindowDelete("winid")
-		WindowCreate(winid, pos_x, pos_y, win_width, win_height, 0, 0, ColourNameToRGB(bg_color))
-		WindowPosition(winid, pos_x, pos_y, 0, 2)
-		WindowSetZOrder(winid, 201)
-		WindowFont(winid, "f1", font_name, font_size, false, false, false, false)
-		WindowFont(winid, "b1", font_name, font_size, true, false, false, false)
-		WindowFont(winid, "s1", font_name, font_size - 1, false, false, false, false)
-		movewindow.install(winid, 6, 2, true, nil, {mouseup=MouseUp, mousedown=MouseDown, dragmove=LeftClickOnly, dragrelease=LeftClickOnly})
-    -- register with the z-order monitor
-CallPlugin("462b665ecb569efbf261422f", "registerMiniwindow", winid)
-		movewindow.add_drag_handler (winid, 0, 0, 0, win_height)
-		WindowAddHotspot(winid, "resize", win_width - grip_resize, win_height - grip_resize, win_width, win_height, "MouseOver", "CancelMouseOver", "MouseDown", "", "MouseUp", "", 6, 0)
-		WindowDragHandler(winid, "resize", "ResizeMoveCallback", "ResizeReleaseCallback", 0)
-	else
-		WindowResize(winid, win_width, win_height, ColourNameToRGB(bg_color))
-		WindowMoveHotspot(winid, "resize", win_width - grip_resize, win_height - grip_resize, win_width, win_height)
-	end
-	WindowShow(winid, true)
-	show_group()
-end
-
-function trim(str)
-	if str then
-		return (str:gsub("^%s*(.-)%s*$", "%1"))
-	else
-		return ""
-	end
-end
-
-function truncate(str)
-	if #str <= 12 then
-		return str
-end
-	return trim(string.sub(str, 1, 10))..".."
-end
-function bigtruncate(str)
-	if str >= 16 then
-		return str
-	end
-	return trim(string.sub(str, 1, 17))..".."
-end
-
-
-function abbreviate(str,length)
-    if length == nil then
-        length=22
-    end
-    if string.len(str)>length then
-        return string.sub(str, 1, length)..string.char(133)
-    else
-        return str
-    end
-end
-function nonumberabbreviate(str,length)
-    if length == nil then
-        length=20
-    end
-    if string.len(str)>length then
-        return string.sub(str, 1, length)..string.char(133)
-    else
-        return str
-    end
-end
-
-function limit_n(num) --function nlim(num) --Yeah, I keep shortening things
-    n=tonumber(num) --Try to coerce into numeric
-
-    if n == nil then --we have a non numeric value
-        --print(string.format('"%s" was not converted to a number', tostring(num)))
-        return string.sub(tostring(num), 1, 5) -- so just return the first 5 characters of the string
-    else --numeric
-        usn=math.abs(n)    --So get absolute value for scale testing
-        --print(string.format("abs(%.2f)=%.2f"),n,usn)
-    end
-    --Now test the absolute value for scale
-    if usn < 10^5 then
-        return tostring(n)
-    elseif usn < 10^6 then
-        return string.format("%.0fk", n / 10^3)
-    elseif usn < 10^9 then
-        return string.format("%.0fm", n / 10^6)
-    elseif usn < 10^12 then
-        return string.format("%.0fb", n / 10^9)
-    elseif usn < 10^15 then
-        return string.format("%.0ft", n / 10^12)
-    else
-        return string.format("%.0fq", n / 10^15)
-    end
-end
-
-function drawPlayer(player, i, isPlayerOrEnemy)
-
-if is_tank(player.tags) or (not show_minions and player.minion == 0) or show_minions then
-            local box_top, box_right, box_bottom = top, 1, nil
-            across = across + 1 -- how many players fit across window
-           --local isleader = leader
-		  -- print("Box_Top1: ", box_top)
-		 --  print("Top1: ", top)
-		   --box_top = top
-	--	   box_top = top
-	box_top = top + font_size/2
-top = GetVariable("font_size")/3 + box_top or 17
-		  -- print("Top2: ", top)
-		  -- print("Box_Top2: ", box_top)
---print("Box_Top: ", box_top)
---print("Box_Bottom: ", box_bottom)
-            local x
-            if isPlayerOrEnemy and bar_width == 100 then
-                x = WindowText(winid, "f1", player.level, left, top + 3, 0, 0, ColourNameToRGB(level_color), false) + left -- label and padding
-                x = WindowText(winid, "f1", truncate(player.name), left + 22, top + 3, 0, 0, ColourNameToRGB(player_color), false) + left + 18 + 6 -- player name truncated
-                WindowAddHotspot(winid, "player"..i, left + 18, top + 2, left + 100, top + 16, "", "", "", "", "", player.name, 0, 0) -- show title for truncated player
-           end
-           if bar_width == 100 and not isPlayerOrEnemy and show_numbers then
-                x = WindowText(winid, "f1", player.level, left, top + 3, 0, 0, ColourNameToRGB(level_color), false) + left -- label and padding
-                x = WindowText(winid, "f1", truncate(player.name), left + 22, top + 3, 0, 0, ColourNameToRGB(player_color), false) + left + 18 + 6 -- player name truncated
-                    x = x + WindowText(winid, "f1", "[ENEMY]", x, top + 3, 0, 0, ColourNameToRGB(tank_color), false) + 2 -- show if enemy
-           end
-           if bar_width == 100 and not isPlayerOrEnemy and not show_numbers then
-                x = WindowText(winid, "f1", player.level, left, top + 3, 0, 0, ColourNameToRGB(level_color), false) + left -- label and padding
-                x = WindowText(winid, "f1", truncate(player.name), left + 22, top + 3, 0, 0, ColourNameToRGB(player_color), false) + left + 18 + 6 -- player name truncated
-                x = WindowText(winid, "f1", "E", x, top + 3, 0, 0, ColourNameToRGB(tank_color), false) -- show if enemy
-           end
-            if isPlayerOrEnemy and bar_width == 200 then
-                x = WindowText(winid, "f1", "Lv["..player.level.."]", left, top + 3, 0, 0, ColourNameToRGB(level_color), false) + left -- label and padding
-                x = x + WindowText(winid, "f1", abbreviate(player.name), left + 50, top + 3, 0, 0, ColourNameToRGB(player_color), false) + left + 18 + 8 -- player name
-             end
-            if bar_width == 200 and not isPlayerOrEnemy and show_numbers then
-                --x = WindowRectOp(winid, 2, left - 3, top, 307, 198, ColourNameToRGB(enemy_background_color))
-                x = WindowText(winid, "f1", "Lv["..player.level.."]", left, top + 3, 0, 0, ColourNameToRGB(level_color), false) + left -- label and padding
-                x = x + WindowText(winid, "f1", abbreviate(player.name), left + 50, top + 3, 0, 0, ColourNameToRGB(player_color), false) + left + 18 + 8 -- player name
-                x = WindowText(winid, "f1", "[ENEMY]", left + 219, top + 3, 0, 0, ColourNameToRGB(tank_color), false) -- show if enemy
-           end
-            if bar_width == 200 and not isPlayerOrEnemy and not show_numbers then
-                x = WindowText(winid, "f1", "Lv["..player.level.."]", left, top + 3, 0, 0, ColourNameToRGB(level_color), false) + left -- label and padding
-                x = x + WindowText(winid, "f1", nonumberabbreviate(player.name), left + 50, top + 3, 0, 0, ColourNameToRGB(player_color), false) + left + 18 + 8 -- player name
-                x = WindowText(winid, "f1", "E", left + 210, top + 3, 0, 0, ColourNameToRGB(tank_color), false) -- show if enemy
-           end
-
-                if group_leader == player.name and isPlayerOrEnemy and bar_width == 100 then
-                    x = x + WindowText(winid, "f1", "L", x, top + 3, 0, 0, ColourNameToRGB(leader_color), false) + 2 -- show if leader
-           end
-
-                if group_leader == player.name and isPlayerOrEnemy and bar_width == 200 and not show_numbers then
-                    x = x + WindowText(winid, "f1", "L", left+210, top + 3, 0, 0, ColourNameToRGB(leader_color), false) + 2 -- show if leader
-           end
-                if group_leader == player.name and isPlayerOrEnemy and bar_width == 200 and show_numbers then
-			--	print("TOPGROUP: ", top)
-			--	print("LEFT: ", left)
-			--	print("BAR+LEFT+19 ",bar_width+left+19)
-                    x = x + WindowText(winid, "f1", "[LEADER]", bar_width+left+19, top + 3, 0, 0, ColourNameToRGB(leader_color), false) -- show if leader -- used to be left+240
-           end
-
-            if is_minion(player.tags) and isPlayerOrEnemy then
-                if bar_width == 100 then
-                    x = x + WindowText(winid, "f1", "C", x, top + 3, 0, 0, ColourNameToRGB(minion_color), false) + 2 -- show if minion
-                end
-            if is_minion(player.tags) and isPlayerOrEnemy and bar_width == 200 and show_numbers then
-                    x = x WindowText(winid, "f1", "[CHARM]", left+219, top + 3, 0, 0, ColourNameToRGB(minion_color), false)  -- show if minion
-               --box_right is usually 307 (vertical) or 611 (horizontal)
-                end
-           end
-               if is_minion(player.tags) and isPlayerOrEnemy and bar_width == 200 and not show_numbers then
-                    x = x + WindowText(winid, "f1", "C", left+210, top + 3, 0, 0, ColourNameToRGB(minion_color), false) + 2 -- show if minion
-           end
-
-                   if is_pet(player.tags) then
-                if bar_width == 100 then
-                    x = x + WindowText(winid, "f1", "P", x, top + 3, 0, 0, ColourNameToRGB(pet_color), false) + 2 -- show if pet
-                end
-           end
-                if is_pet(player.tags) and not show_numbers and bar_width == 200 then
-                    x = x + WindowText(winid, "f1", "P", left + 210, top + 3, 0, 0, ColourNameToRGB(pet_color), false) + 2 -- show if pet
-                end
-                   if is_pet(player.tags)and show_numbers then
-                if bar_width == 200 then
-			--	print("TOPGROUP: ", top)
-			--	print("LEFT: ", left)
-			--	print("BAR WIDTH: ", bar_width)
-			--	print("BAR+LEFT+19 ",bar_width+left+19)
-            --    print("POS_Y: ", pos_y)
-                    x = x + WindowText(winid, "f1", "[PET]", bar_width+left+19	, top + 3, 0, 0, ColourNameToRGB(pet_color), false) -- show if pet
-                end
-           end
-            if is_no_melee(player.tags) then
-                if bar_width == 100 then
-                    x = x + WindowText(winid, "f1", "N", x, top + 3, 0, 0, ColourNameToRGB(no_melee_color), false) + 2 -- show if no melee
-                else
-                    x = x + WindowText(winid, "f1", "[N]", x, top + 3, 0, 0, ColourNameToRGB(no_melee_color), false) -- show if no melee
-                end
-           end
-           -- if is_tank(player.tags) then
-           --     if bar_width == 100 then
-           --         x = x + WindowText(winid, "f1", "TANK", x, top + 3, 0, 0, ColourNameToRGB(tank_color), false) + 2 -- show if tank
-            --    else
-            --        x = x + WindowText(winid, "f1", "[TANK]", left + 260, top + 3, 0, 0, ColourNameToRGB(tank_color), false) -- show if tank
-           --     end
-          -- end
---		  print("Top: ", top)
-
---print("Box Top: ", box_top)
---print("Box Bottom: ", box_bottom)
-        --   top = GetVariable("font_size") * 3 + 10 or 17
-		top = top + bar_height + 4
---		   print("Top2: ", top)
-           -- top = top + 16 -- player line heightheight
-		--	print("TopNEW: ", top)
-			--print("Box_RIGHT:", box_right)
-           if isPlayerOrEnemy then
-            x = WindowText(winid, "f1", "HP", left, top, 0, 0, ColourNameToRGB(hp_label_color), false) + left -- label and padding
-            gauge(winid, "HP for "..player.name, tonumber(player.hp), tonumber(player.hp_max), x + 3, top, bar_width, bar_height, ColourNameToRGB(hp_color), 0x000000, bar_ticks, ColourNameToRGB(bar_border), ColourNameToRGB(bar_border), nil, flat_gauges==1) -- hp gauge
-            elseif not isPlayerOrEnemy then
-            x = WindowText(winid, "f1", "HP", left, top, 0, 0, ColourNameToRGB(enemy_hp_label_color), false) + left -- label and padding
-            gauge(winid, "HP for "..player.name, tonumber(player.hp), tonumber(player.hp_max), x + 3, top, bar_width, bar_height, ColourNameToRGB(enemy_hp_color), 0x000000, bar_ticks, ColourNameToRGB(bar_border), ColourNameToRGB(bar_border), nil, flat_gauges==1) -- hp gauge
-end
-            if overlay_pct then
-                outlined_text(winid, "s1", math.floor(player.hp / player.hp_max * 100).."%", x + 6, top + 2, 0, 0, ColourNameToRGB(overlay_color), false) -- hp %
-            end
-            if show_numbers then
-                box_right = x + bar_width + WindowTextWidth(winid, "b1", string.rep("X", biggest_number).."/"..string.rep("X", biggest_number)) + 14 -- set max size of hp/mana/moves on side of gauge
-                WindowText(winid, "f1", limit_n(player.hp).."/"..limit_n(player.hp_max), x + 6 + bar_width, top, 0, 0, ColourNameToRGB(overlay_color), false) -- hp
-            else
-                box_right = x + bar_width + 6
-            end
-            top = top + bar_height + 2
-
-           if show_mana then
-                x = WindowText(winid, "f1", "MN", left, top, 0, 0, ColourNameToRGB(mana_label_color), false) + left -- label and padding
-                gauge(winid, "Mana for "..player.name, tonumber(player.mana), tonumber(player.mana_max), x + 3, top, bar_width, bar_height, ColourNameToRGB(mana_color), 0x000000, bar_ticks, ColourNameToRGB(bar_border), ColourNameToRGB(bar_border), nil, flat_gauges==1) -- mana gauge
-                local is_number = tonumber(player.mana) and tonumber(player.mana_max)
-                if (is_number and overlay_pct) then
-                    outlined_text(winid, "s1", math.floor(player.mana / player.mana_max * 100).."%", x + 6, top + 2, 0, 0, ColourNameToRGB(overlay_color), false) -- mana %
-                end
-                if show_numbers then
-                    WindowText(winid, "f1", player.mana.."/"..player.mana_max, x + 6 + bar_width, top, 0, 0, ColourNameToRGB(overlay_color), false) -- mana
-                end
-                top = top + bar_height + 2
-            end
-
-            if show_moves then
-                x = WindowText(winid, "f1", "MV", left, top, 0, 0, ColourNameToRGB(moves_label_color), false) + left -- label and padding
-                gauge(winid, "Moves for "..player.name, tonumber(player.moves), tonumber(player.moves_max), x + 3, top, bar_width, bar_height, ColourNameToRGB(moves_color), 0x000000, bar_ticks, ColourNameToRGB(bar_border), ColourNameToRGB(bar_border), nil, flat_gauges==1) -- moves gauge
-                if overlay_pct then
-                    outlined_text(winid, "s1", math.floor(player.moves / player.moves_max * 100).."%", x + 6, top + 2, 0, 0, ColourNameToRGB(overlay_color), false) -- moves %
-                end
-                if show_numbers then
-                    WindowText(winid, "f1", player.moves.."/"..player.moves_max, x + 6 + bar_width, top, 0, 0, ColourNameToRGB(overlay_color), false) -- moves
-                end
-                top = top + bar_height + 2
-            end
-                box_bottom = top + 1
---				print("TOP 3: ", top)
---if player.minion == 0 then
-if isPlayerOrEnemy then
-            WindowRectOp(winid, 1, left - 3, box_top, box_right, box_bottom, ColourNameToRGB(player_border_color)) -- player border
-            else
-            WindowRectOp(winid, 1, left - 3, box_top, box_right, box_bottom, ColourNameToRGB(enemy_border_color))
-         --   WindowRectOp(winid, 2, left - 3, box_top, box_right, box_bottom, ColourNameToRGB(enemy_background_color))
-            end
-
-            if win_width - box_right - (box_right - left + 5) > 0 then -- keep drawing across
-                --Note("keep going across")
-                left = left + (box_right - left) + 4
-                top = 17 + (rows * (box_bottom - box_top + 2))
-            else -- start new row
-                --Note("new row")
-                rows = rows + 1
-                across = 0
-                left = 7
-                top = 17 + (rows * (box_bottom - box_top + 2))
--- Debug Stuff
---print("Top: ", top)
---print("Box Top: ", box_top)
---print("Box Bottom: ", box_bottom)
---print("Box Right: ", box_right)
---print("Box Left: ", box_left)
---print("Bar Width: ", bar_width)
-            end
-        end
-end
-
-function show_group()
-    WindowRectOp(winid, 2, 2, 1, -2, -2, ColourNameToRGB(bg_color)) -- blank canvas
-    --WindowRectOp(winid, 2, 0, 0, 0, 22, ColourNameToRGB(title_bg_color)) -- title background
-    --WindowRectOp(winid, 1, 0, 0, 0, 0, ColourNameToRGB(border_color)) -- border
-    --Theme.Draw3DRect(winid, 0, 0, 0, 0, depressed) -- themed window
-
-    title = "Group Info: Use LOOK to draw the bars, or if this is your first time using the window type setup prompt" -- default title
-    if group_leader ~= "" then -- group leader
-        title = "Group Leader: "..group_leader
-    end
-    Theme.DrawTitleBar(winid, "f1", title, "center") -- them window title (has to be drawn before border) This is the title bar that says the leader name
-    Theme.DrawBorder(winid) -- theme window border
-
-    left, top = 7, 17 -- bar location
-    across = 0
-    rows = 0
-    -- [L][M][O][N][TANK]  green, dark cyan, white, magenta, red
-    for i, player in ipairs(group) do
-       drawPlayer(player, i, true)
-    end
-
-  if enemy_group then
-   for i,player in ipairs(enemy_group) do
-     drawPlayer(player, i, false)
-   end
-end
-    Theme.AddResizeTag(winid, 2, nil, nil, "MouseDown", "ResizeMoveCallback", "ResizeReleaseCallback") -- resize grip
-end
-
-function ResizeMoveCallback()
-	--Note("ResizeMoveCallback")
-	local x_offset, y_offset = start_x - WindowInfo(winid, 17), start_y - WindowInfo(winid, 18)
-	start_x, start_y = WindowInfo(winid, 17), WindowInfo(winid, 18)
-	win_width = win_width - x_offset
-	win_height = win_height - y_offset
-	if os.clock() - last_refresh >= .05 then
-		--Note("redraw")
-		last_refresh = os.clock()
-		window(false)
-	end
-end
-
-function ResizeReleaseCallback()
-	--Note("ResizeReleaseCallback")
-	window(true)
-	SaveState()
-end
-
-function MouseDown(flags, id)
-	--Note("MouseDown")
-	if id == "resize" then
-		start_x, start_y = WindowInfo(winid, 17), WindowInfo(winid, 18)
-	end
-end
-
-function MouseUp(flags, id, win)
-	--Note("MouseUp")
-	if bit.band(flags, 0x20) ~= 0 then -- right click
-		right_click_menu()
-	end
-	pos_x, pos_y = WindowInfo(winid, 10), WindowInfo(winid, 11)
-	SaveState()
-end
-
-function right_click_menu()
-	local x, y = WindowInfo(winid, 14), WindowInfo(winid, 15)
-
-	local str = "!"
-
-	if show_minions then
-		str = str.."Hide Minions"
-	else
-		str = str.."Show Minions"
-	end
-
-	if show_mana then
-		str = str.."|-|Hide Mana"
-	else
-		str = str.."|-|Show Mana"
-	end
-
-	if show_moves then
-		str = str.."|Hide Moves"
-	else
-		str = str.."|Show Moves"
-	end
-
-	if bar_width == 200 then
-		str = str.."|-|Compact Bars"
-	else
-		str = str.."|-|Full Size Bars"
-	end
-
-	str = str.."|-|>Colors|HP|Enemy HP|Mana|Moves|<"
-
-	if overlay_pct then
-		str = str.."|-|Hide % Overlay"
-	else
-		str = str.."|-|Show % Overlay"
-	end
-
-	if show_numbers then
-		str = str.."|-|Hide Totals"
-	else
-		str = str.."|-|Show Totals"
-	end
-
-  str = str.."|-|Bring to Front"
-
-  str = str.."|-|Send to Back"
-
-  str = str.."|-|Change Font"
-
-	opt = WindowMenu(winid, x, y, str)
-
-	if opt == "" then
-		return
-	end
-
-	opt = tonumber(opt)
-
-	if opt == 1 then -- toggle minions
-		show_minions = not show_minions
-		SaveState()
-	elseif opt == 2 then -- toggle mana
-		show_mana = not show_mana
-		SaveState()
-	elseif opt == 3 then -- toggle moves
-		show_moves = not show_moves
-		SaveState()
-	elseif opt == 4 then -- 1/2 width bars
-		if bar_width == 200 then
-			bar_width = 100
-		else
-			bar_width = 200
-		end
-		SaveState()
-	elseif opt == 5 then -- hp color
-		local clr = PickColour(ColourNameToRGB(hp_color))
-		if clr ~= -1 then
-			hp_color = RGBColourToName(clr)
-			SaveState()
-		end
-	elseif opt == 6 then -- enemy hp color
-		local clr = PickColour(ColourNameToRGB(enemy_hp_color))
-		if clr ~= -1 then
-			enemy_hp_color = RGBColourToName(clr)
-			SaveState()
-		end
-	elseif opt == 7 then -- mana color
-		local clr = PickColour(ColourNameToRGB(mana_color))
-		if clr ~= -1 then
-			mana_color = RGBColourToName(clr)
-			SaveState()
-		end
-	elseif opt == 8 then -- moves color
-		local clr = PickColour(ColourNameToRGB(moves_color))
-		if clr ~= -1 then
-			moves_color = RGBColourToName(clr)
-			SaveState()
-		end
-	elseif opt == 9 then -- overlay %
-		overlay_pct = not overlay_pct
-		SaveState()
-	elseif opt == 10 then -- number totals after bar
-		show_numbers = not show_numbers
-		SaveState()
-elseif opt == 11 then -- Bring to Front
-        CallPlugin("462b665ecb569efbf261422f","boostMe", winid)
-      --  print("Bring to Front")
-        SaveState()
-elseif opt == 12 then -- Send to back
-        CallPlugin("462b665ecb569efbf261422f","dropMe", winid)
-      --  print("Sent to Back")
-        SaveState()
-elseif opt == 13 then -- Change Font
-         wanted_font = utils.fontpicker (font_name, font_size) --font dialog
-         if wanted_font then
-		 print("Bar Height1: ", bar_height)
-		 print("Top1: ", top)
-            font_name = wanted_font.name
-            font_size = wanted_font.size
-			SetVariable("font_size", font_size)
-			bar_height = font_size + 4
-			top = top + bar_height * 2
-			--rows+1
-            SetVariable("top", top)
-			--SetVariable("bar_height", bar_height)
-print("Bar Height2: ", bar_height)
-print("Top2: ", top)
-            end
-            end
-	window(true)
-end
-
-function CancelMouseOver(flags, id)
-	--Note("CancelMouseOver")
-	-- nothing
-end
-
-function CancelMouseDown(flags, id)
-	--Note("CancelMouseDown")
-	-- nothing
-end
-
-function OnPluginEnable()
-	--Note("enabled")
-	window(true)
-end
-
-function OnPluginDisable()
-	WindowDelete(winid)
-end
-
-function OnPluginClose()
-	WindowDelete(winid)
-end
-
-function from_bool(v)
-	if v then
-		return 1
-	end
-	return 0
-end
-
-function OnPluginSaveState()
-	SetVariable("pos_x", pos_x)
-	SetVariable("pos_y", pos_y)
-    SetVariable("font_name", font_name)
-    SetVariable("font_size", font_size)
-	SetVariable("win_width", win_width)
-	SetVariable("win_height", win_height)
-	SetVariable("show_minions", from_bool(show_minions)) -- show minions
-	SetVariable("show_mana", from_bool(show_mana)) -- show mana
-	SetVariable("show_moves", from_bool(show_moves)) -- show moves
-	SetVariable("overlay_pct", from_bool(overlay_pct)) -- show % overlay
-	SetVariable("show_numbers", from_bool(show_numbers)) -- show totals
-	SetVariable("hp_color", hp_color) -- hp color
-    SetVariable("enemy_hp_color", enemy_hp_color) -- enemy hp color
-	SetVariable("mana_color", mana_color) -- mana color
-	SetVariable("moves_color", moves_color) -- moves color
-	SetVariable("bar_width", bar_width) -- bar width
-	SetVariable("top", top)
-end
-
-function loaded()
-	Note()
-	ColourNote("darkmagenta", "white", " Cleft of Dimensions group plugin v"..GetPluginInfo(GetPluginID(), 19).." installed! ")
-	Note()
-end
-
--- SIMULATE STUFF
-function simulate_group()
-	table.insert(group, {level = 10, hp = "195", hp_max = "235", mana = "240", mana_max = "300", moves = "150", moves_max = "150", tags = {"X", "L", "T"}, name = "Alas"})
-	table.insert(group, {level = 20, hp = "140", hp_max = "275", mana = "150", mana_max = "250", moves = "160", moves_max = "170", tags = {"-"}, name = "TestPlayer"})
-	table.insert(group, {level = 30, hp = "140", hp_max = "275", mana = "150", mana_max = "250", moves = "160", moves_max = "170", tags = {"-", "?"}, name = "A liveoak 1"})
-	table.insert(group, {level = 40, hp = "140", hp_max = "275", mana = "150", mana_max = "250", moves = "160", moves_max = "170", tags = {"O"}, name = "A clay man 1"})
-	table.insert(group, {level = 50, hp = "140", hp_max = "275", mana = "150", mana_max = "250", moves = "160", moves_max = "1700", tags = {"M"}, name = "An ornary woman 1"})
-	table.insert(group, {level = 60, hp = "44000", hp_max = "50000", mana = "150", mana_max = "250", moves = "160", moves_max = "170", tags = {"T", "-"}, name = "The coolest dude you know"})
-	table.insert(group, {level = 70, hp = "140", hp_max = "275", mana = "150", mana_max = "250", moves = "160", moves_max = "170", tags = {"-"}, name = "TestPlayer"})
-	table.insert(group, {level = 90, hp = "140", hp_max = "275", mana = "150", mana_max = "250", moves = "160", moves_max = "170", tags = {"-"}, name = "A liveoak 2"})
-	table.insert(group, {level = 90, hp = "140", hp_max = "275", mana = "150", mana_max = "250", moves = "160", moves_max = "170", tags = {"O"}, name = "A clay man 2"})
-	table.insert(group, {level = 100, hp = "140", hp_max = "275", mana = "150", mana_max = "250", moves = "160", moves_max = "1700", tags = {"M"}, name = "An ornary woman 2"})
-	table.insert(group, {level = 100, hp = "44000", hp_max = "50000", mana = "150", mana_max = "250", moves = "160", moves_max = "170", tags = {"M", "T", "-"}, name = "The coolest dude you know"})
-
-	end_group()
-end
--- END SIMULATE STUFF
-
-DoAfterSpecial(.2, "loaded()", 12)
-window(true)
---simulate_group()
-
-
+      require "movewindow"
+      require "gauge"
+      require "mw"
+      require "mw_theme_base"
+      require "tprint"
+
+
+      -- ^\[(?<level>\d+) (?<tags>[^\s]+)\] (?<name>.+)\s+(?<hp>\d+)\/(?<hp_max>\d+) hp \s+(?<mana>\d+)\/\s+(?<mana_max>\d+) mana\s+ (?<moves>\d+)\/\s+(?<moves_max>\d+) mv\s+(?<exp>\d+) xp$
+      -- kxwt_group_start
+      -- kxwt_group 65 65 119 119 156 156 XL Alas
+      -- kxwt_group_end
+      -- kxwt_group <hp> <hp_max> <mana> <mana_max> <move> <move_max> <tag> <name>
+
+      local group = {}
+
+
+      -- Tag 'X' - these are your stats.
+      -- Tag 'Pet' - this is a player.
+      -- Tag 'Mob' - this is one of your minions.
+      -- Tag 'O' - this is somebody else's minion.
+      -- Tag 'P' - any pet mob that doesn't fall into the categories above.
+
+      -- Tag 'L' - the group leader
+      -- Tag 'T' - in tanking mode
+      -- Tag 'N' - no-melee mode
+      -- Tag '-' - not present in the room with you
+
+      local to_bool = {["0"] = false, ["1"] = true}
+
+      local winid = "win_"..GetPluginID()
+      local myname = GetVariable("myname") or "" -- my name
+      local group_leader = "" -- group leader
+      local group_name = "" -- group name
+      local show_minions = to_bool[GetVariable("show_minions") or "1"] -- show minions
+      local bg_color = "#000000"
+      local level_color = "#FF00FF"
+      local enemy_background_color = "#FF0000"
+      local title_bg_color = "#303030"
+      local border_color = "#303030"
+      local player_border_color = "#AAAAAA"
+      local enemy_border_color = "#FF0000"
+      local title_color = "#FFFFFF" -- window title color
+      local player_color = "#CCCCCC" -- player name color
+      local leader_color = "#66ff33" -- leader tag color
+      local tank_color = "#ff3300" -- tank tag color
+      local minion_color = "#009999" -- minion tag color
+      local no_melee_color = "#cc00cc" -- no melee tag color
+      local pet_color = "#ffff66" -- pet mob color
+      local you_color = "#0066dd" -- you color
+	  local team_color = "#00FFFF" -- you color
+      local hp_label_color = "#00ff00" -- hp label color
+      local enemy_hp_label_color = "#00ff00" -- enemy hp label color
+      local mana_label_color = "#3333ff" -- mana label color
+      local moves_label_color = "#ffff66" -- moves label color
+      --hp_label_color, mana_label_color, moves_label_color = "#DDDDDD", "#DDDDDD", "#DDDDDD"
+      local overlay_color = "#FFFFFF" -- % overlay color
+      local biggest_number = 1 -- biggest number for hp/mana/moves, to set player box size
+      local overlay_pct = to_bool[GetVariable("overlay_pct") or "1"] -- show % overlay
+      local show_numbers = to_bool[GetVariable("show_numbers") or "1"] -- show numbers after gauge
+      local show_mana = to_bool[GetVariable("show_mana") or "1"] -- show mana
+      local show_moves = to_bool[GetVariable("show_moves") or "1"] -- show moves
+      local last_refresh = 1 -- last window refresh
+      local pos_x = GetVariable("pos_x") or 100
+      local pos_y = GetVariable("pos_y") or 100
+      local font_size = GetVariable("font_size") or 8
+      local font_name = "Lucida Console"
+      local window_visible = true -- always start out with visible window
+      local title = "Group Info: Use LOOK to draw the bars, or if this is your first time using the window type setup prompt"
+      local bar_height = font_size+4 -- height of bars
+      local bar_width = tonumber(GetVariable("bar_width")) or 200 -- width of bars
+      local bar_ticks = 9 -- number of ticks to show on bar
+      local bar_border = "#777777" -- bar surrounding the gauges
+      local enemy_hp_color = GetVariable("enemy_hp_color") or "#00ff00" -- color of bar
+      local hp_color = GetVariable("hp_color") or "#00ff00" -- color of bar
+      local mana_color = GetVariable("mana_color") or "#3333ff" -- color of bar
+      local moves_color = GetVariable("moves_color") or "#ffff66" -- color of bar
+      local win_height = GetVariable("win_height") or 400
+      local win_width = GetVariable("win_width") or 440
+      local top = GetVariable("top") or 20
+      local grip_resize = 10 -- resize grip size
+      local debug_state = GetVariable("debug_state") or false
+
+      function ToggleDebug()
+	 debug_state = not debug_state
+	 NotifyNote("Debug is now " .. tostring(debug_state))
+	 SetVariable("debug_state", tostring(debug_state))
+	 SaveState()
+      end
+
+      function NotifyNote(message)
+	 ColourNote ("Green", "", message)
+      end
+
+      function ErrorNote(message)
+	 ColourNote ("Red", "", message)
+      end
+
+      function DebugNote(message)
+	 if(debug_state) then
+	    Note(message)
+	 end
+      end
+
+      function toggle()
+	 window_visible = not window_visible
+	 if not window_visible then -- remove window
+	    WindowDelete(winid)
+	 else
+	    window(true)
+	 end
+      end
+
+      function toggle_minions()
+	 show_minions = not show_minions
+	 window(false)
+      end
+
+      function start_group()
+	 EnableTriggerGroup("group", true)
+	 group = {}
+      end
+
+      function start_enemy_group()
+	 EnableTriggerGroup("group", false)
+	 EnableTriggerGroup("enemy_group", true)
+	 enemy_group = {}
+      end
+
+      function player_line(name, line, args)
+	 tmp_tags = split(args.name, args.tags)
+	 -- Insert YOU tag
+	 if(args.name == myname) then
+	    table.insert(tmp_tags, "You")
+	 end
+	 table.insert(group, {hp = args.hp, hp_max = args.hp_max, mana = args.mana, mana_max = args.mana_max, moves = args.moves, moves_max = args.moves_max, tags = tmp_tags, name = args.name, level = args.level})
+      end
+
+      function enemy_line(name, line, args)
+	 --tprint(args)
+	 table.insert(enemy_group, {hp = args.hp, hp_max = args.hp_max, mana = args.mana, mana_max = args.mana_max, moves = args.moves, moves_max = args.moves_max, tags = tmp_tags, name = args.name, level = args.level})
+      end
+
+      function my_name(name, line, args)
+	 myname = args.name
+	 SaveState()
+      end
+
+      function prompt_line(name, line, args)
+	 if myname == "" then -- my name isnt set so dont try to update group stats
+	    NotifyNote("My name is not set yet. Going to toggle ctriggers. This probably only happens when re-installing the group plugin.")
+	    SendNoEcho("pbust Playername: %n")
+	    --SendNoEcho("set ctrigger on")
+	    return
+	 end
+	 for i, player in ipairs(group) do
+	    if string.lower(player.name) == string.lower(myname) then
+	       player.hp = args.hp
+	       player.hp_max = args.hp_max
+	       player.mana = args.mana
+	       player.mana_max = args.mana_max
+	       player.moves = args.moves
+	       player.moves_max = args.moves_max
+	       player.level = args.level
+	       window(false)
+	       return
+	    end
+	 end
+	 for i, player in ipairs(enemy_group) do
+	    if string.lower(player.name) == string.lower(myname) then
+	       player.hp = args.hp
+	       player.hp_max = args.hp_max
+	       player.mana = args.mana
+	       player.mana_max = args.mana_max
+	       player.moves = args.moves
+	       player.moves_max = args.moves_max
+	       player.level = args.level
+	       window(false)
+	       return
+	    end
+	 end
+      end
+
+      function end_group()
+	 EnableTriggerGroup("enemy_group", false)
+	 set_order() -- flag as minion, pet, player
+	 get_biggest_number() -- get longest hp/mana/moves number to format box size
+	 table.sort(group, by_player)
+	 window(true)
+      end
+
+      function get_biggest_number()
+	 for i, player in ipairs(group) do
+	    if (not show_minions and player.minion < 1) or show_minions then
+	       if #player.hp_max > biggest_number then
+		  biggest_number = #player.hp_max
+	       end
+	       if #player.mana_max > biggest_number then
+		  biggest_number = #player.mana_max
+	       end
+	       if #player.moves_max > biggest_number then
+		  biggest_number = #player.moves_max
+	       end
+	    end
+	 end
+      end
+
+      function split(n, t)
+	 local tags = {}
+	 for i = 1, #t do
+	    local tag = string.sub(t, i)
+	    table.insert(tags, tag)
+	 end
+	 return tags
+      end
+
+
+      function is_minion(tags)
+	 for i, tag in ipairs(tags) do
+	    if tag == "Mob" then
+	       return true
+	    end
+	 end
+	 return false
+      end
+
+      function is_pet(tags)
+	 for i, tag in ipairs(tags) do
+	    if tag == "Pet" then
+	       return true
+	    end
+	 end
+	 return false
+      end
+
+      function is_you(tags)
+	 for i, tag in ipairs(tags) do
+	    if tag == "You" then
+	       return true
+	    end
+	 end
+	 return false
+      end
+
+
+      function is_no_melee(tags)
+	 for i, tag in ipairs(tags) do
+	    if tag == "N" then
+	       return true
+	    end
+	 end
+	 return false
+      end
+
+      function istheleader(name, line, wildcards)
+	 group_leader = wildcards.leader
+      end
+
+      function is_tank(tags)
+	 for i, tag in ipairs(tags) do
+	    if tag == "T" then
+	       return true
+	    end
+	 end
+	 return false
+      end
+
+
+      function set_order()
+	 for i, player in ipairs(group) do
+	    if is_minion(player.tags) then
+	       player.minion = 3
+	    elseif is_pet(player.tags) then
+	       player.minion = 2
+	    elseif is_you(player.tags) then
+	       player.minion = 1
+	    else
+	       player.minion = 0
+	    end
+	 end
+      end
+
+      function by_player(a, b)
+	 return a.minion < b.minion
+      end
+
+      function window(redraw)
+	 if not window_visible then
+	    return
+	 end
+
+	 if redraw then
+	    WindowDelete("winid")
+	    WindowCreate(winid, pos_x, pos_y, win_width, win_height, 0, 0, ColourNameToRGB(bg_color))
+	    WindowPosition(winid, pos_x, pos_y, 0, 2)
+	    WindowSetZOrder(winid, 201)
+	    WindowFont(winid, "f1", font_name, font_size, false, false, false, false)
+	    WindowFont(winid, "b1", font_name, font_size, true, false, false, false)
+	    WindowFont(winid, "s1", font_name, font_size - 1, false, false, false, false)
+	    movewindow.install(winid, 6, 2, true, nil, {mouseup=MouseUp, mousedown=MouseDown, dragmove=LeftClickOnly, dragrelease=LeftClickOnly})
+	    -- register with the z-order monitor
+	    CallPlugin("462b665ecb569efbf261422f", "registerMiniwindow", winid)
+	    movewindow.add_drag_handler (winid, 0, 0, 0, win_height)
+	    WindowAddHotspot(winid, "resize", win_width - grip_resize, win_height - grip_resize, win_width, win_height, "MouseOver", "CancelMouseOver", "MouseDown", "", "MouseUp", "", 6, 0)
+	    WindowDragHandler(winid, "resize", "ResizeMoveCallback", "ResizeReleaseCallback", 0)
+	 else
+	    WindowResize(winid, win_width, win_height, ColourNameToRGB(bg_color))
+	    WindowMoveHotspot(winid, "resize", win_width - grip_resize, win_height - grip_resize, win_width, win_height)
+	 end
+	 WindowShow(winid, true)
+	 show_group()
+      end
+
+      function trim(str)
+	 if str then
+	    return (str:gsub("^%s*(.-)%s*$", "%1"))
+	 else
+	    return ""
+	 end
+      end
+
+      function truncate(str)
+	 if #str <= 12 then
+	    return str
+	 end
+	 return trim(string.sub(str, 1, 10))..".."
+      end
+      function bigtruncate(str)
+	 if str >= 16 then
+	    return str
+	 end
+	 return trim(string.sub(str, 1, 17))..".."
+      end
+
+
+      function abbreviate(str,length)
+	 if length == nil then
+	    length=22
+	 end
+	 if string.len(str)>length then
+	    return string.sub(str, 1, length)..string.char(133)
+	 else
+	    return str
+	 end
+      end
+      function nonumberabbreviate(str,length)
+	 if length == nil then
+	    length=20
+	 end
+	 if string.len(str)>length then
+	    return string.sub(str, 1, length)..string.char(133)
+	 else
+	    return str
+	 end
+      end
+
+      function limit_n(num) --function nlim(num) --Yeah, I keep shortening things
+	 n=tonumber(num) --Try to coerce into numeric
+
+	 if n == nil then --we have a non numeric value
+	    --print(string.format('"%s" was not converted to a number', tostring(num)))
+	    return string.sub(tostring(num), 1, 5) -- so just return the first 5 characters of the string
+	 else --numeric
+	    usn=math.abs(n)    --So get absolute value for scale testing
+	    --print(string.format("abs(%.2f)=%.2f"),n,usn)
+	 end
+	 --Now test the absolute value for scale
+	 if usn < 10^5 then
+	    return tostring(n)
+	 elseif usn < 10^6 then
+	    return string.format("%.0fk", n / 10^3)
+	 elseif usn < 10^9 then
+	    return string.format("%.0fm", n / 10^6)
+	 elseif usn < 10^12 then
+	    return string.format("%.0fb", n / 10^9)
+	 elseif usn < 10^15 then
+	    return string.format("%.0ft", n / 10^12)
+	 else
+	    return string.format("%.0fq", n / 10^15)
+	 end
+      end
+
+      function drawPlayer(player, i, isPlayerOrEnemy)
+	 if is_tank(player.tags) or (not show_minions and player.minion == 0) or show_minions then
+	    local padding = 3
+	    local box_top, box_right, box_bottom = top, 1, nil
+	    across = across + 1 -- how many players fit across window
+	    box_top = top + font_size/2
+	--	print("Font Size: ", font_size)
+	    top = font_size/3 + box_top or 17
+	    local x = 0
+
+	    ---- <><><><><><><><><><>><><><><><><><><><><><><><><><><><><><><><><><><>
+	    ---- DRAW TEXT FOR SMALL/LARGE BARS --------------------------------------
+	    if isPlayerOrEnemy or not isPlayerOrEnemy then
+	       if bar_width == 100 then
+		  --Thing 1
+		  -- Draw player
+		  x = x + WindowText(winid, "f1", player.level, left, top + padding, 0, 0, ColourNameToRGB(level_color), false) + left -- label and padding
+		  x = x + WindowText(winid, "f1", truncate(player.name), left + 22, top + padding, 0, 0, ColourNameToRGB(player_color), false) + left + 18 + 6 -- player name truncated
+		  WindowAddHotspot(winid, "player"..i, left + 18, top + 2, left + 100, top + 16, "", "", "", "", "", player.name, 0, 0) -- show title for truncated player
+
+		  if show_numbers then
+		     x = x + WindowText(winid, "f1", player.level, left, top + padding, 0, 0, ColourNameToRGB(level_color), false) + left -- label and padding
+		     x = x + WindowText(winid, "f1", truncate(player.name), left + 22, top + padding, 0, 0, ColourNameToRGB(player_color), false) + left + 18 + 6 -- player name truncated
+		  else
+		     x = WindowText(winid, "f1", player.level, left, top + padding, 0, 0, ColourNameToRGB(level_color), false) + left -- label and padding
+		     x = x + WindowText(winid, "f1", truncate(player.name), left + 22, top + padding, 0, 0, ColourNameToRGB(player_color), false) + left + 18 + 6 -- player name truncated
+		  end
+
+
+		  if is_no_melee(player.tags) then
+		     x = x + WindowText(winid, "f1", "N", x, top + padding, 0, 0, ColourNameToRGB(no_melee_color), false) + 2 -- show if no melee
+		  end
+	       elseif bar_width == 200 then
+		  x = x + WindowText(winid, "f1", "Lv["..player.level.."]", left, top + padding, 0, 0, ColourNameToRGB(level_color), false) + left -- label and padding
+		  x = x + WindowText(winid, "f1", abbreviate(player.name), left + 50, top + padding, 0, 0, ColourNameToRGB(player_color), false) + left + 18 + 8 -- player name truncated
+
+		  if is_no_melee(player.tags) then
+		     x = x + WindowText(winid, "f1", "[N]", x, top + padding, 0, 0, ColourNameToRGB(no_melee_color), false) -- show if no melee
+		  end
+	       end
+	    else -- isPlayerOrEnemy
+	    end -- if isPlayerOrEnemy
+	    ---- END DRAW TEXT FOR SMALL/LARGE BARS ----------------------------------
+	    ---- <><><><><><><><><><>><><><><><><><><><><><><><><><><><><><><><><><><>
+
+	    local no_num_bar_width_100_x = bar_width + WindowTextWidth(winid, "f1", "**", false)
+      local show_numbers_100_x = left + 180 + font_size - 2
+	    ---- <><><><><><><><><><>><><><><><><><><><><><><><><><><><><><><><><><><>
+	    ---- YOU -----------------------------------------------------------------
+	    if is_you(player.tags) and not (group_leader == player.name) and not is_minion(player.tags) and isPlayerOrEnemy then
+	       if bar_width == 100 then
+           if show_numbers then
+		     x = x + WindowText(winid, "f1", "Y", show_numbers_100_x, top + padding, 0, 0, ColourNameToRGB(you_color), false) + 2 -- show if you
+		--  else
+		--     x = x + WindowText(winid, "f1", "Y", no_num_bar_width_100_x + padding*2, top + padding, 0, 0, ColourNameToRGB(you_color), false) + 2 -- show if you
+		  end
+	       end
+		   if bar_width == 100 and not show_numbers then
+		     x = x + WindowText(winid, "f1", "Y", left + 110, top + padding, 0, 0, ColourNameToRGB(you_color), false) + 2 -- show if minion
+		   end
+	       if bar_width == 200 then
+		  if show_numbers then
+		     x = x + WindowText(winid, "f1", "[YOU]", bar_width+left+19, top + padding, 0, 0, ColourNameToRGB(you_color), false) -- show if you
+		  else
+		     x = x + WindowText(winid, "f1", "Y", left + 210, top + padding, 0, 0, ColourNameToRGB(you_color), false) + 2 -- show if you
+		  end
+	       end
+	    end
+	    ---- END YOU -------------------------------------------------------------
+	    ---- <><><><><><><><><><>><><><><><><><><><><><><><><><><><><><><><><><><>
+	    ---- TEAM-MATE -----------------------------------------------------------------
+	    if not is_you(player.tags) and not (group_leader == player.name) and not is_minion(player.tags) and not is_pet(player.tags) and isPlayerOrEnemy  then
+	       if bar_width == 100 then
+           if show_numbers then
+		     x = x + WindowText(winid, "f1", "T", show_numbers_100_x, top + padding, 0, 0, ColourNameToRGB(team_color), false) + 2 -- show if you
+		--  else
+		--     x = x + WindowText(winid, "f1", "Y", no_num_bar_width_100_x + padding*2, top + padding, 0, 0, ColourNameToRGB(you_color), false) + 2 -- show if you
+		  end
+	       end
+		   if bar_width == 100 and not show_numbers then
+		     x = x + WindowText(winid, "f1", "T", left + 110, top + padding, 0, 0, ColourNameToRGB(team_color), false) + 2 -- show if minion
+		   end
+	       if bar_width == 200 then
+		  if show_numbers then
+		     x = x + WindowText(winid, "f1", "[TEAM]", bar_width+left+19, top + padding, 0, 0, ColourNameToRGB(team_color), false) -- show if you
+		  else
+		     x = x + WindowText(winid, "f1", "T", left + 210, top + padding, 0, 0, ColourNameToRGB(team_color), false) + 2 -- show if you
+		  end
+	       end
+	    end
+	    ---- END TEAM-MATE -------------------------------------------------------------
+	    ---- <><><><><><><><><><>><><><><><><><><><><><><><><><><><><><><><><><><>
+
+	    ---- <><><><><><><><><><>><><><><><><><><><><><><><><><><><><><><><><><><>
+	    ---- LEADER --------------------------------------------------------------
+	    if group_leader == player.name then
+		  if bar_width == 100 then
+		     if show_numbers then
+			x = x + WindowText(winid, "f1", "L", show_numbers_100_x, top + padding, 0, 0, ColourNameToRGB(leader_color, false) + 2)
+		  --   else
+		  --x = x + WindowText(winid, "f1", "L", left + no_num_bar_width_100_x - 1, top + padding, 0, 0, ColourNameToRGB(leader_color), false) + 2
+		     end
+		  end
+		  if bar_width == 100 and not show_numbers then
+		    x = x + WindowText(winid, "f1", "L", left + 110, top + padding, 0, 0, ColourNameToRGB(leader_color), false) + 2 -- show if minion
+			 end
+
+		  if bar_width == 200 then
+		     if show_numbers then
+			x = x + WindowText(winid, "f1", "[LEADER]", bar_width+left+19, top + padding, 0, 0, ColourNameToRGB(leader_color), false) -- show if leader -- used to be left+240
+		     else
+			x = x + WindowText(winid, "f1", "L", left+210, top + padding, 0, 0, ColourNameToRGB(leader_color), false) + 2 -- show if leader
+		     end
+		  end
+	    end
+	    ---- END LEADER ----------------------------------------------------------
+	    ---- <><><><><><><><><><>><><><><><><><><><><><><><><><><><><><><><><><><>
+
+	    ---- <><><><><><><><><><>><><><><><><><><><><><><><><><><><><><><><><><><>
+	    ---- PETS ----------------------------------------------------------------
+	    if is_pet(player.tags) and isPlayerOrEnemy then
+        DebugNote(x)
+	       if bar_width == 100 then
+		  if show_numbers then
+		     x = x + WindowText(winid, "f1", "P", show_numbers_100_x, top + padding, 0, 0, ColourNameToRGB(pet_color), false) + 2 -- show if pet
+		 -- else
+		 --   x = x + WindowText(winid, "f1", "P", left + bar_width - 1, top + padding, 0, 0, ColourNameToRGB(pet_color), false) + 2 -- show if pet
+		  end
+	       end
+		   		   if bar_width == 100 and not show_numbers then
+		   		     x = x + WindowText(winid, "f1", "P", left + 110, top + padding, 0, 0, ColourNameToRGB(pet_color), false) + 2 -- show if minion
+					 end
+
+	       if bar_width == 200 then
+		  if show_numbers then
+		     x = x + WindowText(winid, "f1", "[PET]", bar_width+left+19, top + padding, 0, 0, ColourNameToRGB(pet_color), false) -- show if pet
+		  else
+		     x = x + WindowText(winid, "f1", "P", left + 210, top + padding, 0, 0, ColourNameToRGB(pet_color), false) + 2 -- show if pet
+		  end
+	       end
+	    end
+	    ---- END PETS ------------------------------------------------------------
+	    ---- <><><><><><><><><><>><><><><><><><><><><><><><><><><><><><><><><><><>
+
+	    ---- <><><><><><><><><><>><><><><><><><><><><><><><><><><><><><><><><><><>
+	    ---- MINIONS -------------------------------------------------------------
+      if is_minion(player.tags) and isPlayerOrEnemy then
+	       if bar_width == 100 then
+		  if show_numbers then
+		     x = x + WindowText(winid, "f1", "C", show_numbers_100_x, top + padding, 0, 0, ColourNameToRGB(minion_color), false) + 2 -- show if minion
+		 -- else
+		   --  x = x + WindowText(winid, "f1", "C", x + padding - 1, top + padding, 0, 0, ColourNameToRGB(minion_color), false) + 2 -- show if minion
+		  end
+	       end
+		   if bar_width == 100 and not show_numbers then
+		   		     x = x + WindowText(winid, "f1", "C", left + 110, top + padding, 0, 0, ColourNameToRGB(minion_color), false) + 2 -- show if minion
+					 end
+
+	       if bar_width == 200 then
+		  if show_numbers then
+		     x = x + WindowText(winid, "f1", "[CHARM]", left + 219, top + padding, 0, 0, ColourNameToRGB(minion_color), false)  -- show if minion
+		  else
+		     x = x + WindowText(winid, "f1", "C", left + 210, top + padding, 0, 0, ColourNameToRGB(minion_color), false) + 2 -- show if minion
+		  end
+	       end
+	    end
+	    ---- END MINIONS ---------------------------------------------------------
+
+	    ---- <><><><><><><><><><>><><><><><><><><><><><><><><><><><><><><><><><><>
+	    ---- ENEMIES -------------------------------------------------------------
+	    if not isPlayerOrEnemy then
+	       if bar_width == 100 then
+		  if show_numbers then
+		     x = x + WindowText(winid, "f1", player.level, left, top + padding, 0, 0, ColourNameToRGB(level_color), false) + left -- label and padding
+		     x = x + WindowText(winid, "f1", truncate(player.name), left + 22, top + padding, 0, 0, ColourNameToRGB(player_color), false) + left + 18 + 8 -- player name
+		     x = WindowText(winid, "f1", "E", show_numbers_100_x, top + padding, 0, 0, ColourNameToRGB(tank_color), false) -- show if enemy
+		  end
+		  end
+		  if bar_width == 100 and not show_numbers then
+		     x = x + WindowText(winid, "f1", player.level, left, top + padding, 0, 0, ColourNameToRGB(level_color), false) + left -- label and padding
+		     x = x + WindowText(winid, "f1", truncate(player.name), left + 22, top + padding, 0, 0, ColourNameToRGB(player_color), false) + left + 18 + 8 -- player name
+		   	 x = x + WindowText(winid, "f1", "E", left + 110, top + padding, 0, 0, ColourNameToRGB(tank_color), false) + 2 -- show if minion
+		  end
+		   if bar_width == 200 then
+		  if show_numbers then
+--		  print("Player Name: ", player.name)
+--		  print("Player Level: ", player.level)
+		     --x = WindowRectOp(winid, 2, left - 3, top, 307, 198, ColourNameToRGB(enemy_background_color))
+		     x = WindowText(winid, "f1", "Lv["..player.level.."]", left, top + padding, 0, 0, ColourNameToRGB(level_color), false) + left -- label and padding
+		     x = x + WindowText(winid, "f1", abbreviate(player.name), left + 50, top + padding, 0, 0, ColourNameToRGB(player_color), false) + left + 18 + 8 -- player name
+		     x = WindowText(winid, "f1", "[ENEMY]", left + 219, top + padding, 0, 0, ColourNameToRGB(tank_color), false) -- show if enemy
+			 		  else
+		     x = WindowText(winid, "f1", "Lv["..player.level.."]", left, top + padding, 0, 0, ColourNameToRGB(level_color), false) + left -- label and padding
+		     x = x + WindowText(winid, "f1", nonumberabbreviate(player.name), left + 50, top + padding, 0, 0, ColourNameToRGB(player_color), false) + left + 18 + 8 -- player name
+		     x = x + WindowText(winid, "f1", "E", left + 210, top + padding, 0, 0, ColourNameToRGB(tank_color), false) + 2 -- show if minion
+		  end
+	       end
+	    end
+	    ---- END ENEMIES ---------------------------------------------------------
+	    ---- <><><><><><><><><><>><><><><><><><><><><><><><><><><><><><><><><><><>
+
+	    -- Magic
+	    top = top + bar_height + 4
+
+	    ---- <><><><><><><><><><>><><><><><><><><><><><><><><><><><><><><><><><><>
+	    ---- DRAW BARS -----------------------------------------------------------
+	    if isPlayerOrEnemy then
+	       x = WindowText(winid, "f1", "HP", left, top, 0, 0, ColourNameToRGB(hp_label_color), false) + left -- label and padding
+	       gauge(winid, "HP for "..player.name, tonumber(player.hp), tonumber(player.hp_max), x + padding, top, bar_width, bar_height, ColourNameToRGB(hp_color), 0x000000, bar_ticks, ColourNameToRGB(bar_border), ColourNameToRGB(bar_border), nil, flat_gauges==1) -- hp gauge
+	    elseif not isPlayerOrEnemy then
+	       x = WindowText(winid, "f1", "HP", left, top, 0, 0, ColourNameToRGB(enemy_hp_label_color), false) + left -- label and padding
+	       gauge(winid, "HP for "..player.name, tonumber(player.hp), tonumber(player.hp_max), x + padding, top, bar_width, bar_height, ColourNameToRGB(enemy_hp_color), 0x000000, bar_ticks, ColourNameToRGB(bar_border), ColourNameToRGB(bar_border), nil, flat_gauges==1) -- hp gauge
+	    end
+	    if overlay_pct then
+	       outlined_text(winid, "s1", math.floor(player.hp / player.hp_max * 100).."%", x + 6, top + 2, 0, 0, ColourNameToRGB(overlay_color), false) -- hp %
+	    end
+	    if show_numbers then
+	       box_right = x + bar_width + WindowTextWidth(winid, "b1", string.rep("X", biggest_number).."/"..string.rep("X", biggest_number)) + 14 -- set max size of hp/mana/moves on side of gauge
+	       WindowText(winid, "f1", limit_n(player.hp).."/"..limit_n(player.hp_max), x + 6 + bar_width, top, 0, 0, ColourNameToRGB(overlay_color), false) -- hp
+	    else
+	       box_right = x + bar_width + 6
+	    end
+	    top = top + bar_height + 2
+
+	    if show_mana then
+	       x = WindowText(winid, "f1", "MN", left, top, 0, 0, ColourNameToRGB(mana_label_color), false) + left -- label and padding
+	       gauge(winid, "Mana for "..player.name, tonumber(player.mana), tonumber(player.mana_max), x + padding, top, bar_width, bar_height, ColourNameToRGB(mana_color), 0x000000, bar_ticks, ColourNameToRGB(bar_border), ColourNameToRGB(bar_border), nil, flat_gauges==1) -- mana gauge
+	       local is_number = tonumber(player.mana) and tonumber(player.mana_max)
+	       if (is_number and overlay_pct) then
+		  outlined_text(winid, "s1", math.floor(player.mana / player.mana_max * 100).."%", x + 6, top + 2, 0, 0, ColourNameToRGB(overlay_color), false) -- mana %
+	       end
+	       if show_numbers then
+		  WindowText(winid, "f1", player.mana.."/"..player.mana_max, x + 6 + bar_width, top, 0, 0, ColourNameToRGB(overlay_color), false) -- mana
+	       end
+	       top = top + bar_height + 2
+
+	       if show_moves then
+		  x = WindowText(winid, "f1", "MV", left, top, 0, 0, ColourNameToRGB(moves_label_color), false) + left -- label and padding
+		  gauge(winid, "Moves for "..player.name, tonumber(player.moves), tonumber(player.moves_max), x + padding, top, bar_width, bar_height, ColourNameToRGB(moves_color), 0x000000, bar_ticks, ColourNameToRGB(bar_border), ColourNameToRGB(bar_border), nil, flat_gauges==1) -- moves gauge
+		  if overlay_pct then
+		     outlined_text(winid, "s1", math.floor(player.moves / player.moves_max * 100).."%", x + 6, top + 2, 0, 0, ColourNameToRGB(overlay_color), false) -- moves %
+		  end
+		  if show_numbers then
+		     WindowText(winid, "f1", player.moves.."/"..player.moves_max, x + 6 + bar_width, top, 0, 0, ColourNameToRGB(overlay_color), false) -- moves
+		  end
+		  top = top + bar_height + 2
+	       end
+	    end
+	    ---- END DRAW BARS -------------------------------------------------------
+	    ---- <><><><><><><><><><>><><><><><><><><><><><><><><><><><><><><><><><><>
+
+	    ---- <><><><><><><><><><>><><><><><><><><><><><><><><><><><><><><><><><><>
+	    ---- BORDER/MISC ---------------------------------------------------------
+	    box_bottom = top + 1
+	    if isPlayerOrEnemy then
+	       WindowRectOp(winid, 1, left - 3, box_top, box_right, box_bottom, ColourNameToRGB(player_border_color)) -- player border
+	    else
+	       WindowRectOp(winid, 1, left - 3, box_top, box_right, box_bottom, ColourNameToRGB(enemy_border_color))
+	       --WindowRectOp(winid, 2, left - 3, box_top, box_right, box_bottom, ColourNameToRGB(enemy_background_color))
+	    end
+	    ---- END BORDER/MISC -----------------------------------------------------
+	    ---- <><><><><><><><><><>><><><><><><><><><><><><><><><><><><><><><><><><>
+
+	    ---- <><><><><><><><><><>><><><><><><><><><><><><><><><><><><><><><><><><>
+	    ---- Row Calculations ----------------------------------------------------
+	    if win_width - box_right - (box_right - left + 5) > 0 then -- keep drawing across
+	       left = left + (box_right - left) + 4
+	       top = 17 + (rows * (box_bottom - box_top + 2))
+	    else -- start new row
+	       rows = rows + 1
+	       across = 0
+	       left = 7
+	       top = 17 + (rows * (box_bottom - box_top + 2))
+	    end
+	    ---- END Row Calculations ------------------------------------------------
+	    ---- <><><><><><><><><>><><><><><><><><><><><><><><><><><><><><><><><><><>
+	 end
+      end
+
+      function show_group()
+	 WindowRectOp(winid, 2, 2, 1, -2, -2, ColourNameToRGB(bg_color)) -- blank canvas
+	 --WindowRectOp(winid, 2, 0, 0, 0, 22, ColourNameToRGB(title_bg_color)) -- title background
+	 --WindowRectOp(winid, 1, 0, 0, 0, 0, ColourNameToRGB(border_color)) -- border
+	 --Theme.Draw3DRect(winid, 0, 0, 0, 0, depressed) -- themed window
+
+	 title = "Group Info: Use LOOK to draw the bars, or if this is your first time using the window type setup prompt" -- default title
+	 if group_leader ~= "" then -- group leader
+	    title = "Group Leader: "..group_leader
+	 end
+	 Theme.DrawTitleBar(winid, "f1", title, "center") -- them window title (has to be drawn before border) This is the title bar that says the leader name
+	 Theme.DrawBorder(winid) -- theme window border
+
+	 left, top = 7, 17 -- bar location
+	 across = 0
+	 rows = 0
+	 -- [L][M][O][N][TANK]  green, dark cyan, white, magenta, red
+	 -- Find YOU in group list and put YOU first.
+	 for k, v in pairs(group) do
+	    if (v.name == myname) then
+	       group[k], group[1] = group[1], group[k]
+	    end
+	 end
+
+	 for i, player in ipairs(group) do
+	    drawPlayer(player, i, true)
+	 end
+
+	 if enemy_group then
+	    for i,player in ipairs(enemy_group) do
+	       drawPlayer(player, i, false)
+	    end
+	 end
+	 Theme.AddResizeTag(winid, 2, nil, nil, "MouseDown", "ResizeMoveCallback", "ResizeReleaseCallback") -- resize grip
+      end -- DrawPlayer
+
+      function ResizeMoveCallback()
+	 local x_offset, y_offset = start_x - WindowInfo(winid, 17), start_y - WindowInfo(winid, 18)
+	 start_x, start_y = WindowInfo(winid, 17), WindowInfo(winid, 18)
+	 win_width = win_width - x_offset
+	 win_height = win_height - y_offset
+	 if os.clock() - last_refresh >= .05 then
+	    last_refresh = os.clock()
+	    window(false)
+	 end
+      end
+
+      function ResizeReleaseCallback()
+	 window(true)
+	 SaveState()
+      end
+
+      function MouseDown(flags, id)
+	 if id == "resize" then
+	    start_x, start_y = WindowInfo(winid, 17), WindowInfo(winid, 18)
+	 end
+      end
+
+      function MouseUp(flags, id, win)
+	 if bit.band(flags, 0x20) ~= 0 then -- right click
+	    right_click_menu()
+	 end
+	 pos_x, pos_y = WindowInfo(winid, 10), WindowInfo(winid, 11)
+	 SaveState()
+      end
+
+      function right_click_menu()
+	 local x, y = WindowInfo(winid, 14), WindowInfo(winid, 15)
+
+	 local str = "!"
+
+	 if show_minions then
+	    str = str.."Hide Minions"
+	 else
+	    str = str.."Show Minions"
+	 end
+
+	 if show_mana then
+	    str = str.."|-|Hide Mana"
+	 else
+	    str = str.."|-|Show Mana"
+	 end
+
+	 if show_moves then
+	    str = str.."|Hide Moves"
+	 else
+	    str = str.."|Show Moves"
+	 end
+
+	 if bar_width == 200 then
+	    str = str.."|-|Compact Bars"
+	 else
+	    str = str.."|-|Full Size Bars"
+	 end
+
+	 str = str.."|-|>Colors|HP|Enemy HP|Mana|Moves|<"
+
+	 if overlay_pct then
+	    str = str.."|-|Hide % Overlay"
+	 else
+	    str = str.."|-|Show % Overlay"
+	 end
+
+	 if show_numbers then
+	    str = str.."|-|Hide Totals"
+	 else
+	    str = str.."|-|Show Totals"
+	 end
+
+	 str = str.."|-|Bring to Front"
+
+	 str = str.."|-|Send to Back"
+
+	 str = str.."|-|Change Font"
+
+	 opt = WindowMenu(winid, x, y, str)
+
+	 if opt == "" then
+	    return
+	 end
+
+	 opt = tonumber(opt)
+
+	 if opt == 1 then -- toggle minions
+	    show_minions = not show_minions
+	    SaveState()
+	 elseif opt == 2 then -- toggle mana
+	    show_mana = not show_mana
+	    SaveState()
+	 elseif opt == 3 then -- toggle moves
+	    show_moves = not show_moves
+	    SaveState()
+	 elseif opt == 4 then -- 1/2 width bars
+	    if bar_width == 200 then
+	       bar_width = 100
+	    else
+	       bar_width = 200
+	    end
+	    SaveState()
+	 elseif opt == 5 then -- hp color
+	    local clr = PickColour(ColourNameToRGB(hp_color))
+	    if clr ~= -1 then
+	       hp_color = RGBColourToName(clr)
+	       SaveState()
+	    end
+	 elseif opt == 6 then -- enemy hp color
+	    local clr = PickColour(ColourNameToRGB(enemy_hp_color))
+	    if clr ~= -1 then
+	       enemy_hp_color = RGBColourToName(clr)
+	       SaveState()
+	    end
+	 elseif opt == 7 then -- mana color
+	    local clr = PickColour(ColourNameToRGB(mana_color))
+	    if clr ~= -1 then
+	       mana_color = RGBColourToName(clr)
+	       SaveState()
+	    end
+	 elseif opt == 8 then -- moves color
+	    local clr = PickColour(ColourNameToRGB(moves_color))
+	    if clr ~= -1 then
+	       moves_color = RGBColourToName(clr)
+	       SaveState()
+	    end
+	 elseif opt == 9 then -- overlay %
+	    overlay_pct = not overlay_pct
+	    SaveState()
+	 elseif opt == 10 then -- number totals after bar
+	    show_numbers = not show_numbers
+	    SaveState()
+	 elseif opt == 11 then -- Bring to Front
+	    CallPlugin("462b665ecb569efbf261422f","boostMe", winid)
+	    --  print("Bring to Front")
+	    SaveState()
+	 elseif opt == 12 then -- Send to back
+	    CallPlugin("462b665ecb569efbf261422f","dropMe", winid)
+	    --  print("Sent to Back")
+	    SaveState()
+	 elseif opt == 13 then -- Change Font
+	    wanted_font = utils.fontpicker (font_name, font_size) --font dialog
+	    if wanted_font then
+	       print("Bar Height1: ", bar_height)
+	       print("Top1: ", top)
+	       font_name = wanted_font.name
+	       font_size = wanted_font.size
+	       SetVariable("font_size", font_size)
+	       bar_height = font_size + 4
+	       top = top + bar_height * 2
+	       --rows+1
+	       SetVariable("top", top)
+	       --SetVariable("bar_height", bar_height)
+	       print("Bar Height2: ", bar_height)
+	       print("Top2: ", top)
+	    end
+	 end
+	 window(true)
+      end
+
+      function CancelMouseOver(flags, id)
+      end
+
+      function CancelMouseDown(flags, id)
+      end
+
+      function OnPluginEnable()
+	 window(true)
+      end
+
+      function OnPluginDisable()
+	 WindowDelete(winid)
+      end
+
+      function OnPluginClose()
+	 WindowDelete(winid)
+      end
+
+      function from_bool(v)
+	 if v then
+	    return 1
+	 end
+	 return 0
+      end
+
+      function OnPluginSaveState()
+	 SetVariable("myname", myname)
+	 SetVariable("pos_x", pos_x)
+	 SetVariable("pos_y", pos_y)
+	 SetVariable("font_name", font_name)
+	 SetVariable("font_size", font_size)
+	 SetVariable("win_width", win_width)
+	 SetVariable("win_height", win_height)
+	 SetVariable("show_minions", from_bool(show_minions)) -- show minions
+	 SetVariable("show_mana", from_bool(show_mana)) -- show mana
+	 SetVariable("show_moves", from_bool(show_moves)) -- show moves
+	 SetVariable("overlay_pct", from_bool(overlay_pct)) -- show % overlay
+	 SetVariable("show_numbers", from_bool(show_numbers)) -- show totals
+	 SetVariable("hp_color", hp_color) -- hp color
+	 SetVariable("enemy_hp_color", enemy_hp_color) -- enemy hp color
+	 SetVariable("mana_color", mana_color) -- mana color
+	 SetVariable("moves_color", moves_color) -- moves color
+	 SetVariable("bar_width", bar_width) -- bar width
+	 SetVariable("top", top)
+	 SetVariable("debug_state", tostring(debug_state))
+      end
+
+      function loaded()
+	 Note()
+	 ColourNote("darkmagenta", "white", " Cleft of Dimensions group plugin v"..GetPluginInfo(GetPluginID(), 19).." installed! ")
+	 Note()
+      end
+
+      -- SIMULATE STUFF
+      function simulate_group()
+	 table.insert(group, {level = 10, hp = "195", hp_max = "235", mana = "240", mana_max = "300", moves = "150", moves_max = "150", tags = {"X", "L", "T"}, name = "Alas"})
+	 table.insert(group, {level = 20, hp = "140", hp_max = "275", mana = "150", mana_max = "250", moves = "160", moves_max = "170", tags = {"-"}, name = "TestPlayer"})
+	 table.insert(group, {level = 30, hp = "140", hp_max = "275", mana = "150", mana_max = "250", moves = "160", moves_max = "170", tags = {"-", "?"}, name = "A liveoak 1"})
+	 table.insert(group, {level = 40, hp = "140", hp_max = "275", mana = "150", mana_max = "250", moves = "160", moves_max = "170", tags = {"O"}, name = "A clay man 1"})
+	 table.insert(group, {level = 50, hp = "140", hp_max = "275", mana = "150", mana_max = "250", moves = "160", moves_max = "1700", tags = {"M"}, name = "An ornary woman 1"})
+	 table.insert(group, {level = 60, hp = "44000", hp_max = "50000", mana = "150", mana_max = "250", moves = "160", moves_max = "170", tags = {"T", "-"}, name = "The coolest dude you know"})
+	 table.insert(group, {level = 70, hp = "140", hp_max = "275", mana = "150", mana_max = "250", moves = "160", moves_max = "170", tags = {"-"}, name = "TestPlayer"})
+	 table.insert(group, {level = 90, hp = "140", hp_max = "275", mana = "150", mana_max = "250", moves = "160", moves_max = "170", tags = {"-"}, name = "A liveoak 2"})
+	 table.insert(group, {level = 90, hp = "140", hp_max = "275", mana = "150", mana_max = "250", moves = "160", moves_max = "170", tags = {"O"}, name = "A clay man 2"})
+	 table.insert(group, {level = 100, hp = "140", hp_max = "275", mana = "150", mana_max = "250", moves = "160", moves_max = "1700", tags = {"M"}, name = "An ornary woman 2"})
+	 table.insert(group, {level = 100, hp = "44000", hp_max = "50000", mana = "150", mana_max = "250", moves = "160", moves_max = "170", tags = {"M", "T", "-"}, name = "The coolest dude you know"})
+
+	 end_group()
+      end
+      -- END SIMULATE STUFF
+
+      DoAfterSpecial(.2, "loaded()", 12)
+      window(true)
 ]]>
 </script>
 
