@@ -439,6 +439,7 @@
 <include name="CleftMUSH_ConvertPacketInfo.xml" plugin="y" />
 <include name="slowspeedwalk.xml" plugin="y" />
 <include name="CleftMUSH Communication Catcher.xml" plugin="y" />
+<include name="CleftMUSH_Plugin_Manager.xml" plugin="y" />
 <include name="CleftMUSH_MudBin.xml" plugin="y" />
 <include name="CleftMUSH COD Handler.xml" plugin="y" />
 <include name="CleftMUSH Group Monitor.xml" plugin="y" />
