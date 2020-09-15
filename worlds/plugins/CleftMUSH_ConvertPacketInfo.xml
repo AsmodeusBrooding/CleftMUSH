@@ -123,6 +123,7 @@ s = string.gsub (s, "%[90g", " \n[SND_COD_BLIP]\n")
 s = string.gsub (s, "%[91g", " \n[SND_COD_SCRT]\n")
 s = string.gsub (s, "%[92g", " \n[SND_COD_STAI]\n")
 s = string.gsub (s, "[\010][\013][\027]%[0m[\010][\013]", "\n[End_Desc]\n")
+--s = string.gsub (s, "[\046][\027][\091][\048][\109][\010][\013]", "\n[End_Desc]\n")
 
 --s = string.gsub (s, "[\010][\013][\027]%[0m[\091][\048][\109][\010][/013][\027]", "[End_Desc]\n")
 s = string.gsub (s, "Your enhanced resolve fades.", "Spelldown Valor")
