@@ -25,7 +25,7 @@
    save_state="y"
    date_written="2019-07-26 07:21:01"
    requires="4.51"
-   version="6.18"
+   version="6.20"
    >
 
 </plugin>
@@ -705,6 +705,7 @@ for word in string.gmatch(result, "%w+") do
     end
 end
 EnableTrigger ("Exits_Line", true)
+EnableTrigger ("get_description_line", false)
 Simulate("\\n[Exits2: " .. result .. "]\\n")</send>
   </trigger>
   <trigger
@@ -953,7 +954,7 @@ require "utility"
 require "tprint"
 
 
-version = "6.18"
+version = "6.20"
 uid = -999
 current_room=nil
 current_area = -999
@@ -1153,8 +1154,9 @@ end -- got_room_name
 -- -----------------------------------------------------------------
 function process_description_line (name, line, wildcards)
   if Trim (line) == "" then
-  --  print("Trim/line nil")
-    return
+  
+  line = "Empty Desc"
+
   end -- if
   if debugging then
 
@@ -1170,15 +1172,15 @@ function process_description_line (name, line, wildcards)
   if just_got_room_name then
 
     -- false alarm!
-    if line:sub (1, 2) ~= "  " then
-    print("FALSE ALARM")
-      just_got_room_name = false
-      EnableTrigger ("get_description_line", false)
+ --   if line:sub (1, 2) ~= "  " then
+ --   print("FALSE ALARM")
+ --     just_got_room_name = false
+ --     EnableTrigger ("get_description_line", false)
 
-      exits = nil
+ --     exits = nil
 
-      return
-    end -- if
+--      return
+ --   end -- if
 
   end -- if
 
