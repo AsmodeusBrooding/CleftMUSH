@@ -59,7 +59,7 @@ Room info should include:
 
 module (..., package.seeall)
 
-VERSION = 6.02   -- for querying by plugins
+VERSION = 6.31   -- for querying by plugins
 require "aard_register_z_on_create"
 
 require "mw_theme_base"
@@ -1903,7 +1903,8 @@ function find (f, show_uid, expected_count, walk, fcb)
     assert (room, "Room " .. uid .. " is not in rooms table.")
 
     if current_room == uid then
-      mapprint (room.name, "is the room you are in")
+	util.print("{x202"..room.name.. " {x202is the room you are in.")
+      --mapprint (room.name, "is the room you are in")
     else
       local distance = #paths [uid].path .. " room"
       if #paths [uid].path > 1 then
@@ -1919,13 +1920,44 @@ function find (f, show_uid, expected_count, walk, fcb)
       -- in case the same UID shows up later, it is only valid from the same room
       local hash = utils.tohex (utils.md5 (tostring (current_room) .. "<-->" .. tostring (uid)))
          table.insert(last_result_list, uid)
-      Hyperlink ("!!" .. GetPluginID () .. ":mapper.do_hyperlink(" .. hash .. ")",
-                 "["..#last_result_list.."] "..room_name, "Click to speedwalk there (" .. distance .. ")", "", "", false)
+		 if (#last_result_list % 2 == 0) then
+    --print(".....it is even")
+   TextColor = "grey"
+   BackgroundColor = "#1F170F"
+else
+   TextColor = "grey"
+    BackgroundColor = "black"
+end
+		 ColourTell(TextColor, BackgroundColor, "")
+		 if (#last_result_list < 10) then
+		 space = " "
+		 else
+		 space = ""
+		 end
+	--	 ColourTell("white", "black", "--------------------------------------------------\n")
+      Hyperlink ("!!" .. GetPluginID () .. ":mapper.do_hyperlink(" .. hash .. ")", " " ..#last_result_list.. " ".. space ..room_name, "Click to speedwalk there (" .. distance .. ")", TextColor, BackgroundColor, false, true) 
+				-- wanted = GetPluginVariable("dd07d6dbe73fe0bd02ddb62c", "wanted")
+				-- Hyperlink("mapper goto " .. wanted, "[Show Path]", "Download and Update Plugin #" .. path, "red", "black", 0, 1)
+				--print(#distance)
+				--print(#room_name)
+				 ColourTell(TextColor, BackgroundColor, "")
+				-- tprint(last_result_list)
+				--mapper.mapprint (string.format ("Path to %s is: %s", wanted, path))
+			--	print(hash)
+				--print(last_result_list[wantedgoto])
       local info = ""
       if type (paths [uid].reason) == "string" and paths [uid].reason ~= "" then
         info = " [" .. paths [uid].reason .. "]"
       end -- if
-      mapprint (" - " .. distance .. info) -- new line
+      --mapprint (" - " .. distance .. info) -- new line
+	  blankspace = ""
+	 -- blankspace = string.sub(blankspace, 1, 80)
+	  superstring = distance .. info .. blankspace
+	  superstring = string.format("%-65s %05s",superstring, "3")
+	  superstring = string.sub(superstring, 1, 73-#room_name)
+	  
+	  --print(superstring)
+	  ColourTell(TextColor, BackgroundColor, " - ".. superstring .. "\n")
 
       -- callback to display extra stuff (like find context, room description)
       if fcb then
@@ -1941,9 +1973,10 @@ function find (f, show_uid, expected_count, walk, fcb)
     if diff == 1 then
       were, matches = "was", "match"
     end -- if
-    mapprint ("There", were, diff, matches,
-              "which I could not find a path to within",
-              config.SCAN.depth, "rooms.")
+	util.print("{x202There " ..were.." " ..diff.." "..matches.." which I could not find a path to within "..config.SCAN.depth.." rooms.")
+  --  mapprint ("There", were, diff, matches,
+   --           "which I could not find a path to within",
+   --           config.SCAN.depth, "rooms.")
   end -- if
    if not walk then
       last_result_list = {}
@@ -1965,6 +1998,9 @@ function do_hyperlink (hash)
   local path = hyperlink_paths [hash]
   if #path > 0 then
     last_hyperlink_uid = path [#path].uid
+	--print(last_hyperlink_uid)
+	--tprint(path)
+	--print(path[1].dir)
   end -- if
   start_speedwalk (path)
 

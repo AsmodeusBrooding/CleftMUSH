@@ -25,7 +25,7 @@
    save_state="y"
    date_written="2019-07-26 07:21:01"
    requires="4.51"
-   version="6.20"
+   version="6.31"
    >
 
 </plugin>
@@ -954,7 +954,7 @@ require "utility"
 require "tprint"
 
 
-version = "6.20"
+version = "6.31"
 uid = -999
 current_room=nil
 current_area = -999
@@ -1959,9 +1959,9 @@ function map_find (name, line, wildcards)
   local matches = { }
   local count = 0
   local target = Trim (wildcards [1]:lower ())
-  util.print("{R-------------------------------------------------------")
-  util.print("            {D[{WSearching rooms for {D'{Y".. target .. "{D']")
-  util.print("{R-------------------------------------------------------")
+  util.print("{R--------------------------------------------------------------------------------")
+  util.print("                        {D[{WSearching rooms for {D'{Y".. target .. "{D']")
+  util.print("{R--------------------------------------------------------------------------------")
   if target == "" then
     mapper.maperror ("No search string specified")
     return
@@ -2010,7 +2010,6 @@ function map_find (name, line, wildcards)
     AnsiNote (reset .. string.gsub (room.desc, caseless_target, bold .. "%1" .. unbold))
 
   end -- show_snippet
-
   -- see if nearby
   mapper.find (
     function (uid)
@@ -2212,6 +2211,8 @@ function map_goto (name, line, wildcards)
     1,          -- how many to expect
     true        -- just walk there
     )
+	
+		--TODO: Add code to goto a number on the list mapper find gives
 end -- map_goto
 
 function map_resume (name, line, wildcards)
