@@ -13,7 +13,7 @@
    purpose="Group monitor"
    date_written="2019-07-03 12:04:56"
    requires="5.00"
-   version="6.39"
+   version="6.40"
    >
 
 </plugin>
@@ -171,7 +171,7 @@
 
       local group = {}
 
-      local version = "6.39"
+      local version = "6.40"
       local to_bool = {["0"] = false, ["1"] = true}
 
       local winid = "win_"..GetPluginID()
@@ -475,12 +475,21 @@
 	 end
 	 return trim(string.sub(str, 1, 10))..".."
       end
+	  
       function bigtruncate(str)
-	 if #str >= 16 then
+	 if #str <= 12 then
 	    return str
 	 end
+	 if bar_width == 200 and show_numbers then
+	 return trim(string.sub(str, 1, 15))..".."
+	 elseif bar_width == 200 and not show_numbers then
+	 return trim(string.sub(str, 1, 15))..".."
+	 elseif bar_width == 100 and show_numbers then
 	 return trim(string.sub(str, 1, 17))..".."
+	 elseif bar_width == 100 and not show_numbers then
+	 return trim(string.sub(str, 1, 7))..".."
       end
+	  end
 
 
       function abbreviate(str,length)
@@ -551,6 +560,10 @@
 		
 		LevelPos = WindowTextWidth(winid, "f1", "["..player.level.."]")
 		NamePos = WindowTextWidth(winid, "f1", abbreviate(player.name))
+		PetNamePos = WindowTextWidth(winid, "f1", bigtruncate(player.name))
+	   no_num_bar_width_100_x = bar_width + WindowTextWidth(winid, "f1", "**", false)
+       show_numbers_100_x = bar_width + NamePos + LevelPos--left + 180 + font_size - 2
+	   show_numbers_100_p = left + LevelPos + PetNamePos - font_size/1.3
 		
 	    ---- <><><><><><><><><><>><><><><><><><><><><><><><><><><><><><><><><><><>
 	    ---- DRAW TEXT FOR SMALL/LARGE BARS --------------------------------------
@@ -559,15 +572,15 @@
 		  --Thing 1
 		  -- Draw player
 		  x = x + WindowText(winid, "f1", player.level, left, top + padding, 0, 0, ColourNameToRGB(level_color), false) + left -- label and padding
-		  x = x + WindowText(winid, "f1", truncate(player.name), left + 22, top + padding, 0, 0, ColourNameToRGB(player_color), false) + left + 18 + 6 -- player name truncated
+		--  x = x + WindowText(winid, "f1", truncate(player.name), left + 22, top + padding, 0, 0, ColourNameToRGB(player_color), false) + left + 18 + 6 -- player name truncated
 		  WindowAddHotspot(winid, "player"..i, left + 18, top + 2, left + 100, top + 16, "", "", "", "", "", player.name, 0, 0) -- show title for truncated player
 
 		  if show_numbers then
 		     x = x + WindowText(winid, "f1", player.level, left, top + padding, 0, 0, ColourNameToRGB(level_color), false) + left -- label and padding
-		     x = x + WindowText(winid, "f1", truncate(player.name), left + 22, top + padding, 0, 0, ColourNameToRGB(player_color), false) + left + 18 + 6 -- player name truncated
+		     x = x + WindowText(winid, "f1", bigtruncate(player.name), left + 22, top + padding, 0, 0, ColourNameToRGB(player_color), false) + left + 18 + 6 -- player name truncated
 		  else
 		     x = WindowText(winid, "f1", player.level, left, top + padding, 0, 0, ColourNameToRGB(level_color), false) + left -- label and padding
-		     x = x + WindowText(winid, "f1", truncate(player.name), left + 22, top + padding, 0, 0, ColourNameToRGB(player_color), false) + left + 18 + 6 -- player name truncated
+		     x = x + WindowText(winid, "f1", bigtruncate(player.name), left + 22, top + padding, 0, 0, ColourNameToRGB(player_color), false) + left + 18 + 6 -- player name truncated
 		  end
 
 
@@ -587,8 +600,6 @@
 	    ---- END DRAW TEXT FOR SMALL/LARGE BARS ----------------------------------
 	    ---- <><><><><><><><><><>><><><><><><><><><><><><><><><><><><><><><><><><>
 
-	    local no_num_bar_width_100_x = bar_width + WindowTextWidth(winid, "f1", "**", false)
-      local show_numbers_100_x = left + 180 + font_size - 2
 	    ---- <><><><><><><><><><>><><><><><><><><><><><><><><><><><><><><><><><><>
 	    ---- YOU -----------------------------------------------------------------
 	    if is_you(player.tags) and not (group_leader == player.name) and not is_minion(player.tags) and isPlayerOrEnemy then
@@ -617,7 +628,7 @@
 	    if not is_you(player.tags) and not (group_leader == player.name) and not is_minion(player.tags) and not is_pet(player.tags) and isPlayerOrEnemy  then
 	       if bar_width == 100 then
            if show_numbers then
-		     x = x + WindowText(winid, "f1", "T", show_numbers_100_x, top + padding, 0, 0, ColourNameToRGB(team_color), false) + 2 -- show if you
+		     x = x + WindowText(winid, "f1", "T", show_numbers_100_p, top + padding, 0, 0, ColourNameToRGB(team_color), false) + 2 -- show if you
 		--  else
 		--     x = x + WindowText(winid, "f1", "Y", no_num_bar_width_100_x + padding*2, top + padding, 0, 0, ColourNameToRGB(you_color), false) + 2 -- show if you
 		  end
@@ -668,7 +679,7 @@
         DebugNote(x)
 	       if bar_width == 100 then
 		  if show_numbers then
-		     x = x + WindowText(winid, "f1", "P", show_numbers_100_x, top + padding, 0, 0, ColourNameToRGB(pet_color), false) + 2 -- show if pet
+		     x = x + WindowText(winid, "f1", "P", show_numbers_100_p, top + padding, 0, 0, ColourNameToRGB(pet_color), false) + 2 -- show if pet
 		 -- else
 		 --   x = x + WindowText(winid, "f1", "P", left + bar_width - 1, top + padding, 0, 0, ColourNameToRGB(pet_color), false) + 2 -- show if pet
 		  end
@@ -695,7 +706,7 @@
       if is_minion(player.tags) and isPlayerOrEnemy then
 	       if bar_width == 100 then
 		  if show_numbers then
-		     x = x + WindowText(winid, "f1", "C", show_numbers_100_x, top + padding, 0, 0, ColourNameToRGB(minion_color), false) + 2 -- show if minion
+		     x = x + WindowText(winid, "f1", "C", show_numbers_100_p, top + padding, 0, 0, ColourNameToRGB(minion_color), false) + 2 -- show if minion
 		 -- else
 		   --  x = x + WindowText(winid, "f1", "C", x + padding - 1, top + padding, 0, 0, ColourNameToRGB(minion_color), false) + 2 -- show if minion
 		  end
@@ -722,7 +733,7 @@
 		  if show_numbers then
 		     x = x + WindowText(winid, "f1", player.level, left, top + padding, 0, 0, ColourNameToRGB(level_color), false) + left -- label and padding
 		     x = x + WindowText(winid, "f1", truncate(player.name), left + 22, top + padding, 0, 0, ColourNameToRGB(player_color), false) + left + 18 + 8 -- player name
-		     x = WindowText(winid, "f1", "E", show_numbers_100_x, top + padding, 0, 0, ColourNameToRGB(tank_color), false) -- show if enemy
+		     x = WindowText(winid, "f1", "E", show_numbers_100_p, top + padding, 0, 0, ColourNameToRGB(tank_color), false) -- show if enemy
 		  end
 		  end
 		  if bar_width == 100 and not show_numbers then
@@ -1019,9 +1030,9 @@
 		   if font_size <= 8 then
 		   util.print("{R[{WThe smallest font size you are allowed is {Y8{W. The most ideal font size is {G10{W, or {Y12{W. Setting the font size to {Y9{W.{R]")
 		   font_size = 9
-		   elseif font_size > 30 then
-		   util.print("{x238The largest font size currently allowed is 30. If you want to surpass this number, ask Asmodeus to add something in for you.")
-		   font_size = 30
+		   elseif font_size >= 17 then
+		   util.print("{x238The largest font size currently allowed is 17. If you want to surpass this number, ask Asmodeus to add something in for you.")
+		   font_size = 17
 		   end
 	      -- font_size = wanted_font.size
 	       SetVariable("font_size", font_size)

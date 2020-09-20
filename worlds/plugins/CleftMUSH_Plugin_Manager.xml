@@ -9,7 +9,7 @@
    purpose="Manages updates for CleftMUSH"
    date_written="2020-5-24 01:08:25"
    requires="4.76"
-   version="1.43"
+   version="2.01"
    save_state="y"
    >
 <description trim="y">
@@ -84,7 +84,7 @@ require "zip"
 require "serialize"
 require "utility"
 dofile(GetPluginInfo(GetPluginID(), 20) .. "cleft_colors.lua")
-version = 1.43
+version = 2.01
 local installedPlugins = {}
 local lastListHash
 local currentPlugin = {}
@@ -120,7 +120,7 @@ end
 function cmu_reload(name, line, wc)
    for p = 1, #pluginList do
       if p == tonumber(wc.index) then
-         printmsg("Attempting to reload plugin #" .. wc.index .. " (" .. pluginList[p].name .. ")")
+         util.print("\n{R[ {WAttempting to reload plugin #" .. wc.index .. " {R({W" .. pluginList[p].name .. "{R) ]\n")
          for i = 1, #pluginList[p].ids do
             ReloadPlugin(pluginList[p].ids[i])
          end
@@ -130,7 +130,7 @@ end
 
 function cmu_update(name, line, wc)
    if wc.index == "" then
-      printmsg("*** Checking if update is available for the CleftMUSH Plugin Manager.. Please wait.\r\n\r\n")
+      util.print("{R*** {WChecking if an update is available for the {YC{yl{Ye{yf{Yt{RM{rU{RS{rH{W Plugin Manager.. Please wait. {R***\r\n\r\n")
       local url = "https://raw.githubusercontent.com/AsmodeusBrooding/CleftUpdater/master/CleftMUSH_Plugin_Manager.xml"
       async.doAsyncRemoteRequest(url, async_cmu_download_complete, "HTTPS", 120)
    else
@@ -202,11 +202,16 @@ function async_head_plugin(retval, page, status, headers, full_status, request_u
       if thisPlugin == nil then return end
       thisPlugin.lastModified = headers["etag"] or "Unknown"
 	  require("tprint")
+	  	--  tprint(headers)
+		  LatestTag = headers.etag
+		  	--	 print("Hrm: ", headers.etag)
 	 -- tprint(headers)
    if pListNum == #pluginList then
       pListNum = 0
       for i = 1, #pluginList do
+	--  tprint(pluginList)
          thisPlugin = pluginList[i]
+	--	 tprint(thisPlugin)
          thisPlugin.updated = false
 		 thisPlugin.lastModified = headers["etag"] or "Unknown"
 		-- util.print("{Y[{W"..i.."{Y] {W".. thisPlugin.name)
@@ -217,15 +222,17 @@ function async_head_plugin(retval, page, status, headers, full_status, request_u
 			
             for k, v in pairs(installedPlugins) do
                if thisPlugin.ids[1] == k then
-		--	   print(thisPlugin.ids[1])
+			--   print(thisPlugin.lastModified)
 		--	    print(thisPlugin.lastModified)
 			  -- print(thisPlugin.lastModified)
-                  if thisPlugin.lastModified == v then
+                  if thisPlugin.lastModified == LatestTag then
+				  			--   tprint(thisPlugin)
                      thisPlugin.updated = true
-					util.print("{G*UP-TO-DATE*")
+				     util.print("{G*UP-TO-DATE*")
+					 end
                   end
                end
-            end
+			
             if not thisPlugin.updated then
                Hyperlink("cmu install " .. i, "[Update Plugin]", "Download and Update Plugin #" .. i, "red", "black", 0, 1)
                print("")
@@ -267,7 +274,7 @@ function async_cmu_download_complete(retval, page, status, headers, full_status,
     local version = tonumber(string.match(page, '%s%s+version="([0-9%.]+)"'))
     local installedVer = GetPluginInfo(GetPluginID(), 19)
     if version > installedVer then
-      printmsg("Updating from version " .. installedVer .. " to version " .. version)
+      util.print("{WUpdating from version {Y" .. installedVer .. "{W to version {G" .. version)
       local file = io.open(GetPluginInfo(GetPluginID(), 6), "w")
       page = string.gsub(page, "\r", "")
       file:write(page)
@@ -275,7 +282,7 @@ function async_cmu_download_complete(retval, page, status, headers, full_status,
       if GetAlphaOption("script_prefix") == "" then SetAlphaOption("script_prefix", "\\\\\\") end
       Execute(GetAlphaOption("script_prefix").."DoAfterSpecial(1, \"ReloadPlugin('"..GetPluginID().."')\", sendto.script)")
     else
-      printmsg("You already have the latest version of the CleftMUSH Plugin Manager installed.")
+      util.print("{WYou are already on version {Y"..version.."{W which is the latest version of the {YC{yl{Ye{yf{Yt{RM{rU{RS{rH {WPlugin Manager{W.")
     end
   else
       printmsg("Plugin update check failed...Error " .. tostring(status))
@@ -290,6 +297,7 @@ function async_plugin_download_complete(retval, page, status, headers, full_stat
       folder = GetInfo(66)
    else
       folder = GetPluginInfo(GetPluginID(), 20)
+	 -- print(folder)
    end
    --print("FOLDER IS " .. folder)
    if status == 200 then -- download successful
@@ -303,9 +311,17 @@ function async_plugin_download_complete(retval, page, status, headers, full_stat
       for file in zfile:files() do
          local currFile, err = zfile:open(file.filename)
          local currFileContents = currFile:read("*a") -- read entire contents of current file
-         local hBinaryOutput = io.open(folder .. file.filename, "wb")
+		 	--	 print(file.filename)
+			--	 print(folder..file.filename)
+		---	print(folder)
+			FileName = file.filename
+			FileName = string.gsub(FileName, "worlds/plugins/", "worlds\\plugins\\")
+				--print("Folder:Filename" ,folder..file.filename)
+	--			print(FileName)
+         local hBinaryOutput = io.open(FileName, "wb")
           -- write current file inside zip to a file outside zip
           if(hBinaryOutput)then
+	--	  print("YES")
               hBinaryOutput:write(currFileContents)
               hBinaryOutput:close()
           end
@@ -318,7 +334,8 @@ function async_plugin_download_complete(retval, page, status, headers, full_stat
             table.insert(xmlFiles, xmlFile)
             xmlFile = {}
          end
-         currFile:close()
+    --     print(currFile:close())
+	--	 print(currFile)	
       end
       os.remove(folder .. "temp_update.zip")
 	 -- print("REMOVED FOLDER: ", folder)
@@ -335,15 +352,17 @@ function async_plugin_download_complete(retval, page, status, headers, full_stat
          --print(xmlFiles[i].filename, xmlFiles[i].pluginid)
          --local version = tonumber(string.match(page, '%s%s+version="([0-9%.]+)"'))
          if not (IsPluginInstalled(xmlFiles[i].pluginid) and GetPluginInfo(xmlFiles[i].pluginid, 17)) then
-            LoadPlugin(folder .. xmlFiles[i].filename)
+            LoadPlugin(FileName)
+			util.print("{x238Plugin {RNOT{x238 loaded, loading now.")
          else
             ReloadPlugin(xmlFiles[i].pluginid)
+			util.print("{x238Plugin is already installed....Reloading")
          end
          installedPlugins[xmlFiles[i].pluginid] = headers["etag"]
       end
       SaveState()
    else
-      printmsg("Plugin download failed...Error " .. tostring(status))
+      util.print("{x238Plugin download {Rfailed{x238...{RError{x238 " .. tostring(status))
       --printmsg(headers["location"])
    end
    updatePlugin = {}
