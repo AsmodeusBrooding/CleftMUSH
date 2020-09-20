@@ -14,7 +14,7 @@
    save_state="y"
    date_written="2019-07-02 23:28:32"
    requires="5.06"
-   version="5.78"
+   version="6.40"
    >
   
 </plugin>
@@ -450,8 +450,7 @@ print("Date Format: ", date_format)
   </trigger>
 
 <trigger
-   enabled="y"
-   name="send_tell"
+   enabled="n"
    match="\You tell ([a-zA-Z]+)\ '(.+)'$"
    regexp="y"
    script="tells"
@@ -664,7 +663,7 @@ print("Date Format: ", date_format)
     sequence="100"
     ></trigger>
 <trigger
-    enabled="n"
+    enabled="y"
     match="You tell * '*'"
     name = "send_tell"
    script="tells"
@@ -727,7 +726,7 @@ print("Date Format: ", date_format)
 <![CDATA[
 
 require "utility"
-
+version = "6.40"
 ----------------------------------------------------------------------------------------------------------
 --- VARIABLES GO HERE 
 ----------------------------------------------------------------------------------------------------------
@@ -1032,6 +1031,11 @@ end
 
 function chathelp()
       util.print("{W--------------------------------------------------------------------------------")
+      util.print("{WPlugin Name  : {YC{yl{Ye{yf{Yt{RM{rU{RS{rH {x238Chat Window")
+      util.print("{WAuthor       : {x238Asmodeus")
+      util.print("{WVersion      : {G" .. version)
+      util.print("{W--------------------------------------------------------------------------------")
+      util.print("")
       util.print("                 {YC{yl{Ye{yf{Yt{RM{rU{RS{rH {x238Chat Window {YHelp                            ")
       util.print("{W--------------------------------------------------------------------------------")
       util.print("")
@@ -1046,6 +1050,10 @@ function chathelp()
       util.print("{W--------------------------------------------------------------------------------")
       util.print("")
       util.print("")
+end
+
+function OnPluginInstall()
+chathelp()
 end
 
 

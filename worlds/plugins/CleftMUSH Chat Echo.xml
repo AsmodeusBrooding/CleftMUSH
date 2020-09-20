@@ -10,7 +10,7 @@
    purpose="Control whether certain channels get hidden from main output"
    date_written="2019-06-27 01:00:00"
    requires="4.75"
-   version="1.0"
+   version="6.40"
    save_state="y"
    sequence="-8999"
 >
@@ -27,71 +27,6 @@ USAGE:
 </plugin>
 
 <triggers>
-<trigger
-   enabled="n"
-   name="warfare"
-   match="^(WARFARE|GENOCIDE):.+$"
-   regexp="y"
-   script="untagged_info"
-   omit_from_output="y"
-   sequence="100"
-   send_to="12"
-><send>StopEvaluatingTriggers(true)</send></trigger>
-
-<trigger
-   enabled="n"
-   name="remort_auction"
-   match="^Remort Auction:.+$"
-   regexp="y"
-   script="untagged_info"
-   omit_from_output="y"
-   sequence="100"
-   send_to="12"
-><send>StopEvaluatingTriggers(true)</send></trigger>
-
-<trigger
-   enabled="n"
-   name="global_quest"
-   match="^Global Quest:.+$"
-   regexp="y"
-   script="untagged_info"
-   omit_from_output="y"
-   sequence="100"
-   send_to="12"
-><send>StopEvaluatingTriggers(true)</send></trigger>
-
-<trigger
-   enabled="n"
-   name="info"
-   match="^INFO:.+$"
-   regexp="y"
-   script="untagged_info"
-   omit_from_output="y"
-   sequence="100"
-   send_to="12"
-><send>StopEvaluatingTriggers(true)</send></trigger>
-
-<trigger
-   enabled="n"
-   name="raidinfo"
-   match="^RAIDINFO:.+$"
-   regexp="y"
-   script="untagged_info"
-   omit_from_output="y"
-   sequence="100"
-   send_to="12"
-><send>StopEvaluatingTriggers(true)</send></trigger>
-
-<trigger
-   enabled="n"
-   name="claninfo"
-   match="^CLANINFO:.+$"
-   regexp="y"
-   script="untagged_info"
-   omit_from_output="y"
-   sequence="100"
-   send_to="12"
-><send>StopEvaluatingTriggers(true)</send></trigger>
 
 <trigger
    enabled="n"
@@ -260,48 +195,7 @@ function OnPluginTelnetOption(data)
 end
 
 msg_buffer = {}
-function OnPluginBroadcast (msg, id, name, text)
-   -- Look for GMCP handler.
-   if (id == '3e7dedbe37e44942dd46d264') then
-      if (text == "config") then
-         compact_mode = gmcp("config.compact")
-      elseif (text == "comm.channel") then
-         local gmcp_comm = gmcp("comm.channel")
-         local msg = gmcp_comm.msg or ""
-         local chan = gmcp_comm.chan or ""
-         if msg:find("\a") and (GetOption("enable_beeps") == 1) then
-            Sound(GetInfo(50))
-         end
 
-         if (never_hide or other_should_echo("clan_donations") or string.match(strip_colours(msg), "^CLAN ANNOUNCEMENT: %a+ has donated") == nil) then
-            if not channels_table[chan] then
-               addNewChannel(chan)
-            end
-            if never_hide or channels_table[chan]["echo"] then
-               if gmcp("char.status.state") ~= "5" then
-                  echo_msg(msg)
-               else
-                  table.insert(msg_buffer, msg)
-               end
-            end
-         end
-      elseif (text == "char.status") then
-         if not done_init then
-            done_init = true
-            --Send_GMCP_Packet("config compact")
-         end
-         if gmcp("char.status.state") ~= "5" then -- show messages that were buffered while in note mode
-            if #msg_buffer > 0 then
-               Note("Replaying all channel messages received while in note writing mode...")
-               for i,v in ipairs(msg_buffer) do
-                  echo_msg(v)
-               end
-               msg_buffer = {}
-            end
-         end
-      end
-   end
-end
 
 function untagged_info (name, line, wildcards, styles)
    EnableTriggerGroup("end_gag", true) -- gags trailing blank line

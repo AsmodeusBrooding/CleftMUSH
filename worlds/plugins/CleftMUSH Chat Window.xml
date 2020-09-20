@@ -10,7 +10,7 @@
    purpose="Move chats to a miniwindow"
    date_written="2019-06-25"
    requires="4.73"
-   version="2.0"
+   version="2.31"
    save_state="y"
    sequence="-9000"
 >
@@ -29,80 +29,14 @@ USAGE:
 
 </plugin>
 
-<triggers>
-<trigger
-   enabled="n"
-   name="remort_auction"
-   match="^Remort Auction:.+$"
-   regexp="y"
-   script="untagged_info"
-   sequence="100"
-></trigger>
-
-<trigger
-   enabled="n"
-   name="global_quest"
-   match="^Global Quest:.+$"
-   regexp="y"
-   script="untagged_info"
-   sequence="100"
-></trigger>
-
-<trigger
-   enabled="n"
-   name="info"
-   match="^INFO:.+$"
-   regexp="y"
-   script="untagged_info"
-   sequence="100"
-></trigger>
-
-<trigger
-   enabled="n"
-   name="raidinfo"
-   match="^RAIDINFO:.+$"
-   regexp="y"
-   script="untagged_info"
-   sequence="100"
-></trigger>
-
-<trigger
-   enabled="n"
-   name="claninfo"
-   match="^CLANINFO:.+$"
-   regexp="y"
-   script="untagged_info"
-   sequence="100"
-></trigger>
-
-<trigger
-   enabled="n"
-   name="warfare"
-   match="^(WARFARE|GENOCIDE):.+$"
-   regexp="y"
-   script="untagged_info"
-   sequence="100"
-></trigger>
-
-<trigger
-   enabled="y"
-   match="^\*.+[^*]$"
-   regexp="y"
-   script="rsocial"
-   name="remote_socials"
-   sequence="100"
-></trigger>
-
-</triggers>
-
 <aliases>
 
 <alias
-   match="resetaard"
+   match="resetcleft"
    enabled="y"
    sequence="100"
    ignore_case="y"
-   script="reset_aard"
+   script="reset_cleft"
 ></alias>
 
 <alias
@@ -369,7 +303,7 @@ function removeTab()
    setTab(current_tab)
 end
 
-function reset_aard()
+function reset_cleft()
    font_name = default_font_name
    font_size = default_font_size
    WindowPosition(win, default_x, default_y, 0, 18)
@@ -667,8 +601,10 @@ function stampAndLog(styles)
 
    timestamp = os.date(date_format)
    
+
    if (log_to_file == 1) then
       text = StylesToColours(styles)
+
       if (log_timestamps == 1) then
          log_text = "{W"..timestamp..text
       else
@@ -708,7 +644,7 @@ function stampAndStore(msg, chan, is_gmcp)
    end
 end
 
--- Takes a string with embedded Aardwolf color codes and a tab name or number.
+-- Takes a string with embedded cleftmush color codes and a tab name or number.
 -- Use via CallPlugin(), http://mushclient.com/scripts/doc.php?function=CallPlugin
 --
 -- Example: CallPlugin("b555825a4a5700c35fa80780","storeFromOutside","HELLO@RHello@Mhello@x215hello@x66HELLO", 1)
@@ -729,23 +665,10 @@ function storeFromOutside(msg, tab)
       end
    end
 
-   if(msg ~= nil) then
-      stampAndLog(ColoursToStyles(msg))
-   end
-
    if should_redraw ~= nil then
       return true  -- stored
    end
    return false  -- not stored
-end
-
--- stolen from Mendaloth
-function rsocial (name, line, wildcards, styles)
-	-- Remote socials will always start with a dark cyan or bright magenta *
-	-- Checking color cuts down on non-socials ending up in the chat log...
-	if (styles[1].textcolour == GetNormalColour(7) or styles[1].textcolour == GetBoldColour(6)) then
-		stampAndStore(styles, "remote_socials")
-	end
 end
 
 function untagged_info (name, line, wildcards, styles)
@@ -810,24 +733,6 @@ function storeChannel(styles, chan)
    end
    if will_draw then
       drawTabs()
-   end
-end
-
-function OnPluginBroadcast(msg, id, name, text)
-   -- Look for GMCP handler.
-   if (id == '3e7dedbe37e44942dd46d264') then
-      if (text == "comm.channel") then
-         gmcpcomm = gmcp("comm.channel")
-         msg = gmcpcomm.msg or ""
-         chan = gmcpcomm.chan or ""
-         if (check_nonchannel_trigger("clan_donations") or string.match(strip_colours(msg), "^CLAN ANNOUNCEMENT: %a+ has donated") == nil) then
-            if (not channels_table[chan]) or channels_table[chan]["capture"] then
-               stampAndStore(msg, chan, true)
-            end
-         end
-      end
-   elseif (id == "462b665ecb569efbf261422f" and msg==996 and text == "re-register z") then
-      CallPlugin("462b665ecb569efbf261422f", "registerMiniwindow", win)
    end
 end
 

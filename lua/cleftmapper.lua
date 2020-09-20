@@ -59,7 +59,7 @@ Room info should include:
 
 module (..., package.seeall)
 
-VERSION = 6.31   -- for querying by plugins
+VERSION = 6.35   -- for querying by plugins
 require "aard_register_z_on_create"
 
 require "mw_theme_base"
@@ -929,7 +929,7 @@ area = GetPluginVariable("dd07d6dbe73fe0bd02ddb62c", "area") or "<No_Area>"
                                          room.fillbrush = 8  -- medium pattern
 										 						elseif string.match (room.info, "inn") then
                                          special_room = true
-		 	                             WindowDrawImage (win, "inn", left, top, right, bottom, 3)
+		 	                             WindowDrawImage (win, "inn", left, top, right, bottom, miniwin.image_stretch)
 										 --WindowDrawImage (win, "inn", left, top, right, bottom, miniwin.image_stretch)  -- stretch to fill
 										 --WindowDrawImageAlpha (win, "inn", left, top, right, bottom)
 				                         WindowCircleOp (win, miniwin.circle_rectangle, left-2-room.borderpenwidth, top-2-room.borderpenwidth,
@@ -939,7 +939,7 @@ area = GetPluginVariable("dd07d6dbe73fe0bd02ddb62c", "area") or "<No_Area>"
 										 				        elseif string.match (room.info, "tavern") then
                                          special_room = true
 									     --WindowDrawImage (winalpha, "tavern", left, top, right, bottom, miniwin.image_stretch)
-										 WindowDrawImage (win, "tavern", left, top, right, bottom, miniwin.image_transparent_copy)
+										 WindowDrawImage (win, "tavern", left, top, right, bottom, miniwin.image_stretch)
 										-- WindowDrawImageAlpha (winalpha, "tavern", left, top, right, bottom)
 				                         WindowCircleOp (win, miniwin.circle_rectangle, left-2-room.borderpenwidth, top-2-room.borderpenwidth,
                                          right+2+room.borderpenwidth, bottom+2+room.borderpenwidth,INN_FILL_COLOUR.colour,
@@ -1229,11 +1229,10 @@ function find_paths (uid, f)
   local done = false
   local found, reason
   local explored_rooms, particles = {}, {}
-
   -- this is where we collect found paths
   -- the table is keyed by destination, with paths as values
   local paths = {}
-
+  
   -- create particle for the initial room
   table.insert (particles, make_particle (uid))
 
@@ -1262,7 +1261,6 @@ function find_paths (uid, f)
 
         -- create one new particle for each exit
         for dir, dest in pairs(exits) do
-
           -- if we've been in this room before, drop it
           if not explored_rooms[dest] then
             explored_rooms[dest] = true
@@ -1275,6 +1273,22 @@ function find_paths (uid, f)
               found, done = f (dest)
               if found then
                 paths[dest] = { path = new_path, reason = found }
+			--	tprint(paths[dest])
+				--print(paths[dest].path[1].dir)
+				--[[			for k, v in pairs(exits) do
+		print(#k)
+		if #k >= 3 then
+		non_cardinal_key = k
+		cardinal_key = nil
+		dir.dir = non_cardinal_key
+		print("Non Cardinal: ",non_cardinal_key)
+		else
+		cardinal_key = k
+		non_cardinal_key = nil
+		print("Cardinal: ",cardinal_key)
+		end
+      end
+		]]--
               end -- found one!
 
               -- make a new particle in the new room
@@ -1650,11 +1664,11 @@ function init (t)
 
    win = GetPluginID () .. "_mapper"
    config_win = GetPluginID () .. "_z_config_win"
-   winalpha = GetPluginID () .. "_alphaimages"
+  -- winalpha = GetPluginID () .. "_alphaimages"
 
    WindowCreate (win, 0, 0, 0, 0, 0, 0, 0)
    WindowCreate(config_win, 0, 0, 0, 0, 0, 0, 0)
-   WindowCreate(winalpha, 0, 0, 0, 0, 0, 0, 0)
+  -- WindowCreate(winalpha, 0, 0, 0, 0, 0, 0, 0)
 
    -- add the fonts
    WindowFont (win, FONT_ID, config.FONT.name, config.FONT.size)
@@ -1930,9 +1944,11 @@ else
 end
 		 ColourTell(TextColor, BackgroundColor, "")
 		 if (#last_result_list < 10) then
-		 space = " "
-		 else
+		 space = "  "
+		 elseif (#last_result_list >= 100) then
 		 space = ""
+		 else 
+		 space = " "
 		 end
 	--	 ColourTell("white", "black", "--------------------------------------------------\n")
       Hyperlink ("!!" .. GetPluginID () .. ":mapper.do_hyperlink(" .. hash .. ")", " " ..#last_result_list.. " ".. space ..room_name, "Click to speedwalk there (" .. distance .. ")", TextColor, BackgroundColor, false, true) 
@@ -1953,8 +1969,8 @@ end
 	  blankspace = ""
 	 -- blankspace = string.sub(blankspace, 1, 80)
 	  superstring = distance .. info .. blankspace
-	  superstring = string.format("%-65s %05s",superstring, "3")
-	  superstring = string.sub(superstring, 1, 73-#room_name)
+	  superstring = string.format("%-65s %05s",superstring, " ")
+	  superstring = string.sub(superstring, 1, 82-#room_name)
 	  
 	  --print(superstring)
 	  ColourTell(TextColor, BackgroundColor, " - ".. superstring .. "\n")
@@ -2009,22 +2025,34 @@ end -- do_hyperlink
 -- build a speedwalk from a path into a string
 
 function build_speedwalk (path)
-
  -- build speedwalk string (collect identical directions)
   local tspeed = {}
   for _, dir in ipairs (path) do
+  
     local n = #tspeed
     if n == 0 then
-      table.insert (tspeed, { dir = dir.dir, count = 1 })
+
+
+--	dir.dir = non_cardinal_key or cardinal_key
+
+	table.insert (tspeed, { dir = dir.dir, count = 1 })
+		--end
+--		print(path)
+--	print(dir.dir)
     else
       if tspeed [n].dir == dir.dir then
+	--  	print("Tspeed1: ",tspeed[n].dir)
+	--  print("TSPEED: ",tspeed[n].dir)
         tspeed [n].count = tspeed [n].count + 1
+	--	print("PATH.DIR: ",dir.dir)
       else
+	 -- 	print("Tspeed2: ",tspeed[n].dir)
+	--  print(dir.dir)
         table.insert (tspeed, { dir = dir.dir, count = 1 })
+		--	  tprint(path)
       end -- if different direction
     end -- if
   end -- for
-
   if #tspeed == 0 then
     return
   end -- nowhere to go (current room?)

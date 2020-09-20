@@ -13,7 +13,7 @@
    purpose="Group monitor"
    date_written="2019-07-03 12:04:56"
    requires="5.00"
-   version="5.76"
+   version="6.39"
    >
 
 </plugin>
@@ -116,6 +116,13 @@
 <!--  Aliases  -->
 
 <aliases>
+<alias
+	sequence="100"
+	match="group help"
+	enabled="y"
+	send_to="12"
+	ignore_case="y"><send>grouphelp()
+</send></alias>
   <alias
    regexp="y"
    match="^group$"
@@ -159,28 +166,12 @@
       require "mw"
       require "mw_theme_base"
       require "tprint"
-
-
-      -- ^\[(?<level>\d+) (?<tags>[^\s]+)\] (?<name>.+)\s+(?<hp>\d+)\/(?<hp_max>\d+) hp \s+(?<mana>\d+)\/\s+(?<mana_max>\d+) mana\s+ (?<moves>\d+)\/\s+(?<moves_max>\d+) mv\s+(?<exp>\d+) xp$
-      -- kxwt_group_start
-      -- kxwt_group 65 65 119 119 156 156 XL Alas
-      -- kxwt_group_end
-      -- kxwt_group <hp> <hp_max> <mana> <mana_max> <move> <move_max> <tag> <name>
+	  require "utility"
+	  dofile(GetPluginInfo(GetPluginID(), 20) .. "cleft_colors.lua")
 
       local group = {}
 
-
-      -- Tag 'X' - these are your stats.
-      -- Tag 'Pet' - this is a player.
-      -- Tag 'Mob' - this is one of your minions.
-      -- Tag 'O' - this is somebody else's minion.
-      -- Tag 'P' - any pet mob that doesn't fall into the categories above.
-
-      -- Tag 'L' - the group leader
-      -- Tag 'T' - in tanking mode
-      -- Tag 'N' - no-melee mode
-      -- Tag '-' - not present in the room with you
-
+      local version = "6.39"
       local to_bool = {["0"] = false, ["1"] = true}
 
       local winid = "win_"..GetPluginID()
@@ -201,7 +192,7 @@
       local tank_color = "#ff3300" -- tank tag color
       local minion_color = "#009999" -- minion tag color
       local no_melee_color = "#cc00cc" -- no melee tag color
-      local pet_color = "#ffff66" -- pet mob color
+      local pet_color = "#ffd700" -- pet mob color
       local you_color = "#0066dd" -- you color
 	  local team_color = "#00FFFF" -- you color
       local hp_label_color = "#00ff00" -- hp label color
@@ -218,8 +209,8 @@
       local last_refresh = 1 -- last window refresh
       local pos_x = GetVariable("pos_x") or 100
       local pos_y = GetVariable("pos_y") or 100
-      local font_size = GetVariable("font_size") or 8
-      local font_name = "Lucida Console"
+      local font_size = GetVariable("font_size") or 12
+      local font_name = "Fixedsys" or "Fixedsys Excelsior 3.01"
       local window_visible = true -- always start out with visible window
       local title = "Group Info: Use LOOK to draw the bars, or if this is your first time using the window type setup prompt"
       local bar_height = font_size+4 -- height of bars
@@ -234,12 +225,16 @@
       local win_width = GetVariable("win_width") or 440
       local top = GetVariable("top") or 20
       local grip_resize = 10 -- resize grip size
-      local debug_state = GetVariable("debug_state") or false
+      local debug_state = false
 
       function ToggleDebug()
-	 debug_state = not debug_state
+	 if debug_state ~= true then
+	 debug_state = true
+	 else
+	 debug_state = false
+	 end
 	 NotifyNote("Debug is now " .. tostring(debug_state))
-	 SetVariable("debug_state", tostring(debug_state))
+	 SetVariable("debug_state", "debug_state")
 	 SaveState()
       end
 
@@ -481,7 +476,7 @@
 	 return trim(string.sub(str, 1, 10))..".."
       end
       function bigtruncate(str)
-	 if str >= 16 then
+	 if #str >= 16 then
 	    return str
 	 end
 	 return trim(string.sub(str, 1, 17))..".."
@@ -490,20 +485,29 @@
 
       function abbreviate(str,length)
 	 if length == nil then
-	    length=22
+	 if tonumber(font_size) <= 12 then 
+	    length=23
+		elseif tonumber(font_size) > 12 and tonumber(font_size) < 20 then
+		length = 20 - font_size/3 + 3
+		elseif tonumber(font_size) >= 20 then 
+		length = 20 - font_size/2.5
+		end		
+		if not show_numbers then 
+		length = 18
+		end
 	 end
 	 if string.len(str)>length then
-	    return string.sub(str, 1, length)..string.char(133)
+	    return string.sub(str, 1, length)..".."
 	 else
 	    return str
 	 end
       end
       function nonumberabbreviate(str,length)
 	 if length == nil then
-	    length=20
+	    length=17
 	 end
 	 if string.len(str)>length then
-	    return string.sub(str, 1, length)..string.char(133)
+	    return string.sub(str, 1, length)..".."
 	 else
 	    return str
 	 end
@@ -544,7 +548,10 @@
 	--	print("Font Size: ", font_size)
 	    top = font_size/3 + box_top or 17
 	    local x = 0
-
+		
+		LevelPos = WindowTextWidth(winid, "f1", "["..player.level.."]")
+		NamePos = WindowTextWidth(winid, "f1", abbreviate(player.name))
+		
 	    ---- <><><><><><><><><><>><><><><><><><><><><><><><><><><><><><><><><><><>
 	    ---- DRAW TEXT FOR SMALL/LARGE BARS --------------------------------------
 	    if isPlayerOrEnemy or not isPlayerOrEnemy then
@@ -569,7 +576,7 @@
 		  end
 	       elseif bar_width == 200 then
 		  x = x + WindowText(winid, "f1", "Lv["..player.level.."]", left, top + padding, 0, 0, ColourNameToRGB(level_color), false) + left -- label and padding
-		  x = x + WindowText(winid, "f1", abbreviate(player.name), left + 50, top + padding, 0, 0, ColourNameToRGB(player_color), false) + left + 18 + 8 -- player name truncated
+		  x = x + WindowText(winid, "f1", abbreviate(player.name), left + LevelPos + font_size*1.7, top + padding, 0, 0, ColourNameToRGB(player_color), false) + left + 18 + 8 -- player name truncated
 
 		  if is_no_melee(player.tags) then
 		     x = x + WindowText(winid, "f1", "[N]", x, top + padding, 0, 0, ColourNameToRGB(no_melee_color), false) -- show if no melee
@@ -597,7 +604,8 @@
 		   end
 	       if bar_width == 200 then
 		  if show_numbers then
-		     x = x + WindowText(winid, "f1", "[YOU]", bar_width+left+19, top + padding, 0, 0, ColourNameToRGB(you_color), false) -- show if you
+		  YouTagSize = WindowTextWidth(winid, "f1", "[YOU]")
+		     x = x + WindowText(winid, "f1", "[YOU]", bar_width+left+LevelPos+YouTagSize-padding*4, top + padding, 0, 0, ColourNameToRGB(you_color), false) -- show if you
 		  else
 		     x = x + WindowText(winid, "f1", "Y", left + 210, top + padding, 0, 0, ColourNameToRGB(you_color), false) + 2 -- show if you
 		  end
@@ -619,7 +627,8 @@
 		   end
 	       if bar_width == 200 then
 		  if show_numbers then
-		     x = x + WindowText(winid, "f1", "[TEAM]", bar_width+left+19, top + padding, 0, 0, ColourNameToRGB(team_color), false) -- show if you
+		  TeamTagSize = WindowTextWidth(winid, "f1", "[TEAM]")
+		     x = x + WindowText(winid, "f1", "[TEAM]", bar_width+left+TeamTagSize-font_size*1.5, top + padding, 0, 0, ColourNameToRGB(team_color), false) -- show if you
 		  else
 		     x = x + WindowText(winid, "f1", "T", left + 210, top + padding, 0, 0, ColourNameToRGB(team_color), false) + 2 -- show if you
 		  end
@@ -644,7 +653,7 @@
 
 		  if bar_width == 200 then
 		     if show_numbers then
-			x = x + WindowText(winid, "f1", "[LEADER]", bar_width+left+19, top + padding, 0, 0, ColourNameToRGB(leader_color), false) -- show if leader -- used to be left+240
+			x = x + WindowText(winid, "f1", "[LEADER]", bar_width+left+LevelPos, top + padding, 0, 0, ColourNameToRGB(leader_color), false) -- show if leader -- used to be left+240
 		     else
 			x = x + WindowText(winid, "f1", "L", left+210, top + padding, 0, 0, ColourNameToRGB(leader_color), false) + 2 -- show if leader
 		     end
@@ -670,7 +679,9 @@
 
 	       if bar_width == 200 then
 		  if show_numbers then
-		     x = x + WindowText(winid, "f1", "[PET]", bar_width+left+19, top + padding, 0, 0, ColourNameToRGB(pet_color), false) -- show if pet
+		    PetTagSize = WindowTextWidth(winid, "f1", "[PET]")
+		     x = x + WindowText(winid, "f1", "[PET]", bar_width+left+LevelPos+PetTagSize-font_size*1.5, top + padding, 0, 0, ColourNameToRGB(pet_color), false) -- show if pet
+			 --print("Bar_width: ",bar_width)
 		  else
 		     x = x + WindowText(winid, "f1", "P", left + 210, top + padding, 0, 0, ColourNameToRGB(pet_color), false) + 2 -- show if pet
 		  end
@@ -695,7 +706,8 @@
 
 	       if bar_width == 200 then
 		  if show_numbers then
-		     x = x + WindowText(winid, "f1", "[CHARM]", left + 219, top + padding, 0, 0, ColourNameToRGB(minion_color), false)  -- show if minion
+		  CharmTagSize = WindowTextWidth(winid, "f1", "[CHARM]")
+		     x = x + WindowText(winid, "f1", "[CHARM]", bar_width+left+CharmTagSize-font_size*1.5, top + padding, 0, 0, ColourNameToRGB(minion_color), false)  -- show if minion
 		  else
 		     x = x + WindowText(winid, "f1", "C", left + 210, top + padding, 0, 0, ColourNameToRGB(minion_color), false) + 2 -- show if minion
 		  end
@@ -723,9 +735,10 @@
 --		  print("Player Name: ", player.name)
 --		  print("Player Level: ", player.level)
 		     --x = WindowRectOp(winid, 2, left - 3, top, 307, 198, ColourNameToRGB(enemy_background_color))
+			 EnemyTagSize = WindowTextWidth(winid, "f1", "[ENEMY]")
 		     x = WindowText(winid, "f1", "Lv["..player.level.."]", left, top + padding, 0, 0, ColourNameToRGB(level_color), false) + left -- label and padding
-		     x = x + WindowText(winid, "f1", abbreviate(player.name), left + 50, top + padding, 0, 0, ColourNameToRGB(player_color), false) + left + 18 + 8 -- player name
-		     x = WindowText(winid, "f1", "[ENEMY]", left + 219, top + padding, 0, 0, ColourNameToRGB(tank_color), false) -- show if enemy
+		     x = x + WindowText(winid, "f1", abbreviate(player.name), left + LevelPos + font_size*1.7, top + padding, 0, 0, ColourNameToRGB(player_color), false) + left + 18 + 8 -- player name
+		     x = WindowText(winid, "f1", "[ENEMY]", bar_width+left+EnemyTagSize-font_size*1.5, top + padding, 0, 0, ColourNameToRGB(tank_color), false) -- show if enemy
 			 		  else
 		     x = WindowText(winid, "f1", "Lv["..player.level.."]", left, top + padding, 0, 0, ColourNameToRGB(level_color), false) + left -- label and padding
 		     x = x + WindowText(winid, "f1", nonumberabbreviate(player.name), left + 50, top + padding, 0, 0, ColourNameToRGB(player_color), false) + left + 18 + 8 -- player name
@@ -737,7 +750,7 @@
 	    ---- <><><><><><><><><><>><><><><><><><><><><><><><><><><><><><><><><><><>
 
 	    -- Magic
-	    top = top + bar_height + 4
+	    top = top + bar_height + font_size/2
 
 	    ---- <><><><><><><><><><>><><><><><><><><><><><><><><><><><><><><><><><><>
 	    ---- DRAW BARS -----------------------------------------------------------
@@ -749,7 +762,9 @@
 	       gauge(winid, "HP for "..player.name, tonumber(player.hp), tonumber(player.hp_max), x + padding, top, bar_width, bar_height, ColourNameToRGB(enemy_hp_color), 0x000000, bar_ticks, ColourNameToRGB(bar_border), ColourNameToRGB(bar_border), nil, flat_gauges==1) -- hp gauge
 	    end
 	    if overlay_pct then
-	       outlined_text(winid, "s1", math.floor(player.hp / player.hp_max * 100).."%", x + 6, top + 2, 0, 0, ColourNameToRGB(overlay_color), false) -- hp %
+	       outlined_text(winid, "s1", math.floor(player.hp / player.hp_max * 100).."%", x + 6, top - font_size/20, 0, 0, ColourNameToRGB(overlay_color), false) -- hp %
+		 --  print("HP TOP: ", top)
+		 --  print("FONT_SIZE: ", font_size)
 	    end
 	    if show_numbers then
 	       box_right = x + bar_width + WindowTextWidth(winid, "b1", string.rep("X", biggest_number).."/"..string.rep("X", biggest_number)) + 14 -- set max size of hp/mana/moves on side of gauge
@@ -764,7 +779,8 @@
 	       gauge(winid, "Mana for "..player.name, tonumber(player.mana), tonumber(player.mana_max), x + padding, top, bar_width, bar_height, ColourNameToRGB(mana_color), 0x000000, bar_ticks, ColourNameToRGB(bar_border), ColourNameToRGB(bar_border), nil, flat_gauges==1) -- mana gauge
 	       local is_number = tonumber(player.mana) and tonumber(player.mana_max)
 	       if (is_number and overlay_pct) then
-		  outlined_text(winid, "s1", math.floor(player.mana / player.mana_max * 100).."%", x + 6, top + 2, 0, 0, ColourNameToRGB(overlay_color), false) -- mana %
+		  outlined_text(winid, "s1", math.floor(player.mana / player.mana_max * 100).."%", x + 6, top - font_size/20, 0, 0, ColourNameToRGB(overlay_color), false) -- mana %
+		  		--   print("MANA TOP: ", top)
 	       end
 	       if show_numbers then
 		  WindowText(winid, "f1", player.mana.."/"..player.mana_max, x + 6 + bar_width, top, 0, 0, ColourNameToRGB(overlay_color), false) -- mana
@@ -775,7 +791,8 @@
 		  x = WindowText(winid, "f1", "MV", left, top, 0, 0, ColourNameToRGB(moves_label_color), false) + left -- label and padding
 		  gauge(winid, "Moves for "..player.name, tonumber(player.moves), tonumber(player.moves_max), x + padding, top, bar_width, bar_height, ColourNameToRGB(moves_color), 0x000000, bar_ticks, ColourNameToRGB(bar_border), ColourNameToRGB(bar_border), nil, flat_gauges==1) -- moves gauge
 		  if overlay_pct then
-		     outlined_text(winid, "s1", math.floor(player.moves / player.moves_max * 100).."%", x + 6, top + 2, 0, 0, ColourNameToRGB(overlay_color), false) -- moves %
+		     outlined_text(winid, "s1", math.floor(player.moves / player.moves_max * 100).."%", x + 6, top - font_size/20, 0, 0, ColourNameToRGB(overlay_color), false) -- moves % 
+			-- 		   print("MOVE TOP: ", top)
 		  end
 		  if show_numbers then
 		     WindowText(winid, "f1", player.moves.."/"..player.moves_max, x + 6 + bar_width, top, 0, 0, ColourNameToRGB(overlay_color), false) -- moves
@@ -802,12 +819,12 @@
 	    ---- Row Calculations ----------------------------------------------------
 	    if win_width - box_right - (box_right - left + 5) > 0 then -- keep drawing across
 	       left = left + (box_right - left) + 4
-	       top = 17 + (rows * (box_bottom - box_top + 2))
+	       top = font_size * 1.1 + 2 + (rows * (box_bottom - box_top + 2))
 	    else -- start new row
 	       rows = rows + 1
 	       across = 0
 	       left = 7
-	       top = 17 + (rows * (box_bottom - box_top + 2))
+	       top = font_size * 1.1 + 2 +(rows * (box_bottom - box_top + 2))
 	    end
 	    ---- END Row Calculations ------------------------------------------------
 	    ---- <><><><><><><><><>><><><><><><><><><><><><><><><><><><><><><><><><><>
@@ -827,7 +844,7 @@
 	 Theme.DrawTitleBar(winid, "f1", title, "center") -- them window title (has to be drawn before border) This is the title bar that says the leader name
 	 Theme.DrawBorder(winid) -- theme window border
 
-	 left, top = 7, 17 -- bar location
+	 left, top = 7, font_size * 1.1 + 2-- bar location
 	 across = 0
 	 rows = 0
 	 -- [L][M][O][N][TANK]  green, dark cyan, white, magenta, red
@@ -992,20 +1009,29 @@
 	    --  print("Sent to Back")
 	    SaveState()
 	 elseif opt == 13 then -- Change Font
-	    wanted_font = utils.fontpicker (font_name, font_size) --font dialog
+	  --  wanted_font = utils.fontpicker ("Fixedsys", font_size) --font dialog
+	  wanted_font = utils.inputbox("Select Font Size", "Change the font size for default font", font_size)
 	    if wanted_font then
-	       print("Bar Height1: ", bar_height)
-	       print("Top1: ", top)
-	       font_name = wanted_font.name
-	       font_size = wanted_font.size
+	   --    print("Bar Height1: ", bar_height)
+	   --    print("Top1: ", top)
+	       font_name = "Fixedsys" or "Fixedsys Excelsior 3.01"
+		   font_size = tonumber(wanted_font)
+		   if font_size <= 8 then
+		   util.print("{R[{WThe smallest font size you are allowed is {Y8{W. The most ideal font size is {G10{W, or {Y12{W. Setting the font size to {Y9{W.{R]")
+		   font_size = 9
+		   elseif font_size > 30 then
+		   util.print("{x238The largest font size currently allowed is 30. If you want to surpass this number, ask Asmodeus to add something in for you.")
+		   font_size = 30
+		   end
+	      -- font_size = wanted_font.size
 	       SetVariable("font_size", font_size)
 	       bar_height = font_size + 4
 	       top = top + bar_height * 2
 	       --rows+1
 	       SetVariable("top", top)
 	       --SetVariable("bar_height", bar_height)
-	       print("Bar Height2: ", bar_height)
-	       print("Top2: ", top)
+	 --      print("Bar Height2: ", bar_height)
+	 --      print("Top2: ", top)
 	    end
 	 end
 	 window(true)
@@ -1059,10 +1085,37 @@
       end
 
       function loaded()
-	 Note()
-	 ColourNote("darkmagenta", "white", " Cleft of Dimensions group plugin v"..GetPluginInfo(GetPluginID(), 19).." installed! ")
-	 Note()
+      util.print("{W--------------------------------------------------------------------------------")
+      util.print("{WPlugin Name  : {YC{yl{Ye{yf{Yt{RM{rU{RS{rH {x238Group Window Installed")
+      util.print("{WAuthor       : {x238Asmodeus and Elisius")
+      util.print("{WVersion      : {G" .. version)
+      util.print("{W--------------------------------------------------------------------------------")
       end
+	  
+	  function grouphelp()
+      util.print("{W--------------------------------------------------------------------------------")
+      util.print("{WPlugin Name  : {YC{yl{Ye{yf{Yt{RM{rU{RS{rH {x238Group Window")
+      util.print("{WAuthor       : {x238Asmodeus and Elisius")
+      util.print("{WVersion      : {G" .. version)
+      util.print("{W--------------------------------------------------------------------------------")
+      util.print("")
+      util.print("                 {YC{yl{Ye{yf{Yt{RM{rU{RS{rH {x238Group Window {YHelp                            ")
+      util.print("{W--------------------------------------------------------------------------------")
+      util.print("")
+      util.print("{Y group help                 {R-->{W Displays the help pages for the group window")
+      util.print("{Y group debug                {R-->{W Displays the debug prints for developers")
+      util.print("{Y group                      {R-->{W Hides or shows the group window")
+      util.print("")
+      util.print("{W--------------------------------------------------------------------------------")
+      util.print("")
+      util.print("")
+end
+
+function OnPluginInstall()
+AddFont("FSEX300.ttf")
+end
+
+	  
 
       -- SIMULATE STUFF
       function simulate_group()

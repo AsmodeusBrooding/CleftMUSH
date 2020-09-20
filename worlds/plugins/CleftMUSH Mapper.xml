@@ -25,7 +25,7 @@
    save_state="y"
    date_written="2019-07-26 07:21:01"
    requires="4.51"
-   version="6.31"
+   version="6.35"
    >
 
 </plugin>
@@ -638,6 +638,7 @@ DoAfterSpecial (0.5, 'EnableTrigger ("Exits_Line", true)', sendto.script)
   <send>
 terrain = GetTriggerWildcard ("get_room_name", "terrain")  -- get wildcard named 'terrain'
 name = GetTriggerWildcard ("get_room_name", "name")  -- get wildcard named 'who'
+area = "&lt;No_area>"
 EnableTriggerGroup ("get_room_name", false)
 </send>
   </trigger>
@@ -954,7 +955,7 @@ require "utility"
 require "tprint"
 
 
-version = "6.31"
+version = "6.35"
 uid = -999
 current_room=nil
 current_area = -999
@@ -1642,8 +1643,6 @@ Simulate("\n[UID]: ", uid)
 
 printexits = exits_str
 Simulate("\nLast Dir: ", last_direction_moved)
---print("Last DIRECTION: ", last_direction_moved)
-
 
   -- add to table if not known
   --Note("add room to table")
@@ -1654,6 +1653,9 @@ Simulate("\nLast Dir: ", last_direction_moved)
 
   -- save so we know current room later on
   current_room = uid
+--  if rooms[uid].area == "<No_area>" then
+ -- print(area)
+  rooms[uid].area = area or "<No_area>"
 
   if from_room ~= "" and last_direction_moved then -- we were in a room # that we got from kxwt, and then moved to another room
 	--Note("rooms[", from_room, "].exits[", last_direction_moved, "] = ", current_room)
@@ -1668,6 +1670,8 @@ Simulate("\nLast Dir: ", last_direction_moved)
       --AnsiNote(ColoursToANSI("{R[{WMapper Notes for room" ..name.. ..rooms[uid].notes.."{W]"))
    AnsiNote(ColoursToANSI("{R[{WNotes - {Y"..name.." {W- "..rooms[uid].notes.."{R]{w"))
 end
+
+--if rooms[uid].area = 
 
   just_got_room_name = false
   if name == nil then
@@ -1698,6 +1702,7 @@ util.print("{R------------------------------------------------------------------
    end
    AnsiNote(ColoursToANSI(" {WRoom Flags: {Y"..info.."{R"))
 util.print("{R----------------------------------------------------------------------------")
+area = nil
 end
 end -- process_exits
 
@@ -1959,9 +1964,10 @@ function map_find (name, line, wildcards)
   local matches = { }
   local count = 0
   local target = Trim (wildcards [1]:lower ())
-  util.print("{R--------------------------------------------------------------------------------")
-  util.print("                        {D[{WSearching rooms for {D'{Y".. target .. "{D']")
-  util.print("{R--------------------------------------------------------------------------------")
+  util.print("{R------------------------------------------------------------------------------------------")
+  util.print("                             {D[{WSearching rooms for {D'{Y".. target .. "{D']")
+  util.print("{R------------------------------------------------------------------------------------------")
+ -- util.print("    {x238[{WArea and Room{x238]             [{WDistance{x238]")
   if target == "" then
     mapper.maperror ("No search string specified")
     return
@@ -2039,9 +2045,9 @@ function note_find (name, line, wildcards)
   local matches = { }
   local count = 0
   local target = Trim (wildcards [1]:lower ())
-    util.print("{R-------------------------------------------------------")
-  util.print("            {D[{WSearching notes for {D'{Y".. target .. "{D']")
-    util.print("{R-------------------------------------------------------")
+  util.print("{R------------------------------------------------------------------------------------------")
+  util.print("                             {D[{WSearching notes for {D'{Y".. target .. "{D']")
+  util.print("{R------------------------------------------------------------------------------------------")
   if target == "" then
     mapper.maperror ("No search string specified")
     return
@@ -2118,9 +2124,9 @@ function desc_find (name, line, wildcards)
   local matches = { }
   local count = 0
   local target = Trim (wildcards [1]:lower ())
-    util.print("{R-------------------------------------------------------")
-  util.print("         {D[{WSearching descriptions for {D'{Y".. target .. "{D']")
-    util.print("{R-------------------------------------------------------")
+  util.print("{R------------------------------------------------------------------------------------------")
+  util.print("                             {D[{WSearching descriptions for {D'{Y".. target .. "{D']")
+  util.print("{R------------------------------------------------------------------------------------------")
   if target == "" then
     mapper.maperror ("No search string specified")
     return
@@ -2254,6 +2260,7 @@ function map_where (name, line, wildcards)
                     uid == wanted   -- stop searching?
             end)
   local uid, item = next (paths, nil) -- extract first (only) path
+
   -- nothing? room not found
   if not item then
     mapper.mapprint (string.format ("Room %s not found", wanted))

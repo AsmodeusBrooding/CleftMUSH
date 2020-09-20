@@ -80,7 +80,7 @@ max_exp = remorts + 2000
 
 <trigger
    enabled="y"
-   match="| HP:*/* | MP:*/* | MV:*/* | Enemy:None! | TNL:* | SUPER: * | "
+   match="| HP:*/* | MP:*/* | MV:*/* | Enemy:None | TNL:* | SUPER: * | "
    keep_evaluating="y"
    regexp="n"
    send_to="14"
