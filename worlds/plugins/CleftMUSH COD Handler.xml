@@ -147,7 +147,17 @@ keep_evaluating="y"
 -----------------------------------------------------------------------------------
 -- COLORS SECTION
 -----------------------------------------------------------------------------------
+
+  <trigger
+   enabled="y"
+   match="* DISARMS you and sends your weapon flying!"
+   send_to="12"
+   sequence="100"
+   script="DisarmAlert"
+  >
+  </trigger>
 </triggers>
+
 
 
 
@@ -598,6 +608,25 @@ end -- function setup_prompt
 function setup_prompt_aff()
 Execute("prompt {R[{WLast_Dir: %d {R]%c{c%1[G_End]%c{D| {WRemort: %L {D| {WLevel: %l {D|%c| {wHP:{R%h{D/{r%H{D |{w MP:{B%m{D/{b%M{w {D| {wMV:{Y%v{D/{y%V{D |{w Enemy:{R%o{w {D| {wTNL:{m%X {D| {wSUPER: {C%A{D |{w %c{R[{WRoom{R][{W%C{R]%r%c[Exits: %e]%c[NAME: %n]%c%E%c|BODILYREQUIREMENTS %u %U|%c")
 end -- function setup_prompt
+
+
+function DisarmAlert(name, line, wildcards)
+mob = wildcards[1]
+text = string.format("{W[{RWARNING{W] {Y"..mob.."{W disarmed you!! Don't forget to get your weapon..")
+
+util.print("{W[{RWARNING{W] {Y"..mob.."{W disarmed you!! Don't forget to get your weapon..")
+SendToCommLog(text)
+end
+
+function SendToCommLog(text)
+
+CallPlugin(
+"b555825a4a5700c35fa80780",
+ "storeFromOutside",
+ "[" .. os.date("%b %d, %H:%M:%S") .. "] " .. text)
+
+end
+
 
 function OnPluginInstall()
 volume = GetVariable("volume") or 100
