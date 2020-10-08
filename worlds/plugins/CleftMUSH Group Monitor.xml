@@ -13,7 +13,7 @@
    purpose="Group monitor"
    date_written="2019-07-03 12:04:56"
    requires="5.00"
-   version="6.55"
+   version="6.57"
    >
 
 </plugin>
@@ -172,7 +172,7 @@
 
       local group = {}
 
-      local version = "6.55"
+      local version = "6.57"
       local to_bool = {["0"] = false, ["1"] = true}
 
       local winid = "win_"..GetPluginID()
@@ -230,7 +230,7 @@
       local top = GetVariable("top") or 20
       local grip_resize = 10 -- resize grip size
       local debug_state = false
-      local compact_mode = false
+      local compact_mode = to_bool[GetVariable("compact_mode") or 0]
       GAP = 4
       --allows for gauges changing color at certain thresholds
       thresh1active = tonumber (GetVariable("thresh1active")) or 0
@@ -1191,6 +1191,7 @@ end
 	 SetVariable("show_moves", from_bool(show_moves)) -- show moves
 	 SetVariable("overlay_pct", from_bool(overlay_pct)) -- show % overlay
 	 SetVariable("show_numbers", from_bool(show_numbers)) -- show totals
+   SetVariable("compact_mode", from_bool(compact_mode)) -- show minions
 	 SetVariable("hp_color", hp_color) -- hp color
    SetVariable("hp_bar_border", hp_color) -- hp color
 	 SetVariable("enemy_hp_color", enemy_hp_color) -- enemy hp color
