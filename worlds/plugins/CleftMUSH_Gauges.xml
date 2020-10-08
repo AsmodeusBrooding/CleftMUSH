@@ -5,13 +5,13 @@
 <muclient>
 <plugin
    name="CleftMUSH_Big_Gauges"
-   author="Asmodeus"
+   author="Asmodeus and Fiendish"
    id="48062dcd6b934c590df53c68"
    language="Lua"
    purpose="Shows hp, mana, move, exp, and mob health in a mini window"
    date_written="2019-06-30 09:00"
    requires="4.40"
-   version="5.76"
+   version="6.37"
    save_state="y"
    >
 <description trim="y">
@@ -31,17 +31,7 @@ Previous $\<HP:(\d+)\/(\d+) MP:(\d+)\/(\d+) MV:(\d+)\/(\d+) Enemy:(.*) TNL:(\d+)
 </plugin>
 ^\|\s+HP:(\d+)\/(\d+)\s+\||\s+MP:(\d+)\/(\d+)\s+\||\s+MV:(\d+)\/(\d+)\s+\||\s+Enemy:(.*)\s+\||\s+TNL:(\d+)\s+\||\s+SUPER:\s+(\d+)\||$
 <!--  Triggers  -->
-<triggers>
-  <trigger
-   enabled="y"
-   match="^kxwt_prompt (\d+)\s* (\d+)\s* (\d+)\s* (\d+)\s* (\d+)\s* (\d+)\s*$"
-   regexp="y"
-   script="do_prompt"
-   sequence="100"
-   send_to="14"
-  >
-<send>WindowShow (win, ShowWindow)</send>
-  </trigger>
+<triggers>y
 <trigger
    enabled="y"
    match="| Remort: * | Level: * |"
@@ -54,40 +44,52 @@ Previous $\<HP:(\d+)\/(\d+) MP:(\d+)\/(\d+) MV:(\d+)\/(\d+) Enemy:(.*) TNL:(\d+)
 remorts = tonumber("%1") * 200 - 200
   </send>
   </trigger>
-<trigger
-   enabled="y"
-   match="| HP:*/* | MP:*/* | MV:*/* | Enemy:*% | TNL:* | SUPER: * | "
-   keep_evaluating="y"
-   regexp="n"
-   script="do_prompt"
-   send_to="14"
-   sequence="100"
-  >
-  <send>
-exp = max_exp - TNL
-enemy = tonumber("%7")
-TNL = tonumber("%8")
-super = tonumber("%9")
-max_exp = remorts + 2000
-     WindowShow (win, ShowWindow)
-  </send>
-  </trigger>
+  <trigger
+     enabled="y"
+     name="fightprompt"
+     match="^\| HP:(?P<hp>\d+)\/(?P<max_hp>\d+) \| MP:(?P<mana>\d+)\/(?P<max_mana>\d+) \| MV:(?P<move>\d+)\/(?P<max_move>\d+) \| Enemy:(?P<enemy>\d+)\% \| TNL:(?P<tnl>\d+) \| SUPER: (?P<super>\d+) \| $"
+     keep_evaluating="y"
+     regexp="y"
+     send_to="14"
+      script="DisplayStatsPage"
+     sequence="100"
+    >
+    <send>
+    fighting = true
+    enemy = GetTriggerWildcard ("fightprompt", "enemy") or 0
+    max_hp = GetTriggerWildcard ("fightprompt", "max_hp") or 0 -- get wildcard named enemy
+    max_mana = GetTriggerWildcard ("fightprompt", "max_mana") or 0 -- get wildcard named enemy
+    max_move = GetTriggerWildcard ("fightprompt", "max_move") or 0 -- get wildcard named enemy
+    TNL = GetTriggerWildcard ("fightprompt", "tnl") or 0 -- get wildcard named enemy
+    super = GetTriggerWildcard ("fightprompt", "super") or 0 -- get wildcard named enemy
+  exp = tostring(max_exp - TNL)
+
+  max_exp = tostring(remorts + 2000)
+       WindowShow (win, ShowWindow)
+    </send>
+    </trigger>
 
 <trigger
    enabled="y"
-   match="| HP:*/* | MP:*/* | MV:*/* | Enemy:None | TNL:* | SUPER: * | "
+   name="defaultprompt"
+   match="^\| HP:(?P<hp>\d+)\/(?P<max_hp>\d+) \| MP:(?P<mana>\d+)\/(?P<max_mana>\d+) \| MV:(?P<move>\d+)\/(?P<max_move>\d+) \| Enemy:None \| TNL:(?P<tnl>\d+) \| SUPER: (?P<super>\d+) \| $"
    keep_evaluating="y"
-   regexp="n"
+   regexp="y"
    send_to="14"
-    script="do_prompt"
+    script="DisplayStatsPage"
    sequence="100"
   >
   <send>
-exp = max_exp - TNL
+  fighting = false
+  max_hp = GetTriggerWildcard ("defaultprompt", "max_hp") or 0 -- get wildcard named enemy
+  max_mana = GetTriggerWildcard ("defaultprompt", "max_mana") or 0 -- get wildcard named enemy
+  max_move = GetTriggerWildcard ("defaultprompt", "max_move") or 0 -- get wildcard named enemy
+  TNL = GetTriggerWildcard ("defaultprompt", "tnl") or 0 -- get wildcard named enemy
+  super = GetTriggerWildcard ("defaultprompt", "super") or 0 -- get wildcard named enemy
+exp = tostring(max_exp - TNL)
 enemy = 0
-TNL = tonumber("%7")
-super = tonumber("%8")
-max_exp = remorts + 2000
+
+max_exp = tostring(remorts + 2000)
      WindowShow (win, ShowWindow)
   </send>
   </trigger>
@@ -110,6 +112,13 @@ max_exp = remorts + 2000
    ignore_case="y"
 ></alias>
 <alias
+	sequence="100"
+	match="gauge help"
+	enabled="y"
+	send_to="12"
+	ignore_case="y"><send>gaugehelp()
+</send></alias>
+<alias
    match="setup prompt"
    enabled="n"
    sequence="100"
@@ -127,465 +136,714 @@ max_exp = remorts + 2000
 
 <script>
 <![CDATA[
-
+require "aard_register_z_on_create"
+require "mw_theme_base"
 require "movewindow"
 require "gauge"
 require "serialize"
-require "checkplugin"
-require "mw_theme_base"
-require "tprint"
+require "utility"
+dofile(GetPluginInfo(GetPluginID(), 20) .. "cleft_colors.lua")
 
-NUMBER_OF_TICKS = 9
-font_size = GetVariable("font_size") or 9
-GAUGE_HEIGHT = GetVariable("GAUGE_HEIGHT") or 15
-FONT_COLOUR = ColourNameToRGB "white"
+default_width         = 1137
+default_x             = 0
+default_y             = 552
 
-local bg_color = "#000000"
-local title = "Group Info"
-local title_bg_color = "#303030"
-local border_color = "#303030"
-local to_bool = {["0"] = false, ["1"] = true}
-local hp_label_color = GetVariable("hp_color") or "#00ff00" -- hp label color
-local mana_label_color = GetVariable("mana_color") or "#3333ff" -- mana label color
-local moves_label_color = GetVariable("moves_color") or "#ffd700" -- moves label color
-local pos_x = GetVariable("pos_x") or 100
-local pos_y = GetVariable("pos_y") or 100
-local window_visible = true -- always start out with visible window
-local hp_color = GetVariable("hp_color") or "#00ff00" -- color of bar
-local mana_color = GetVariable("mana_color") or "#3333ff" -- color of bar
-local moves_color = GetVariable("moves_color") or "#ffd700" -- color of bar
+local MIN_WIDTH        = 40
+local LEFT_MARGIN     = 10
+local TOP_MARGIN      = 6
 local ShowWindow = GetVariable("win_shown") or "true"
-local last_refresh = 1 -- last window refresh
-local bar_border = "#777777"
-local winid = "win_"..GetPluginID()
-local bg_color = "#000000"
-local border_color = "#303030"
-local grip_resize = 10 -- resize grip size
-local win_height = GetVariable("win_height") or 97
-local win_width = GetVariable("win_width") or 740
---local font_size = 8
-local player_border_color = "#AAAAAA"
-local hp_label_color = "#00ff00" -- hp label color
-local enemy_label_color = GetVariable("enemy_color") or "#ff0000" -- color of bar
-local enemy_color = GetVariable("enemy_color") or "#ff0000" -- color of bar
-local super_label_color = GetVariable("super_color") or "#00ffff" -- color of bar
-local super_color = GetVariable("super_color") or "#00ffff" -- color of bar
-local exp_color = GetVariable("exp_color") or "#9400d3" -- color of bar
-local exp_label_color = GetVariable("exp_color") or "#9400d3" -- color of bar
-local page_built = false
+NUMBER_OF_TICKS = 9
+local stacked = 0
+local showLabels = 1
+local reverseTNL = 1
+graphicalMode = tonumber(GetVariable("graphicalMode") or 1)
+local defaultShowBar = {Health={"Health:",true,"Health:",0x00ff00,0x004400}, Mana={"Mana  :",true,"Mana:",0xff5500,0x442200}, Moves={"Moves :",true,"Moves:",0x00ffff,0x004444}, TNL={"TNL   :",true,"TNL:",0xffffff,0x444444}, Enemy={"Enemy :",true,"Enemy:",0x0000ff,0x000044}, Align={"Align :",true, "Alignment:",0x0000ff,0x00ffff}}
+showBar = defaultShowBar
+local barIndex = {"Health", "Mana", "Moves", "TNL", "Enemy", "Align"}
 local hp, max_hp, mana, max_mana, move, max_move
-font_name = GetVariable("font_name") or "Fixedsys"    -- the font
-TNL = 0
-exp = 0
-remorts = 0
-max_exp = 2800
+local bar_ticks = 9 -- number of ticks to show on bar
+local window_visible = true -- always start out with visible window
+local version = "6.37"
+TNL = "0"
+exp = "0"
+remorts = "0"
+max_exp = GetVariable("max_exp") or "2000"
 no_enemy=0
 max_enemy=100
-enemy=0
+enemy="0" or nil
 show_mana=true
 super = 0
 max_super = 100
+alignment = "0"
+thresh1active = tonumber (GetVariable("thresh1active")) or 0
+thresh2active = tonumber (GetVariable("thresh2active")) or 0
+thresh1percent = tonumber (GetVariable("thresh1percent")) or 40
+thresh2percent = tonumber (GetVariable("thresh2percent")) or 20
+thresh1color = tonumber (GetVariable("thresh1color")) or 0x00ffff
+thresh2color = tonumber (GetVariable("thresh2color")) or 0x0000ff
+
+startx     = ""
+starty     = ""
+posx       = ""
+posy       = ""
+hotspot_id = ""
+page_built = false
+gmcp_char = {}
+
 
 function toggle()
 	window_visible = not window_visible
-	if not window_visible then -- remove window
-		WindowDelete(winid)
+	if not window_visible and win_shown == false or nil then -- remove window
+return
 	else
-		window(true)
+    WindowShow (win, ShowWindow)
 	end
 end
 
-function setup_prompt()
-Execute("prompt {R[{WLast_Dir: %d {R]%c{c%1[G_End]%c{D| {WRemort: %L {D| {WLevel: %l {D|%c| {wHP:{R%h{D/{r%H{D |{w MP:{B%m{D/{b%M{w {D| {wMV:{Y%v{D/{y%V{D |{w Enemy:{R%o{w {D| {wTNL:{m%X {D| {wSUPER: {C%A{D |{w %c{R[{WRoom{R][{W%C{R]%r%c[Exits: %e]%c%E%c")
-end -- function setup_prompt
+
+string.lpad = function(str, len, char)
+   str = tostring(str)
+   if char == nil then char = ' ' end
+   return string.rep(char, len - #str) .. str
+end
+
+string.rpad = function(str, len, char)
+   str = tostring(str)
+   if char == nil then char = ' ' end
+   return str .. string.rep(char, len - #str)
+end
+
+function reset_demon()
+   font_name = default_font_name
+   font_size = default_font_size
+   WindowPosition(win, default_x, default_y, 0, 18)
+   WindowResize(win, default_width, WindowInfo(win, 4), Theme.PRIMARY_BODY)
+   Repaint() -- hack because WindowPosition doesn't immediately update coordinates
+   stacked = 0
+   SaveState()
+   OnPluginInstall()
+end
 
 function gauge_show(name, line, wildcards)
    ColourNote ("yellow", "", "Gauges window now shown. Type 'gauge hide' to hide it.")
 ShowWindow = true
 SetVariable("win_shown", "true")
-WindowShow( winid, ShowWindow )
+WindowShow( win, ShowWindow )
 end -- function gauge_show
 
 function gauge_hide(name, line, wildcards)
    ColourNote ("yellow", "", "Gauges window now hidden. Type 'gauge show' to see it again.")
 ShowWindow = false
 SetVariable("win_shown", "false")
-   WindowShow( winid, ShowWindow )
+   WindowShow( win, ShowWindow )
 end -- function gauge_hide
 
+function validate_percent(input)
+   if string.sub(input, -1) == "%" then
+      input = string.sub(input, 1,-2)
+   end
+   local inputNum = tonumber(input)
+   if not inputNum or inputNum < 1 or inputNum > 100 or inputNum % 1 ~= 0 then
+      ColourNote("white","red","'"..input.."' is not a whole number between 1 and 100. Try again.")
+      return false
+   end
+   return true
+end
 
-function DoGauge (sPrompt, current, max, Colour)
-  if (max <= 0 or current == nil) then
-    return
-  end -- no divide by zero
+--function fightgauge(name, line, wildcards)
+--   if wildcards ~= nil then
+--      enemy = wildcards [7]
+--	  end
+--fighting = true
+--max_enemy=100
+--gauge(win,showBar[bar][3],enemy,max_enemy,xpos+label_width,ypos,bar_width,line_height,showBar[bar][4],0x000000,bar_ticks,0xFFFFFF,showBar[bar][5],nil,flat_gauges==1)
+--   CallPlugin("abc1a0944ae4af7586ce88dc", "BufferedRepaint")
+--   end
 
-  -- fraction in range 0 to 1
-  local Fraction = math.min (math.max (current / max, 0), 1)
-	--WindowRectOp(winid, 2, 0, 0, 0, 22, ColourNameToRGB(title_bg_color)) -- title background
-	--WindowRectOp(winid, 1, 0, 0, 0, 0, ColourNameToRGB(player_border_color)) -- border
+function DoNextSimpleBar(bar, current, max, flip, stacked_label, unstacked_label)
+   txt = ""
+   if (showBar[bar][2] == true) then
+      local num_val = tonumber(current)
+      local num_max = tonumber(max)
+      if showLabels == 1 then
+         if stacked == 1 then
+            WindowText(win, font_id, stacked_label or showBar[bar][1], xpos,  ypos, 0, 0, showBar[bar][4], false)
+         else
+            xpos = xpos + WindowText(win, font_id, unstacked_label or showBar[bar][3], xpos,  ypos, 0, 0, showBar[bar][4], false)
+         end
+      end
+      if num_max and num_val then
+         if flip then
+            current = tostring(num_max-num_val)
+            num_val = tonumber(current)
+         end
+         if overlay_numbers == 1 or overlay_numbers == 3 or (graphicalMode == 0 and overlay_numbers ~= 2) then
+            maxlen = math.max(#max, #current)
+            txt = string.lpad(current, maxlen, ' ').."/"..string.rpad(max,maxlen,' ')
+         end
+         if overlay_numbers == 2 or overlay_numbers == 3 then
+            txt = txt..((overlay_numbers == 3 and " (") or "")..string.lpad(string.format('%d',100*current/max).."%",4,' ')..((overlay_numbers == 3 and ")") or "")
+          end
+      end
 
-	local title = "Monitor Gauge" -- default title
+      if graphicalMode == 1 then
+         local color1 = showBar[bar][4]
+         local color2 = showBar[bar][5]
+         if bar == "Health" then
+            local hpPercent = 100
+            if num_val and num_max then
+               hpPercent = 100* (num_val / num_max)
+            end
+            if thresh1active == 1 then
+               if hpPercent < thresh1percent then
+                  color1 = thresh1color
+                  color2 = thresh1color
+               end
+            end
+            if thresh2active == 1 then
+               if hpPercent < thresh2percent then
+                  color1 = thresh2color
+                  color2 = thresh2color
+               end
+            end
+         end
+         gauge(win,showBar[bar][3],num_val,num_max,xpos+label_width,ypos,bar_width,line_height,color1,0x000000,bar_ticks,0xFFFFFF,color2,nil,flat_gauges==1)
+         if overlay_numbers ~= 0 then
+            txtlen = WindowTextWidth(win,font_id,txt)
+            outlined_text(win, font_id, txt, xpos+label_width + 2, ypos, 0, 0, 0xeeeeee, utf8)
+            -- original: outlined_text(win, font_id, txt, xpos+label_width+((bar_width-txtlen)/2), ypos, 0, 0, 0xeeeeee, utf8)
+         end
+      else
+         xpos = xpos + (((stacked == 0) and 1) or 0)*WindowText(win, font_id, " ["..txt.."]", xpos+label_width, ypos, 0, 0, showBar[bar][4], false)
+      end
 
-	--Theme.Draw3DRect(winid, 0, 0, 0, 0, depressed) -- themed window
-	Theme.DrawBorder(winid) -- theme window border
-
-  local width = WindowTextWidth (winid, font_id, sPrompt)
-
-  WindowText (winid, font_id, sPrompt, gauge_left - width, vertical, 0, 0, Colour)
-
-
-  local gauge_width = (win_width - gauge_left - 5) * Fraction
-
-   -- box size must be > 0 or WindowGradient fills the whole thing
-  if math.floor (gauge_width) > 0 then
-GAUGE_HEIGHT = GetVariable("GAUGE_HEIGHT") or 15
-    -- top half
-    WindowGradient (winid, gauge_left, vertical, gauge_left + gauge_width, vertical + GAUGE_HEIGHT / 2,
-                    0x000000,
-                    Colour, 2)
-
-    -- bottom half
-    WindowGradient (winid, gauge_left, vertical + GAUGE_HEIGHT / 2,
-                    gauge_left + gauge_width, vertical +  GAUGE_HEIGHT,
-                    Colour,
-                    0x000000,
-                    2)
-
-  end -- non-zero
-
-  -- show ticks
-  local ticks_at = (win_width - gauge_left - 5) / (NUMBER_OF_TICKS + 1)
-
-  -- ticks
-  for i = 1, NUMBER_OF_TICKS do
-    WindowLine (winid, gauge_left + (i * ticks_at), vertical,
-                gauge_left + (i * ticks_at), vertical + GAUGE_HEIGHT, ColourNameToRGB ("silver"), 0, 1)
-  end -- for
-
-  -- show actual exp in gauge
- WindowText (winid, "f1", string.format ("%i/%i (%i%%)", current, max, Fraction * 100),
-                             gauge_left + 3, vertical + 1, 0, 0, ColourNameToRGB ("black"))
-
- WindowText (winid, "f1", string.format ("%i/%i (%i%%)", current, max, Fraction * 100),
-                             gauge_left + 2, vertical + 1, 0, 0, ColourNameToRGB ("black"))
-
- WindowText (winid, "f1", string.format ("%i/%i (%i%%)", current, max, Fraction * 100),
-                             gauge_left + 1, vertical, 0, 0, ColourNameToRGB ("white"))
-
--- draw a box around it
-  WindowRectOp (winid, 1, gauge_left, vertical, win_width - 5, vertical + GAUGE_HEIGHT,
-          ColourNameToRGB(player_border_color))  -- frame entire box
-	--WindowRectOp(winid, 1, gauge_left, vertical, 0, 0, ColourNameToRGB(player_border_color)) -- border
-
-  -- mouse-over information: add hotspot if not there
-  if not WindowHotspotInfo(winid, sPrompt, 1) then
-  end -- if
-
-  -- store numeric values in case they mouse over it
-  WindowHotspotTooltip(winid, sPrompt, string.format ("%s\t%i / %i (%i%%)",
-                        sPrompt, current, max, Fraction * 100) )
-    Theme.AddResizeTag(winid, 1, nil, nil, "MouseDown", "ResizeMoveCallback", "ResizeReleaseCallback")
-  vertical = vertical + font_size + 9
-end -- function DoGauge
-
-function do_prompt (name, line, wildcards)
-   page_built = true
-
-   hp, max_hp = tonumber (wildcards [1]), tonumber (wildcards [2])
-   mana, max_mana = tonumber (wildcards [3]), tonumber (wildcards [4])
-   move, max_move = tonumber (wildcards [5]), tonumber (wildcards [6])
-
-
-
-   -- fill entire box to clear it
-   WindowRectOp(winid, 2, 2, 1, -2, -2, ColourNameToRGB(bg_color)) -- blank canvas
-
-   -- Edge around box rectangle
-   check (WindowCircleOp (winid, 3, 0, 0, 0, 0, ColourNameToRGB(bar_border), 0, 2, 0, 1))
-
-
-   vertical = 6 -- pixel to start at
-   DoGauge ("HP: ",    hp ,   max_hp,    ColourNameToRGB(hp_color))
-   DoGauge ("Mana: ",  mana,  max_mana,  ColourNameToRGB(mana_color))
-   DoGauge ("Move: ",  move,  max_move,  ColourNameToRGB(moves_color))
-   if exp ~= nil then
-      DoGauge ("Exp: ", exp , max_exp, ColourNameToRGB(exp_color))
-   else
-      if lastlearn==nil or os.time() - lastlearn > 15 then
-	 Send("learn")
-	 lastlearn=os.time()
+      if stacked == 1 then
+         ypos = ypos + line_height + 1
+      else
+         xpos = xpos+(graphicalMode*bar_width)+LEFT_MARGIN
       end
    end
-   if enemy ~= nil then
-      DoGauge ("Enemy: ",  enemy,  max_enemy,  ColourNameToRGB(enemy_color))
+end
+
+
+local hp, max_hp, mana, max_mana, move, max_move
+function DisplayStatsPage(name, line, wildcards)
+   if wildcards ~= nil then
+      page_built = true
+      hp = wildcards.hp
+	  mana = wildcards.mana
+	  move = wildcards.move
+	  max_hp = GetTriggerWildcard ("defaultprompt", "max_hp") or 0 -- get wildcard named enemy
+    max_mana = GetTriggerWildcard ("defaultprompt", "max_mana") or 0 -- get wildcard named enemy
+    max_move = GetTriggerWildcard ("defaultprompt", "max_move") or 0 -- get wildcard named enemy
+	  enemy = GetTriggerWildcard ("fightprompt", "enemy") or 0
    end
-   if super ~= nil then
-      DoGauge ("Super: ",  super,  max_super,  ColourNameToRGB(super_color))
+   WindowRectOp(win, 2, 0, 0, 0, 0, Theme.PRIMARY_BODY) -- blank
+   if not page_built then
+      if stacked == 1 then
+         local txt = "Status bars will appear"
+         local txtlen = WindowTextWidth(win,font_id,txt)
+         WindowText (win, font_id, txt, (effectiveWidth-txtlen)/2, (height/2)-line_height, 0, 0, Theme.BODY_TEXT, false)
+         txt = "when play begins."
+         txtlen = WindowTextWidth(win,font_id,txt)
+         WindowText (win, font_id, txt, (effectiveWidth-txtlen)/2, height/2, 0, 0, Theme.BODY_TEXT, false)
+      else
+         local txt = "Status bars will appear when play begins."
+         local txtlen = WindowTextWidth(win,font_id,txt)
+         WindowText (win, font_id, txt, (effectiveWidth-txtlen)/2, (height-line_height)/2, 0, 0, Theme.BODY_TEXT, false)
+      end
+   else -- Only draw bars if we have data.
+
+      local barTexts = ""
+      ypos = TOP_MARGIN
+      xpos = LEFT_MARGIN
+      label_width = 0
+      bar_width = 0
+  --    num_ticks = 3
+      if overlay_numbers ~= 0 then
+         num_ticks = 0
+      end
+
+      -- count up the bars we're going to use
+      if stacked == 1 then
+         if showLabels == 1 then
+            label_width = WindowTextWidth(win, font_id, "WWWWWW:")
+         end
+         bar_width = math.max(1, effectiveWidth-label_width-LEFT_MARGIN*2)
+      else
+         for i,v in pairs(showBar) do
+            if (v[2] == true) then
+               barTexts = barTexts..v[3]
+            end
+         end
+         if showLabels == 1 then
+            bar_width = math.max(1, (effectiveWidth-WindowTextWidth(win, font_id, barTexts)-LEFT_MARGIN)/numBars-LEFT_MARGIN)
+         else
+            bar_width = math.max(1, (effectiveWidth-LEFT_MARGIN)/numBars-LEFT_MARGIN)
+         end
+      end
+      DoNextSimpleBar("Health", hp, max_hp)
+      DoNextSimpleBar("Mana", mana, max_mana)
+      DoNextSimpleBar("Moves", move, max_move)
+
+      local tnl = exp
+      local perlevel = max_exp
+      -- switch from "to next level" to "current level experience"
+      if (reverseTNL == 0) then
+         DoNextSimpleBar("TNL", exp, max_exp, false, "Exp   :", "Exp:")
+      else
+         DoNextSimpleBar("TNL", exp, max_exp, true, "Exp   :", "Exp:")
+      end
+      bar = "Enemy"
+      if (showBar[bar][2] == true) then
+           if fighting == true then
+            if enemy ~= nil then
+	    enemy = GetTriggerWildcard ("fightprompt", "enemy") or enemy
+               if showLabels == 1 then
+                  if stacked == 1 then
+                     WindowText(win, font_id, showBar[bar][1], xpos,  ypos, 0, 0, showBar[bar][4], false)
+                  else
+                     xpos = xpos + WindowText(win, font_id, showBar[bar][3], xpos,  ypos, 0, 0, showBar[bar][4], false)
+                  end
+               end
+            end
+            if graphicalMode == 1 then
+               gauge(win,showBar[bar][3],enemy,max_enemy,xpos+label_width,ypos,bar_width,line_height,showBar[bar][4],0x000000,bar_ticks,0xFFFFFF,showBar[bar][5],nil,flat_gauges==1)
+               if overlay_numbers ~= 0 then
+                  txt = string.lpad(enemy.."%", 4, ' ')
+                  txtlen = WindowTextWidth(win,font_id,txt)
+                  outlined_text(win, font_id, txt, xpos+label_width, ypos, 0, 0, 0xeeeeee, utf8)
+                  --outlined_text(win, font_id, txt, xpos+label_width+((bar_width-txtlen)/2), ypos, 0, 0, 0xeeeeee, utf8)
+               end
+            else
+               xpos = xpos + (((stacked == 0) and 1) or 0)*WindowText(win, font_id, " ["..string.format("%3d",enemy).."%]", xpos+label_width, ypos, 0, 0, showBar[bar][4], false)
+            end
+         else
+            if showLabels == 1 then
+               if stacked == 1 then
+                  WindowText(win, font_id, showBar[bar][1], xpos, ypos, 0, 0, 0x444444, false)
+               else
+                  xpos = xpos + WindowText(win, font_id, showBar[bar][3], xpos, ypos, 0, 0, 0x444444, false)
+               end
+            end
+            if graphicalMode == 1 then
+               gauge(win,showBar[bar][3],tonumber(0),100,xpos+label_width,ypos,bar_width,line_height,0x444444,0x000000,bar_ticks,0xFFFFFF,0x222222,nil,flat_gauges==1)
+            else
+               xpos = xpos + (((stacked == 0) and 1) or 0)*WindowText(win, font_id, " [    ]", xpos+label_width, ypos, 0, 0, 0x444444, false)
+            end
+         end
+         if stacked == 1 then
+            ypos = ypos + line_height + 1
+         else
+            xpos = xpos+(graphicalMode*bar_width)+LEFT_MARGIN
+         end
+      end
+
+      bar = "Align"
+      if (showBar[bar][2] == true) then
+         alignment = tonumber(GetTriggerWildcard ("my_align", "align")) or "0"  -- get wildcard named 'alignment'
+         if alignment ~= nil then
+            zeroed_alignment = alignment+2500
+            bar_colour = ((zeroed_alignment<=1625 and showBar[bar][4]) or ((zeroed_alignment>=3375 and showBar[bar][5]) or 0xcccccc))
+            if bar_colour ~= prev_bar_colour then
+               local bch = string.format("%06X", bar_colour)
+               local reverse = "#"..bch:sub(5,6)..bch:sub(3,4)..bch:sub(1,2)
+               local c = colors.new(reverse):hue_offset(-15):lighten_by(0.60):to_rgb()
+               dark_bar_colour = ColourNameToRGB(c)
+            end
+            prev_bar_colour = bar_colour
+            if showLabels == 1 then
+               if stacked == 1 then
+                  WindowText(win, font_id, showBar[bar][1], xpos,  ypos, 0, 0, bar_colour, false)
+               else
+                  xpos = xpos + WindowText(win, font_id, showBar[bar][3], xpos,  ypos, 0, 0, bar_colour, false)
+               end
+            end
+            if graphicalMode == 1 then
+               WindowLine (win, xpos+label_width+math.max(0,line_height/2), math.ceil(ypos+line_height/2), xpos+label_width+math.max(0,bar_width-line_height/2), math.ceil(ypos+line_height/2), bar_colour, 0+0x0200, 2)
+               WindowCircleOp (win, 1, xpos+label_width+(zeroed_alignment/5000)*(bar_width-line_height), ypos, xpos+label_width+(zeroed_alignment/5000)*(bar_width-line_height)+line_height, ypos+line_height, dark_bar_colour, 0, 2, bar_colour, 0)
+
+               -- add ticks at alignment change boundaries
+               local tick_1 = xpos + label_width + (-874 + 2500) / 5000 * (bar_width);
+               local tick_2 = xpos + label_width + (874 + 2500) / 5000 * (bar_width);
+               WindowLine (win, tick_1, ypos, tick_1, ypos+line_height, bar_colour, 0+0x0200, 2)
+               WindowLine (win, tick_2, ypos, tick_2, ypos+line_height, bar_colour, 0+0x0200, 2)
+            else
+               xpos = xpos + (((stacked == 0) and 1) or 0)*WindowText(win, font_id, " ["..string.format("%5s",alignment).."]", xpos+label_width, ypos, 0, 0, bar_colour, false)
+            end
+            if stacked == 1 then
+               ypos = ypos + line_height + 1
+            else
+               xpos = xpos+(graphicalMode*bar_width)+LEFT_MARGIN
+            end
+         end
+      end
    end
-   WindowShow (win, ShowWindow)
-end -- function do_prompt
+      if GetVariable("win_shown") == "false" then
+        WindowShow(win, false)
+      end
+
+   Theme.DressWindow(win, nil, nil)
+   Theme.AddResizeTag(win, 1, nil, nil, "MouseDown", "ResizeMoveCallback", "ResizeReleaseCallback")
+
+   CallPlugin("abc1a0944ae4af7586ce88dc", "BufferedRepaint")
+end -- DisplayStatsPage
+
+-- right click menu
+function right_click_menu ()
+   menustring ="!Change Font|"
+   if showLabels == 1 then
+      menustring = menustring.."Hide Labels|"
+   else
+      menustring = menustring.."Show Labels|"
+   end
+   if stacked == 1 then
+      menustring = menustring.."Un-stack Bars|"
+   else
+      menustring = menustring.."Stack Bars|"
+   end
+   local activeBars = ""
+   for i,v in ipairs(barIndex) do
+      if (showBar[v][2] == true) then
+         activeBars = activeBars.."+"..v.."|"
+      else
+         activeBars = activeBars..""..v.."|"
+      end
+   end
+   menustring = menustring .. ">Activate/De-activate|"..activeBars.."<|"
+   menustring = menustring .. ">Configure Colors|>Health|Main|Border|<|>Mana|Main|Border|<|>Moves|Main|Border|<|>TNL|Main|Border|<|>Enemy|Main|Border|<|>Align|Evil|Good|<|<|"
+   menustring = menustring .. ">HP Thresholds|>First|"..(((thresh1active == 1) and "+") or "").."Activate|Set Percent ("..thresh1percent.."%)|Set Color ("..RGBColourToName(thresh1color)..")|<|>Second|"..(((thresh2active == 1) and "+") or "").."Activate|Set Percent ("..thresh2percent.."%)|Set Color ("..RGBColourToName(thresh2color)..")|<|<|"
+   menustring = menustring .. ((reverseTNL==1 and "+") or "").."Reverse TNL|-|"..((graphicalMode==0 and "+") or "").."Text Mode|"..((flat_gauges==1 and "+") or "").."Use Flat Gauges|>Overlay Numbers|"..((overlay_numbers==0 and "+") or "").."None"..(((graphicalMode==0) and " (Same as \"Standard\" in Text Mode)") or "").."|"..((overlay_numbers==1 and "+") or "").."Standard|"..((overlay_numbers==2 and "+") or "").."Percentages|"..((overlay_numbers==3 and "+") or "").."Standard+Percentages|<|-|Bring To Front|Send To Back|-|>(In case of emergency)|Reduce Size|<|"
+
+   result = WindowMenu (win,
+      WindowInfo (win, 14),  -- x position
+      WindowInfo (win, 15),   -- y position
+      menustring) -- content
+   if result ~= "" then
+      numResult = tonumber(result)
+      if numResult == 1 then
+         -- change font
+         wanted_font = utils.fontpicker (font_name, font_size) --font dialog
+         if wanted_font then
+            font_name = wanted_font.name
+            font_size = wanted_font.size
+         end
+      elseif numResult == 2 then
+         -- show/hide labels
+         showLabels = (((showLabels == 0) and 1) or 0)
+      elseif numResult == 3 then
+         -- stack/unstack bars
+         if stacked == 1 then
+            stacked = 0
+            height = line_height+(TOP_MARGIN*2)
+         else
+            stacked = 1
+            height = ((line_height+1)*numBars)+(TOP_MARGIN*2)
+         end
+      elseif numResult >= 4 and numResult <= 9 then
+         -- activate/de-activate
+         showBar[barIndex[numResult-3]][2] = not showBar[barIndex[numResult-3]][2]
+      elseif numResult >= 10 and numResult <= 21 then
+         -- change colors
+         local colourIndex = 4
+         if (numResult % 2 == 1) then
+            colourIndex = 5
+         end
+         local newcolour = PickColour (showBar[barIndex[math.ceil((numResult-9)/2)]][colourIndex])
+         if newcolour ~= -1 then
+            showBar[barIndex[math.ceil((numResult-9)/2)]][colourIndex] = newcolour
+         end
+      elseif numResult == 22 then
+         thresh1active = (((thresh1active == 0) and 1) or 0)
+      elseif numResult == 23 then
+         local perc = utils.inputbox( "I want the HP bars to change color when they drop below this percent...\n(enter a whole number between 1 and 100)", "Group Monitor HP Threshold #1", thresh1percent, nil, nil, {validate=validate_percent})
+         if perc then
+            if string.sub(perc, -1) == "%" then
+               perc = string.sub(perc, 1,-2)
+            end
+            thresh1percent = tonumber(perc)
+         end
+      elseif numResult == 24 then
+         local newColor = PickColour (thresh1color)
+         if newcolor ~= -1 then
+            thresh1color = newColor
+         end
+      elseif numResult == 25 then
+         thresh2active = (((thresh2active == 0) and 1) or 0)
+      elseif numResult == 26 then
+         local perc = utils.inputbox( "I want the HP bars to change color when they drop below this percent...\n(enter a whole number between 1 and 100)", "Group Monitor HP Threshold #2", thresh2percent, nil, nil, {validate=validate_percent})
+         if perc then
+            if string.sub(perc, -1) == "%" then
+               perc = string.sub(perc, 1,-2)
+            end
+            thresh2percent = tonumber(perc)
+         end
+      elseif numResult == 27 then
+         local newColor = PickColour (thresh2color)
+         if newcolor ~= -1 then
+            thresh2color = newColor
+         end
+      elseif numResult == 28 then
+         -- reverse tnl
+         reverseTNL = (((reverseTNL == 0) and 1) or 0)
+      elseif numResult == 29 then
+         -- text mode
+         graphicalMode = (((graphicalMode == 0) and 1) or 0)
+      elseif numResult == 30 then
+         flat_gauges = (((flat_gauges == 0) and 1) or 0)
+      elseif numResult == 31 then
+         overlay_numbers = 0
+      elseif numResult == 32 then
+         overlay_numbers = 1
+      elseif numResult == 33 then
+         overlay_numbers = 2
+      elseif numResult == 34 then
+         overlay_numbers = 3
+      elseif numResult == 35 then
+         -- bring to front
+         CallPlugin("462b665ecb569efbf261422f","boostMe", win)
+      elseif numResult == 36 then
+         -- send to back
+         CallPlugin("462b665ecb569efbf261422f","dropMe", win)
+      elseif numResult == 37 then
+         -- reduce size
+         font_name = default_font_name
+         font_size = default_font_size
+         width = MIN_WIDTH
+      end -- if
+
+      SaveState()
+      OnPluginInstall()
+   end
+end -- right_click_menu
 
 
-function OnPluginInstall ()
+---------------------------------------------------------------------------------
+-- Called as the window is dragged around. This function and those below are
+-- only 'handlers' because they are set in WindowAddHotSpot
+---------------------------------------------------------------------------------
+function ResizeMoveCallback(name, line, wildcards)
+   if GetPluginVariable("c293f9e7f04dde889f65cb90", "lock_down_miniwindows") == "1" then
+      return
+   end
+   posx, posy = WindowInfo (win, 17), WindowInfo (win, 18)
+   width = width + posx - startx
+   startx = posx
+   if (width < MIN_WIDTH) then
+      width = MIN_WIDTH
+      startx = windowinfo.window_left+width
+   elseif (windowinfo.window_left+width > GetInfo(281)) then
+      width = GetInfo(281)-windowinfo.window_left
+      startx = GetInfo(281)
+   end
 
-window(true)
-    win = GetPluginID ()
-  font_id = "fn"
+   if (utils.timer() - lastRefresh > 0.0333) then
+     --effectiveWidth = math.max(MIN_WIDTH, math.min(width, GetInfo(281)-windowinfo.window_left))
 
-  require "movewindow"  -- load the movewindow.lua module
+     --WindowResize(win, effectiveWidth, height, Theme.SECONDARY_BODY)
+    --  DisplayStatsPage()
+      resize_window()
+      lastRefresh = utils.timer()
+   end
+end
+
+lastRefresh = 0
+
+---------------------------------------------------------------------------------
+-- Called after the resize widget is released.
+---------------------------------------------------------------------------------
+function ResizeReleaseCallback(name, line, wildcards)
+  --effectiveWidth = math.max(MIN_WIDTH, math.min(width, GetInfo(281)-windowinfo.window_left))
+
+  --WindowResize(win, effectiveWidth, height, Theme.SECONDARY_BODY)
+  resize_window()
+end
+
+---------------------------------------------------------------------------------
+-- Called when mouse button is pressed on hotspot.
+---------------------------------------------------------------------------------
+function MouseDown(flags, hotspot_id)
+   if (hotspot_id == "resize") then
+      startx, starty = WindowInfo(win, 17), WindowInfo(win, 18)
+   end
+end
+
+---------------------------------------------------------------------------------
+-- Called when mouse moved away from hotspot. Doesn't really apply for draggables.
+---------------------------------------------------------------------------------
+function CancelMouseDown(flags, hotspot_id)
+end
+
+---------------------------------------------------------------------------------
+-- Called when mouse button released on hotspot.
+---------------------------------------------------------------------------------
+function MouseUp(flags, hotspot_id, win)
+   if bit.band(flags, miniwin.hotspot_got_rh_mouse) ~= 0 then
+      right_click_menu()
+   end
+   return true
+end
+
+function LeftClickOnly(flags, hotspot_id, win)
+   if bit.band(flags, miniwin.hotspot_got_rh_mouse) ~= 0 then
+      return true
+   end
+   return false
+end
+
+---------------------------------------------------------------------------------
+-- Called when plugin is saved - store our variables for next time.
+---------------------------------------------------------------------------------
+function OnPluginSaveState ()
+   -- save window current location for next time
+   movewindow.save_state(win)
+   barTexts = ""
+   SetVariable("stacked", stacked)
+   SetVariable("showLabels", showLabels)
+   SetVariable("reverseTNL", reverseTNL)
+   SetVariable("enabled", tostring(GetPluginInfo(GetPluginID(), 17)))
+   if WindowInfo(win, 3) and WindowInfo(win, 4) then
+      width = WindowInfo(win, 3)
+      height = WindowInfo(win, 4)
+   end
+   SetVariable("width", width)
+   SetVariable("font_name", font_name)
+   SetVariable("font_size", font_size)
+   SetVariable("showBar", serialize.save ("showBar"))
+   SetVariable("graphicalMode", graphicalMode)
+   SetVariable("flat_gauges", flat_gauges)
+   SetVariable("overlay_numbers", overlay_numbers)
+   SetVariable("thresh1active", thresh1active)
+   SetVariable("thresh2active", thresh2active)
+   SetVariable("thresh1percent", thresh1percent)
+   SetVariable("thresh2percent", thresh2percent)
+   SetVariable("thresh1color", thresh1color)
+   SetVariable("thresh2color", thresh2color)
+   SetVariable("max_exp", max_exp)
+end -- OnPluginSaveState
+
+function OnPluginClose()
+   WindowDelete(win)
+end
+
+function OnPluginDisable()
+   SaveState()
+   WindowShow(win, false)
+end --  OnPluginDisable
+
+function OnPluginEnable()
+   WindowShow(win, true)
+   SaveState()
+end -- OnPluginEnable
+
+
+
+
+function OnPluginWorldOutputResized()
+   if (installed == true) and (((GetInfo(281)-windowinfo.window_left) > effectiveWidth) or ((GetInfo(281)-windowinfo.window_left) < width)) then
+      resize_window()
+   end
+end
+
+  win = GetPluginID()
+
+function OnPluginInstall()
+   width      = tonumber(GetVariable("width")) or default_width
+   stacked    = tonumber(GetVariable("stacked")) or stacked
+   showLabels = tonumber(GetVariable("showLabels")) or showLabels
+   reverseTNL = tonumber(GetVariable("reverseTNL")) or reverseTNL
+   flat_gauges = tonumber(GetVariable("flat_gauges")) or 0
+   overlay_numbers = tonumber (GetVariable("overlay_numbers")) or 1
+   showBar = defaultShowBar
+   assert (loadstring (GetVariable ("showBar") or "")) ()
+   barTexts = ""
+   numBars = 0
+   for i,v in pairs(showBar) do
+      if (v[2] == true) then
+         barTexts = barTexts..v[3]
+         numBars = numBars + 1
+      end
+   end
+
+   local fonts = utils.getfontfamilies()
+
+   -- if Dina not there already, add it
+   if not fonts.Dina then
+      AddFont(GetInfo(66) .. "\\Dina.fon")
+      fonts = utils.getfontfamilies()
+   end
+
+   if fonts["Dina"] then
+      default_font_size = 8
+      default_font_name = "Dina"
+   elseif fonts["Courier New"] then
+      default_font_size = 9
+      default_font_name = "Courier New"
+   else
+      default_font_size = 9
+      default_font_name = "Lucida Console"
+   end
+
+   font_name = GetVariable("font_name") or default_font_name
+   font_size = tonumber(GetVariable("font_size")) or default_font_size
+
+   windowinfo = movewindow.install(win, miniwin.pos_top_right, miniwin.create_absolute_location, false, nil, {mouseup=MouseUp, mousedown=LeftClickOnly, dragmove=LeftClickOnly, dragrelease=LeftClickOnly},{x=default_x, y=default_y})
+   WindowCreate(win, windowinfo.window_left, windowinfo.window_top, width, 60, windowinfo.window_mode, windowinfo.window_flags, Theme.SECONDARY_BODY)
 
    -- register with the z-order monitor
    CallPlugin("462b665ecb569efbf261422f", "registerMiniwindow", win)
 
-  -- install the window movement handler, get back the window position
-		WindowPosition(winid, pos_x, pos_y, 0, 2)
- windowinfo = movewindow.install (win, miniwin.pos_top_right, miniwin.create_absolute_location, true, {mouseup=MouseUp, mousedown=MouseDown, dragmove=LeftClickOnly, dragrelease=LeftClickOnly})
-font_name = GetVariable("font_name") or "Fixedsys" 
-  WindowFont (winid, font_id, font_name, 9)
-  -- work out how far in to start the gauge
-  gauge_left =                        WindowTextWidth (winid, font_id, "HP: ")
-  gauge_left = math.max (gauge_left,  WindowTextWidth (winid, font_id, "Mana: "))
-  gauge_left = math.max (gauge_left,  WindowTextWidth (winid, font_id, "Move: "))
-  gauge_left = math.max (gauge_left,  WindowTextWidth (winid, font_id, "Enemy: "))
-  gauge_left = math.max (gauge_left,  WindowTextWidth (winid, font_id, "Super: "))
+   font_id = "statmon_font"
+   WindowFont(win, font_id, font_name, font_size, false, false, false, false, 0) -- normal font
+   line_height = WindowFontInfo(win, font_id, 1) -  WindowFontInfo(win, font_id, 4) + 2
 
-  gauge_left = gauge_left + 5  -- allow gap from edge
-  WindowFont (winid, "intro", "Lucida Console", 10, false, true, false, false)
-    if not page_built then
-	local title = "Gauge window"
-Theme.DrawTitleBar(winid, font_id, title, center)
-		  local txt = " Status Gauges will appear in this window when you receive a prompt."
-	Theme.DrawBorder(winid) -- theme window border
-WindowText (winid, "intro", txt,
-            5, 65, 0, 0,  -- rectangle
-            ColourNameToRGB ("white"),
-            false) -- not Unicode
-	end
-  if GetVariable ("enabled") == "false" then
-    ColourNote ("yellow", "", "Warning: Plugin " .. GetPluginName ().. " is currently disabled.")
-    check (EnablePlugin(GetPluginID (), false))
-  end -- they didn't enable us last time
+   MIN_WIDTH = math.max(40, WindowTextWidth(win, font_id, "WWWWWW:")+(LEFT_MARGIN*2))
+
+   if stacked == 1 then
+      height = (TOP_MARGIN*2) + (numBars*(line_height+1))
+   else
+      if showLabels == 1 then
+         MIN_WIDTH = math.max(40, WindowTextWidth(win, font_id, barTexts)+(LEFT_MARGIN*(numBars+2)))
+      end
+      height = (TOP_MARGIN*2) + line_height
+   end
+
+   width = math.max(width, MIN_WIDTH)
+
+  resize_window()
+  movewindow.add_drag_handler(win, 0, 0, 0, 0)
+  WindowShow(win, true)
+   installed = true
+   ShowWindow = true
+   if GetVariable("win_shown") == "false" then ShowWindow = false
 end
-ShowWindow = true
-if GetVariable("win_shown") == "false" then ShowWindow = false
-
-end -- OnPluginInstall
-
-function ResizeMoveCallback()
-	--Note("ResizeMoveCallback")
-	local x_offset, y_offset = start_x - WindowInfo(winid, 17), start_y - WindowInfo(winid, 18)
-	start_x, start_y = WindowInfo(winid, 17), WindowInfo(winid, 18)
-	local min_width = 200
-	local min_height = GAUGE_HEIGHT + 8
-	win_width = win_width - x_offset
-	win_width = (win_width > min_width) and win_width or min_width
-	win_height = win_height - y_offset
-	win_height = (function() if (win_height > min_height) then return win_height else SaveState(); return min_height end end)()
-	if os.clock() - last_refresh >= .01 then
-		--Note("redraw")
-		last_refresh = os.clock()
-		if hp and max_hp and mana and max_mana and move and max_move then
-		   do_prompt ("", "", { hp, max_hp, mana, max_mana, move, max_move } )
-		end
-		window(false)
-	end
 end
 
-function ResizeReleaseCallback()
-	--Note("ResizeReleaseCallback")
-	--window(true)
-	SendNoEcho("pbust %")
-	SaveState()
-end
+function resize_window(name, line, wildcards)
+   effectiveWidth = math.max(MIN_WIDTH, math.min(width, GetInfo(281)-windowinfo.window_left))
 
-function MouseDown(flags, id)
-	--Note("MouseDown")
-	if id == "resize" then
-		start_x, start_y = WindowInfo(winid, 17), WindowInfo(winid, 18)
-	end
-end
+   WindowResize(win, effectiveWidth, height, Theme.SECONDARY_BODY)
+   movewindow.add_drag_handler(win, 0, 0, 0, 0)
 
-function MouseUp(flags, id, win)
-	--Note("MouseUp")
-	if bit.band(flags, 0x20) ~= 0 then -- right click
-		right_click_menu()
-	end
-	pos_x, pos_y = WindowInfo(winid, 10), WindowInfo(winid, 11)
-	SaveState()
-end
-
-function right_click_menu()
-	local x, y = WindowInfo(winid, 14), WindowInfo(winid, 15)
-
-	local str = "!"
-	
-		 str = str..">Colors|HP|Mana|Moves|Exp|Enemy|Super|<"
-		
-		 str = str.."|-|Bring to Front"
-
-         str = str.."|-|Send to Back"
-		  
-		 str = str.."|-|Change Font"
-
-	
-	opt = WindowMenu(winid, x, y, str)
-	
-	if opt == "" then
-		return
-	end
-	
-	opt = tonumber(opt)
-	
-	if opt == 1 then -- hp color
-		local clr = PickColour(ColourNameToRGB(hp_color))
-		if clr ~= -1 then
-			hp_color = RGBColourToName(clr)
-			SaveState()
-		end
-	elseif opt == 2 then -- mana color
-		local clr = PickColour(ColourNameToRGB(mana_color))
-		if clr ~= -1 then
-			mana_color = RGBColourToName(clr)
-			SaveState()
-		end
-	elseif opt == 3 then -- moves color
-		local clr = PickColour(ColourNameToRGB(moves_color))
-		if clr ~= -1 then
-			moves_color = RGBColourToName(clr)
-			SaveState()
-		end
-	elseif opt == 4 then -- exp color
-		local clr = PickColour(ColourNameToRGB(exp_color))
-		if clr ~= -1 then
-			exp_color = RGBColourToName(clr)
-			SaveState()
-		end
-        elseif opt == 5 then -- enemy color
-		local clr = PickColour(ColourNameToRGB(enemy_color))
-		if clr ~= -1 then
-			enemy_color = RGBColourToName(clr)
-			SaveState()
-		end
-        elseif opt == 6 then -- enemy color
-		local clr = PickColour(ColourNameToRGB(super_color))
-		if clr ~= -1 then
-			super_color = RGBColourToName(clr)
-			SaveState()
-		end
-		elseif opt == 7 then -- Bring to Front
-        CallPlugin("462b665ecb569efbf261422f","boostMe", winid)
-      --  print("Bring to Front")
-        SendNoEcho("pbust %")			  
-        SaveState()
-elseif opt == 8 then -- Send to back
-        CallPlugin("462b665ecb569efbf261422f","dropMe", winid)
-      --  print("Sent to Back")
-        SendNoEcho("pbust %")				
-        SaveState()
-elseif opt == 9 then -- Change Font
-     wanted_font = utils.fontpicker (font_name, font_size) --font dialog
-         if wanted_font then
-            font_name = wanted_font.name
-            font_size = wanted_font.size
-			SetVariable("font_size", font_size)
-			SetVariable("font_name", font_name)
-			GAUGE_HEIGHT = font_size + 8
-            SetVariable("GAUGE_HEIGHT", GAUGE_HEIGHT)			
-        	SendNoEcho("pbust %")			
-			--SetVariable("bar_height", bar_height)		
-end		
-end	
-	window(true)
+   DisplayStatsPage()
 end
 
 
-function mouseover (flags, hotspot_id)
-  Note ("we moused over hotspot " .. hotspot_id)
-  return 0  -- needed for some languages
-end -- mouseover
-
-function CancelMouseOver(flags, id)
-	--Note("CancelMouseOver")
-	-- nothing
+function getmemoryusage()
+  collectgarbage('collect')
+  return collectgarbage('count')
 end
 
-function CancelMouseDown(flags, id)
-	--Note("CancelMouseDown")
-	SendNoEcho("pbust %")	
-	-- nothing
+function gaugehelp()
+  util.print("{W--------------------------------------------------------------------------------")
+  util.print("{WPlugin Name  : {YC{yl{Ye{yf{Yt{RM{rU{RS{rH {x238BIG Gauge Window")
+  util.print("{WAuthor       : {x238Asmodeus and Fiendish")
+  util.print("{WVersion      : {G" .. version)
+  util.print("{W--------------------------------------------------------------------------------")
+  util.print("")
 end
-
-function from_bool(v)
-	if v then
-		return 1
-	end
-	return 0
-end
-
-function OnPluginDisable ()
-  WindowShow (win, ShowWindow)
-end -- OnPluginDisable
-
-function OnPluginEnable()
-	--Note("enabled")
-	window(true)
-
-  -- draw gauge again if possible
-  if hp and max_hp and mana and max_mana and move and max_move then
-    do_prompt ("", "", { hp, max_hp, mana, max_mana, move, max_move } )
-  end -- if know hp, endurance and guile
-end -- OnPluginEnable
-function window(redraw)
-
-	if not window_visible then
-		return
-	end
-
-	if redraw then
-		--Note("redraw")
-font_size = GetVariable("font_size") or 9  
-font_name = GetVariable("font_name") or "Fixedsys"  
-		WindowDelete("winid")
-		WindowCreate(winid, pos_x, pos_y, win_width, win_height, 0, 0, ColourNameToRGB(bg_color))
-		WindowPosition(winid, pos_x, pos_y, 0, 2)
-		WindowSetZOrder(winid, 201)
-		WindowFont(winid, "f1", font_name, font_size, false, false, false, false)
-		WindowFont(winid, "b1", font_name, font_size, true, false, false, false)
-		WindowFont(winid, "s1", font_name, font_size - 1, false, false, false, false)
-		movewindow.install(winid, 6, 2, true, nil, {mouseup=MouseUp, mousedown=MouseDown, dragmove=LeftClickOnly, dragrelease=LeftClickOnly})
-		    -- register with the z-order monitor
-CallPlugin("462b665ecb569efbf261422f", "registerMiniwindow", winid)
-		movewindow.add_drag_handler (winid, 0, 0, 0, win_height)
-		WindowAddHotspot(winid, "resize", win_width - grip_resize, win_height - grip_resize, win_width, win_height, "MouseOver", "CancelMouseOver", "MouseDown", "", "MouseUp", "", 6, 0)
-		WindowDragHandler(winid, "resize", "ResizeMoveCallback", "ResizeReleaseCallback", 0)
-		
-	else
-		WindowResize(winid, win_width, win_height, ColourNameToRGB(bg_color))
-		WindowMoveHotspot(winid, "resize", win_width - grip_resize, win_height - grip_resize, win_width, win_height)
-	end
-	WindowShow(winid, ShowWindow)
-	
-end
-
-function OnPluginSaveState ()
-   -- save window current location for next time
-	SetVariable("pos_x", pos_x)
-	SetVariable("pos_y", pos_y)
-	SetVariable("win_width", win_width)
-	SetVariable("win_height", win_height)
-	SetVariable("hp_color", hp_color) -- hp color
-	SetVariable("mana_color", mana_color) -- mana color
-	SetVariable("moves_color", moves_color) -- moves color
-	SetVariable("enemy_color", enemy_color) -- enemy color
-	SetVariable("super_color", super_color) -- super color
-	SetVariable("exp_color", exp_color) -- enemy color
-    SetVariable("font_size", font_size) -- font_size
-	SetVariable("font_name", font_name)
-	SetVariable("GAUGE_HEIGHT", GAUGE_HEIGHT)
-end -- OnPluginSaveState
 
 
 ]]>
 </script>
-
 </muclient>
