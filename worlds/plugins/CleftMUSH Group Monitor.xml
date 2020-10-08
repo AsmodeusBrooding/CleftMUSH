@@ -13,7 +13,7 @@
    purpose="Group monitor"
    date_written="2019-07-03 12:04:56"
    requires="5.00"
-   version="6.40"
+   version="6.54"
    >
 
 </plugin>
@@ -62,7 +62,7 @@
    enabled="n"
    regexp="y"
    keep_evaluating="y"
-   match="^\[(\s+|)(?<level>\d+)\s+(?<tags>[^\s]+)\]\s+(?<name>(\[\w+\]\s+\w+.*\w+|\(\w+\)\s+\w+.*\w+|\w+.*\w+))\s+(?<hp>\d+)\/(\s+|)(?<hp_max>\d+)\s+hp\s+(?<mana>(-\d+|\d+|\?))\/(\s+|)(?<mana_max>(-\d+|\d+|\?))\s+mana\s+(?<moves>\d+)\/(\s+|)(?<moves_max>\d+)\s+mv\s+(?<exp>\d+)\s+xp$"
+   match="^\[(\s+|)(?<level>\d+)\s+(?<tags>[^\s]+)\]\s+(?<name>(\[\w+\]\s+\w+.*\w+|\(\w+\)\s+\w+.*\w+|\w+.*\w+))\s+(?<hp>\d+)\/(\s+|)(?<hp_max>\d+)\s+hp\s+(?<mana>(-\d+|\d+|\?))\/(\s+|)(?<mana_max>(-\d+|\d+|\?))\s+mana\s+(?<moves>(-\d+|\d+|\?))\/(\s+|)(?<moves_max>\d+)\s+mv\s+(?<exp>\d+)\s+xp$"
    script="player_line"
    omit_from_output="y"
    sequence="100"
@@ -83,7 +83,7 @@
    enabled="n"
    regexp="y"
    keep_evaluating="y"
-   match="^\[(\s+|)(?<level>\d+)\s+(?<tags>[^\s]+)\]\s+(?<name>\w+.*\w+)\s+(?<hp>\d+)\/(\s+|)(?<hp_max>\d+)\s+hp\s+(?<mana>(-\d+|\d+|\?))\/(\s+|)(?<mana_max>(-\d+|\d+|\?))\s+mana\s+(?<moves>\d+)\/(\s+|)(?<moves_max>\d+)\s+mv\s+(?<exp>\d+)\s+xp$"
+   match="^\[(\s+|)(?<level>\d+)\s+(?<tags>[^\s]+)\]\s+(?<name>\w+.*\w+)\s+(?<hp>\d+)\/(\s+|)(?<hp_max>\d+)\s+hp\s+(?<mana>(-\d+|\d+|\?))\/(\s+|)(?<mana_max>(-\d+|\d+|\?))\s+mana\s+(?<moves>(-\d+|\d+|\?))\/(\s+|)(?<moves_max>\d+)\s+mv\s+(?<exp>\d+)\s+xp$"
    script="enemy_line"
    omit_from_output="y"
    sequence="100"
@@ -166,12 +166,13 @@
       require "mw"
       require "mw_theme_base"
       require "tprint"
-	  require "utility"
-	  dofile(GetPluginInfo(GetPluginID(), 20) .. "cleft_colors.lua")
+	    require "utility"
+      require "colors"
+  	  dofile(GetPluginInfo(GetPluginID(), 20) .. "cleft_colors.lua")
 
       local group = {}
 
-      local version = "6.40"
+      local version = "6.54"
       local to_bool = {["0"] = false, ["1"] = true}
 
       local winid = "win_"..GetPluginID()
@@ -210,13 +211,16 @@
       local pos_x = GetVariable("pos_x") or 100
       local pos_y = GetVariable("pos_y") or 100
       local font_size = GetVariable("font_size") or 12
-      local font_name = "Fixedsys" or "Fixedsys Excelsior 3.01"
+      local font_name = "Fixedsys Excelsior 3.01" or "Fixedsys"
       local window_visible = true -- always start out with visible window
       local title = "Group Info: Use LOOK to draw the bars, or if this is your first time using the window type setup prompt"
       local bar_height = font_size+4 -- height of bars
       local bar_width = tonumber(GetVariable("bar_width")) or 200 -- width of bars
       local bar_ticks = 9 -- number of ticks to show on bar
-      local bar_border = "#777777" -- bar surrounding the gauges
+      local hp_bar_border = GetVariable("hp_bar_border") or "#777777" -- bar surrounding the gauges
+      local enemy_hp_bar_border = GetVariable("hp_bar_border") or "#777777" -- bar surrounding the gauges
+      local mana_bar_border = GetVariable("mana_bar_border_color") or "#777777" -- bar surrounding the gauges
+      local moves_bar_border = GetVariable("moves_bar_border_color") or "#777777" -- bar surrounding the gauges
       local enemy_hp_color = GetVariable("enemy_hp_color") or "#00ff00" -- color of bar
       local hp_color = GetVariable("hp_color") or "#00ff00" -- color of bar
       local mana_color = GetVariable("mana_color") or "#3333ff" -- color of bar
@@ -226,6 +230,15 @@
       local top = GetVariable("top") or 20
       local grip_resize = 10 -- resize grip size
       local debug_state = false
+      local compact_mode = false
+      GAP = 4
+      --allows for gauges changing color at certain thresholds
+      thresh1active = tonumber (GetVariable("thresh1active")) or 0
+      thresh2active = tonumber (GetVariable("thresh2active")) or 0
+      thresh1percent = tonumber (GetVariable("thresh1percent")) or 40
+      thresh2percent = tonumber (GetVariable("thresh2percent")) or 20
+      thresh1color = GetVariable("thresh1color") or "#00ffff"
+      thresh2color = GetVariable("thresh2color") or "#0000ff"
 
       function ToggleDebug()
 	 if debug_state ~= true then
@@ -444,7 +457,14 @@
 	    WindowCreate(winid, pos_x, pos_y, win_width, win_height, 0, 0, ColourNameToRGB(bg_color))
 	    WindowPosition(winid, pos_x, pos_y, 0, 2)
 	    WindowSetZOrder(winid, 201)
-	    WindowFont(winid, "f1", font_name, font_size, false, false, false, false)
+	  --  WindowFont(winid, font_id, font_name, font_size, false, false, false, false)
+    font_id = "font"
+    labels_width = math.max(WindowTextWidth(winid, font_id, "HP"), WindowTextWidth(winid, font_id, "MN"), WindowTextWidth(winid, font_id, "MV"))
+       WindowFont(winid, font_id, font_name, font_size, false, false, false, false, 0) -- normal font
+    --- Grab font size settings.
+    line_height = WindowFontInfo (winid, font_id, 1) -  WindowFontInfo (winid, font_id, 4) + 2
+    title_height = line_height*2+4
+  --     WindowFont(win, font_id, font_name, font_size, false, false, false, false, 0) -- normal font
 	    WindowFont(winid, "b1", font_name, font_size, true, false, false, false)
 	    WindowFont(winid, "s1", font_name, font_size - 1, false, false, false, false)
 	    movewindow.install(winid, 6, 2, true, nil, {mouseup=MouseUp, mousedown=MouseDown, dragmove=LeftClickOnly, dragrelease=LeftClickOnly})
@@ -475,18 +495,18 @@
 	 end
 	 return trim(string.sub(str, 1, 10))..".."
       end
-	  
+
       function bigtruncate(str)
 	 if #str <= 12 then
 	    return str
 	 end
-	 if bar_width == 200 and show_numbers then
+	 if not compact_mode and show_numbers then
 	 return trim(string.sub(str, 1, 15))..".."
-	 elseif bar_width == 200 and not show_numbers then
+	 elseif not compact_mode and not show_numbers then
 	 return trim(string.sub(str, 1, 15))..".."
-	 elseif bar_width == 100 and show_numbers then
+	 elseif compact_mode and show_numbers then
 	 return trim(string.sub(str, 1, 17))..".."
-	 elseif bar_width == 100 and not show_numbers then
+	 elseif compact_mode and not show_numbers then
 	 return trim(string.sub(str, 1, 7))..".."
       end
 	  end
@@ -494,16 +514,22 @@
 
       function abbreviate(str,length)
 	 if length == nil then
-	 if tonumber(font_size) <= 12 then 
-	    length=23
-		elseif tonumber(font_size) > 12 and tonumber(font_size) < 20 then
-		length = 20 - font_size/3 + 3
-		elseif tonumber(font_size) >= 20 then 
-		length = 20 - font_size/2.5
-		end		
-		if not show_numbers then 
-		length = 18
+	 --if tonumber(font_size) <= 12 then
+	    length=22
+		--elseif tonumber(font_size) > 12 and tonumber(font_size) < 20 then
+		--length = 20 -- font_size/3 + 3
+		--elseif tonumber(font_size) >= 20 then
+		--length = 20 -- font_size/2.5
 		end
+		if not show_numbers and compact_mode then
+		length = 8
+  elseif not show_numbers and not compact_mode then
+    length = 15
+  elseif show_numbers and compact_mode then
+  length = 18
+elseif show_numbers and not compact_mode then
+  length = 22
+	--	end
 	 end
 	 if string.len(str)>length then
 	    return string.sub(str, 1, length)..".."
@@ -533,8 +559,10 @@
 	    --print(string.format("abs(%.2f)=%.2f"),n,usn)
 	 end
 	 --Now test the absolute value for scale
-	 if usn < 10^5 then
+	 if usn < 10^4 then
 	    return tostring(n)
+    elseif usn < 10^5 then
+       return string.format("%.0fk", n / 10^3)
 	 elseif usn < 10^6 then
 	    return string.format("%.0fk", n / 10^3)
 	 elseif usn < 10^9 then
@@ -550,52 +578,84 @@
 
       function drawPlayer(player, i, isPlayerOrEnemy)
 	 if is_tank(player.tags) or (not show_minions and player.minion == 0) or show_minions then
-	    local padding = 3
-	    local box_top, box_right, box_bottom = top, 1, nil
-	    across = across + 1 -- how many players fit across window
-	    box_top = top + font_size/2
-	--	print("Font Size: ", font_size)
-	    top = font_size/3 + box_top or 17
-	    local x = 0
-		
-		LevelPos = WindowTextWidth(winid, "f1", "["..player.level.."]")
-		NamePos = WindowTextWidth(winid, "f1", abbreviate(player.name))
-		PetNamePos = WindowTextWidth(winid, "f1", bigtruncate(player.name))
-	   no_num_bar_width_100_x = bar_width + WindowTextWidth(winid, "f1", "**", false)
-       show_numbers_100_x = bar_width + NamePos + LevelPos--left + 180 + font_size - 2
-	   show_numbers_100_p = left + LevelPos + PetNamePos - font_size/1.3
-		
+	   local padding = 3
+	   local box_top, box_right, box_bottom = top, 1, nil
+	   across = across + 1 -- how many players fit across window
+	   box_top = top + line_height - font_size + padding
+	   top = font_size/3 + box_top or 17
+	   local x = 0
+     local column_width = 0
+	 	 LevelPos = WindowTextWidth(winid, font_id, "[100] ")
+		 NamePos = WindowTextWidth(winid, font_id, abbreviate(player.name).." ")
+     if NamePos <= 80 then
+       NamePos = 144
+     end
+		 TagNamePos = WindowTextWidth(winid, font_id, "[Leader] ")
+	   no_num_bar_width_100_x = bar_width + WindowTextWidth(winid, font_id, "**", false)
+     --if column_width == 0 then
+     Level100Width = WindowTextWidth(winid, font_id, " ")
+     LeaderTagSize = WindowTextWidth(winid, font_id, "[LEADER] ")
+     column_width = math.max(column_width, WindowTextWidth(winid, font_id, "[]                   "..NamePos..LeaderTagSize))
+     bar_width = column_width - GAP*3 - labels_width
+     if compact_mode == true then
+       bar_width = bar_width/2
+     else
+       bar_width = column_width - GAP*3 - labels_width
+     end
+        local hpPercent = 100
+        if player.hp and player.hp_max then
+           hpPercent = math.floor(player.hp / player.hp_max * 100)
+        end
+      local hp_color = "#00ff00" -- color of bar
+      local hp_bar_border = "#777777" -- bar surrounding the gauges
+      local thresh1color = GetVariable("thresh1color") or "#00ffff"
+      local thresh2color = GetVariable("thresh2color") or "#0000ff"
+        if thresh1active == 1 then
+           if hpPercent < thresh1percent then
+              hp_color = thresh1color
+              hp_bar_border = thresh1color
+           end
+        end
+        if thresh2active == 1 then
+           if hpPercent < thresh2percent then
+             hp_color = thresh2color
+             hp_bar_border = thresh2color
+           end
+         end
 	    ---- <><><><><><><><><><>><><><><><><><><><><><><><><><><><><><><><><><><>
 	    ---- DRAW TEXT FOR SMALL/LARGE BARS --------------------------------------
 	    if isPlayerOrEnemy or not isPlayerOrEnemy then
-	       if bar_width == 100 then
+	       if compact_mode then
 		  --Thing 1
 		  -- Draw player
-		  x = x + WindowText(winid, "f1", player.level, left, top + padding, 0, 0, ColourNameToRGB(level_color), false) + left -- label and padding
-		--  x = x + WindowText(winid, "f1", truncate(player.name), left + 22, top + padding, 0, 0, ColourNameToRGB(player_color), false) + left + 18 + 6 -- player name truncated
+		  x = x + WindowText(winid, font_id, player.level, left, top + padding, 0, 0, ColourNameToRGB(level_color), false) + left -- label and padding
+		--  x = x + WindowText(winid, font_id, truncate(player.name), left + 22, top + padding, 0, 0, ColourNameToRGB(player_color), false) + left + 18 + 6 -- player name truncated
 		  WindowAddHotspot(winid, "player"..i, left + 18, top + 2, left + 100, top + 16, "", "", "", "", "", player.name, 0, 0) -- show title for truncated player
 
 		  if show_numbers then
-		     x = x + WindowText(winid, "f1", player.level, left, top + padding, 0, 0, ColourNameToRGB(level_color), false) + left -- label and padding
-		     x = x + WindowText(winid, "f1", bigtruncate(player.name), left + 22, top + padding, 0, 0, ColourNameToRGB(player_color), false) + left + 18 + 6 -- player name truncated
-		  else
-		     x = WindowText(winid, "f1", player.level, left, top + padding, 0, 0, ColourNameToRGB(level_color), false) + left -- label and padding
-		     x = x + WindowText(winid, "f1", bigtruncate(player.name), left + 22, top + padding, 0, 0, ColourNameToRGB(player_color), false) + left + 18 + 6 -- player name truncated
+		     x = x + WindowText(winid, font_id, player.level, left, top + padding, 0, 0, ColourNameToRGB(level_color), false) + left -- label and padding
+		     x = x + WindowText(winid, font_id, abbreviate(player.name), left + labels_width + Level100Width, top + padding, 0, 0, ColourNameToRGB(player_color), false) + left + 18 + 6 -- player name truncated
 		  end
+      if not show_numbers then
+		     x = WindowText(winid, font_id, player.level, left, top + padding, 0, 0, ColourNameToRGB(level_color), false) + left -- label and padding
+		     x = x + WindowText(winid, font_id, abbreviate(player.name), left + labels_width + Level100Width, top + padding, 0, 0, ColourNameToRGB(player_color), false) + left + 18 + 6 -- player name truncated
+		  end
+    end
 
 
 		  if is_no_melee(player.tags) then
-		     x = x + WindowText(winid, "f1", "N", x, top + padding, 0, 0, ColourNameToRGB(no_melee_color), false) + 2 -- show if no melee
+		     x = x + WindowText(winid, font_id, "N", x, top + padding, 0, 0, ColourNameToRGB(no_melee_color), false) + 2 -- show if no melee
 		  end
-	       elseif bar_width == 200 then
-		  x = x + WindowText(winid, "f1", "Lv["..player.level.."]", left, top + padding, 0, 0, ColourNameToRGB(level_color), false) + left -- label and padding
-		  x = x + WindowText(winid, "f1", abbreviate(player.name), left + LevelPos + font_size*1.7, top + padding, 0, 0, ColourNameToRGB(player_color), false) + left + 18 + 8 -- player name truncated
+     if not compact_mode then
+		  x = x + WindowText(winid, font_id, "Lv["..player.level.."]", left, top + padding, 0, 0, ColourNameToRGB(level_color), false) + left -- label and padding
+		  x = x + WindowText(winid, font_id, abbreviate(player.name), left + LevelPos + font_size*1.7, top + padding, 0, 0, ColourNameToRGB(player_color), false) + left + 18 + 8-- player name truncated
 
 		  if is_no_melee(player.tags) then
-		     x = x + WindowText(winid, "f1", "[N]", x, top + padding, 0, 0, ColourNameToRGB(no_melee_color), false) -- show if no melee
+		     x = x + WindowText(winid, font_id, "[N]", x, top + padding, 0, 0, ColourNameToRGB(no_melee_color), false) -- show if no melee
 		  end
 	       end
-	    else -- isPlayerOrEnemy
+       --end
+	    --else -- isPlayerOrEnemy
 	    end -- if isPlayerOrEnemy
 	    ---- END DRAW TEXT FOR SMALL/LARGE BARS ----------------------------------
 	    ---- <><><><><><><><><><>><><><><><><><><><><><><><><><><><><><><><><><><>
@@ -603,22 +663,22 @@
 	    ---- <><><><><><><><><><>><><><><><><><><><><><><><><><><><><><><><><><><>
 	    ---- YOU -----------------------------------------------------------------
 	    if is_you(player.tags) and not (group_leader == player.name) and not is_minion(player.tags) and isPlayerOrEnemy then
-	       if bar_width == 100 then
+	       if compact_mode then
            if show_numbers then
-		     x = x + WindowText(winid, "f1", "Y", show_numbers_100_x, top + padding, 0, 0, ColourNameToRGB(you_color), false) + 2 -- show if you
+		     x = x + WindowText(winid, font_id, "Y", left+column_width - labels_width*2, top + padding, 0, 0, ColourNameToRGB(you_color), false) + 2 -- show if you
 		--  else
-		--     x = x + WindowText(winid, "f1", "Y", no_num_bar_width_100_x + padding*2, top + padding, 0, 0, ColourNameToRGB(you_color), false) + 2 -- show if you
+		--     x = x + WindowText(winid, font_id, "Y", no_num_bar_width_100_x + padding*2, top + padding, 0, 0, ColourNameToRGB(you_color), false) + 2 -- show if you
 		  end
 	       end
-		   if bar_width == 100 and not show_numbers then
-		     x = x + WindowText(winid, "f1", "Y", left + 110, top + padding, 0, 0, ColourNameToRGB(you_color), false) + 2 -- show if minion
+		   if compact_mode and not show_numbers then
+		     x = x + WindowText(winid, font_id, "Y", left + bar_width+font_size, top + padding, 0, 0, ColourNameToRGB(you_color), false) + 2 -- show if minion
 		   end
-	       if bar_width == 200 then
+	       if not compact_mode then
 		  if show_numbers then
-		  YouTagSize = WindowTextWidth(winid, "f1", "[YOU]")
-		     x = x + WindowText(winid, "f1", "[YOU]", bar_width+left+LevelPos+YouTagSize-padding*4, top + padding, 0, 0, ColourNameToRGB(you_color), false) -- show if you
+		  YouTagSize = WindowTextWidth(winid, font_id, " [YOU]")
+		     x = x + WindowText(winid, font_id, "[YOU]", bar_width+left+YouTagSize, top + padding, 0, 0, ColourNameToRGB(you_color), false) -- show if you
 		  else
-		     x = x + WindowText(winid, "f1", "Y", left + 210, top + padding, 0, 0, ColourNameToRGB(you_color), false) + 2 -- show if you
+		     x = x + WindowText(winid, font_id, "Y", left+bar_width+font_size, top + padding, 0, 0, ColourNameToRGB(you_color), false) + 2 -- show if you
 		  end
 	       end
 	    end
@@ -626,22 +686,22 @@
 	    ---- <><><><><><><><><><>><><><><><><><><><><><><><><><><><><><><><><><><>
 	    ---- TEAM-MATE -----------------------------------------------------------------
 	    if not is_you(player.tags) and not (group_leader == player.name) and not is_minion(player.tags) and not is_pet(player.tags) and isPlayerOrEnemy  then
-	       if bar_width == 100 then
+	       if compact_mode then
            if show_numbers then
-		     x = x + WindowText(winid, "f1", "T", show_numbers_100_p, top + padding, 0, 0, ColourNameToRGB(team_color), false) + 2 -- show if you
+		     x = x + WindowText(winid, font_id, "T", left+column_width - labels_width*2, top + padding, 0, 0, ColourNameToRGB(team_color), false) + 2 -- show if you
 		--  else
-		--     x = x + WindowText(winid, "f1", "Y", no_num_bar_width_100_x + padding*2, top + padding, 0, 0, ColourNameToRGB(you_color), false) + 2 -- show if you
+		--     x = x + WindowText(winid, font_id, "Y", no_num_bar_width_100_x + padding*2, top + padding, 0, 0, ColourNameToRGB(you_color), false) + 2 -- show if you
 		  end
 	       end
-		   if bar_width == 100 and not show_numbers then
-		     x = x + WindowText(winid, "f1", "T", left + 110, top + padding, 0, 0, ColourNameToRGB(team_color), false) + 2 -- show if minion
+		   if compact_mode and not show_numbers then
+		     x = x + WindowText(winid, font_id, "T",  left + bar_width+font_size, top + padding, 0, 0, ColourNameToRGB(team_color), false) + 2 -- show if minion
 		   end
-	       if bar_width == 200 then
+	       if not compact_mode then
 		  if show_numbers then
-		  TeamTagSize = WindowTextWidth(winid, "f1", "[TEAM]")
-		     x = x + WindowText(winid, "f1", "[TEAM]", bar_width+left+TeamTagSize-font_size*1.5, top + padding, 0, 0, ColourNameToRGB(team_color), false) -- show if you
+		  TeamTagSize = WindowTextWidth(winid, font_id, "[TEAM]")
+		     x = x + WindowText(winid, font_id, "[TEAM]", bar_width+left+TeamTagSize, top + padding, 0, 0, ColourNameToRGB(team_color), false) -- show if you
 		  else
-		     x = x + WindowText(winid, "f1", "T", left + 210, top + padding, 0, 0, ColourNameToRGB(team_color), false) + 2 -- show if you
+		     x = x + WindowText(winid, font_id, "T", left+bar_width+font_size, top + padding, 0, 0, ColourNameToRGB(team_color), false) + 2 -- show if you
 		  end
 	       end
 	    end
@@ -651,22 +711,22 @@
 	    ---- <><><><><><><><><><>><><><><><><><><><><><><><><><><><><><><><><><><>
 	    ---- LEADER --------------------------------------------------------------
 	    if group_leader == player.name then
-		  if bar_width == 100 then
+		  if compact_mode then
 		     if show_numbers then
-			x = x + WindowText(winid, "f1", "L", show_numbers_100_x, top + padding, 0, 0, ColourNameToRGB(leader_color, false) + 2)
+			x = x + WindowText(winid, font_id, "L", left+column_width - labels_width*2, top + padding, 0, 0, ColourNameToRGB(leader_color, false) + 2)
 		  --   else
-		  --x = x + WindowText(winid, "f1", "L", left + no_num_bar_width_100_x - 1, top + padding, 0, 0, ColourNameToRGB(leader_color), false) + 2
+		  --x = x + WindowText(winid, font_id, "L", left + no_num_bar_width_100_x - 1, top + padding, 0, 0, ColourNameToRGB(leader_color), false) + 2
 		     end
 		  end
-		  if bar_width == 100 and not show_numbers then
-		    x = x + WindowText(winid, "f1", "L", left + 110, top + padding, 0, 0, ColourNameToRGB(leader_color), false) + 2 -- show if minion
+		  if compact_mode and not show_numbers then
+		    x = x + WindowText(winid, font_id, "L", left + bar_width+font_size, top + padding, 0, 0, ColourNameToRGB(leader_color), false) + 2 -- show if minion
 			 end
 
-		  if bar_width == 200 then
+		  if not compact_mode then
 		     if show_numbers then
-			x = x + WindowText(winid, "f1", "[LEADER]", bar_width+left+LevelPos, top + padding, 0, 0, ColourNameToRGB(leader_color), false) -- show if leader -- used to be left+240
+			x = x + WindowText(winid, font_id, "[LEADER]", bar_width+left+LevelPos-font_size*2.5, top + padding, 0, 0, ColourNameToRGB(leader_color), false) -- show if leader -- used to be left+240
 		     else
-			x = x + WindowText(winid, "f1", "L", left+210, top + padding, 0, 0, ColourNameToRGB(leader_color), false) + 2 -- show if leader
+			x = x + WindowText(winid, font_id, "L", left + bar_width+font_size, top + padding, 0, 0, ColourNameToRGB(leader_color), false) + 2 -- show if leader
 		     end
 		  end
 	    end
@@ -677,24 +737,24 @@
 	    ---- PETS ----------------------------------------------------------------
 	    if is_pet(player.tags) and isPlayerOrEnemy then
         DebugNote(x)
-	       if bar_width == 100 then
+	       if compact_mode then
 		  if show_numbers then
-		     x = x + WindowText(winid, "f1", "P", show_numbers_100_p, top + padding, 0, 0, ColourNameToRGB(pet_color), false) + 2 -- show if pet
+		     x = x + WindowText(winid, font_id, "P", left+column_width - labels_width*2, top + padding, 0, 0, ColourNameToRGB(pet_color), false) + 2 -- show if pet
 		 -- else
-		 --   x = x + WindowText(winid, "f1", "P", left + bar_width - 1, top + padding, 0, 0, ColourNameToRGB(pet_color), false) + 2 -- show if pet
+		 --   x = x + WindowText(winid, font_id, "P", left + bar_width - 1, top + padding, 0, 0, ColourNameToRGB(pet_color), false) + 2 -- show if pet
 		  end
 	       end
-		   		   if bar_width == 100 and not show_numbers then
-		   		     x = x + WindowText(winid, "f1", "P", left + 110, top + padding, 0, 0, ColourNameToRGB(pet_color), false) + 2 -- show if minion
+		   		   if compact_mode and not show_numbers then
+		   		     x = x + WindowText(winid, font_id, "P", left + bar_width+font_size, top + padding, 0, 0, ColourNameToRGB(pet_color), false) + 2 -- show if minion
 					 end
 
-	       if bar_width == 200 then
+	       if not compact_mode then
 		  if show_numbers then
-		    PetTagSize = WindowTextWidth(winid, "f1", "[PET]")
-		     x = x + WindowText(winid, "f1", "[PET]", bar_width+left+LevelPos+PetTagSize-font_size*1.5, top + padding, 0, 0, ColourNameToRGB(pet_color), false) -- show if pet
+		    PetTagSize = WindowTextWidth(winid, font_id, "  [PET]")
+		     x = x + WindowText(winid, font_id, "[PET]", bar_width+left+PetTagSize, top + padding, 0, 0, ColourNameToRGB(pet_color), false) -- show if pet
 			 --print("Bar_width: ",bar_width)
 		  else
-		     x = x + WindowText(winid, "f1", "P", left + 210, top + padding, 0, 0, ColourNameToRGB(pet_color), false) + 2 -- show if pet
+		     x = x + WindowText(winid, font_id, "P", left+bar_width+font_size, top + padding, 0, 0, ColourNameToRGB(pet_color), false) + 2 -- show if pet
 		  end
 	       end
 	    end
@@ -704,23 +764,23 @@
 	    ---- <><><><><><><><><><>><><><><><><><><><><><><><><><><><><><><><><><><>
 	    ---- MINIONS -------------------------------------------------------------
       if is_minion(player.tags) and isPlayerOrEnemy then
-	       if bar_width == 100 then
+	       if compact_mode then
 		  if show_numbers then
-		     x = x + WindowText(winid, "f1", "C", show_numbers_100_p, top + padding, 0, 0, ColourNameToRGB(minion_color), false) + 2 -- show if minion
+		     x = x + WindowText(winid, font_id, "C", left+column_width - labels_width*2, top + padding, 0, 0, ColourNameToRGB(minion_color), false) + 2 -- show if minion
 		 -- else
-		   --  x = x + WindowText(winid, "f1", "C", x + padding - 1, top + padding, 0, 0, ColourNameToRGB(minion_color), false) + 2 -- show if minion
+		   --  x = x + WindowText(winid, font_id, "C", x + padding - 1, top + padding, 0, 0, ColourNameToRGB(minion_color), false) + 2 -- show if minion
 		  end
 	       end
-		   if bar_width == 100 and not show_numbers then
-		   		     x = x + WindowText(winid, "f1", "C", left + 110, top + padding, 0, 0, ColourNameToRGB(minion_color), false) + 2 -- show if minion
+		   if compact_mode and not show_numbers then
+		   		     x = x + WindowText(winid, font_id, "C", left + bar_width+font_size, top + padding, 0, 0, ColourNameToRGB(minion_color), false) + 2 -- show if minion
 					 end
 
-	       if bar_width == 200 then
+	       if not compact_mode then
 		  if show_numbers then
-		  CharmTagSize = WindowTextWidth(winid, "f1", "[CHARM]")
-		     x = x + WindowText(winid, "f1", "[CHARM]", bar_width+left+CharmTagSize-font_size*1.5, top + padding, 0, 0, ColourNameToRGB(minion_color), false)  -- show if minion
+		  --CharmTagSize = WindowTextWidth(winid, font_id, "[CHARM]")
+		     x = x + WindowText(winid, font_id, "[CHARM]", bar_width+left+LevelPos-font_size, top + padding, 0, 0, ColourNameToRGB(minion_color), false)  -- show if minion
 		  else
-		     x = x + WindowText(winid, "f1", "C", left + 210, top + padding, 0, 0, ColourNameToRGB(minion_color), false) + 2 -- show if minion
+		     x = x + WindowText(winid, font_id, "C", left + bar_width+font_size, top + padding, 0, 0, ColourNameToRGB(minion_color), false) + 2 -- show if minion
 		  end
 	       end
 	    end
@@ -729,48 +789,49 @@
 	    ---- <><><><><><><><><><>><><><><><><><><><><><><><><><><><><><><><><><><>
 	    ---- ENEMIES -------------------------------------------------------------
 	    if not isPlayerOrEnemy then
-	       if bar_width == 100 then
+	       if compact_mode then
 		  if show_numbers then
-		     x = x + WindowText(winid, "f1", player.level, left, top + padding, 0, 0, ColourNameToRGB(level_color), false) + left -- label and padding
-		     x = x + WindowText(winid, "f1", truncate(player.name), left + 22, top + padding, 0, 0, ColourNameToRGB(player_color), false) + left + 18 + 8 -- player name
-		     x = WindowText(winid, "f1", "E", show_numbers_100_p, top + padding, 0, 0, ColourNameToRGB(tank_color), false) -- show if enemy
+		     x = x + WindowText(winid, font_id, player.level, left, top + padding, 0, 0, ColourNameToRGB(level_color), false) + left -- label and padding
+		     x = x + WindowText(winid, font_id, abbreviate(player.name), left + labels_width, top + padding, 0, 0, ColourNameToRGB(player_color), false) + left + 18 + 8 -- player name
+		     x = WindowText(winid, font_id, "E", left+column_width - labels_width*2, top + padding, 0, 0, ColourNameToRGB(tank_color), false) -- show if enemy
 		  end
 		  end
-		  if bar_width == 100 and not show_numbers then
-		     x = x + WindowText(winid, "f1", player.level, left, top + padding, 0, 0, ColourNameToRGB(level_color), false) + left -- label and padding
-		     x = x + WindowText(winid, "f1", truncate(player.name), left + 22, top + padding, 0, 0, ColourNameToRGB(player_color), false) + left + 18 + 8 -- player name
-		   	 x = x + WindowText(winid, "f1", "E", left + 110, top + padding, 0, 0, ColourNameToRGB(tank_color), false) + 2 -- show if minion
+		  if compact_mode and not show_numbers then
+		     x = x + WindowText(winid, font_id, player.level, left, top + padding, 0, 0, ColourNameToRGB(level_color), false) + left -- label and padding
+		     x = x + WindowText(winid, font_id, abbreviate(player.name), left + labels_width, top + padding, 0, 0, ColourNameToRGB(player_color), false) + left + 18 + 8 -- player name
+		   	 x = x + WindowText(winid, font_id, "E", left + bar_width+font_size, top + padding, 0, 0, ColourNameToRGB(tank_color), false) + 2 -- show if minion
 		  end
-		   if bar_width == 200 then
-		  if show_numbers then
+		   if not compact_mode and show_numbers then
 --		  print("Player Name: ", player.name)
 --		  print("Player Level: ", player.level)
 		     --x = WindowRectOp(winid, 2, left - 3, top, 307, 198, ColourNameToRGB(enemy_background_color))
-			 EnemyTagSize = WindowTextWidth(winid, "f1", "[ENEMY]")
-		     x = WindowText(winid, "f1", "Lv["..player.level.."]", left, top + padding, 0, 0, ColourNameToRGB(level_color), false) + left -- label and padding
-		     x = x + WindowText(winid, "f1", abbreviate(player.name), left + LevelPos + font_size*1.7, top + padding, 0, 0, ColourNameToRGB(player_color), false) + left + 18 + 8 -- player name
-		     x = WindowText(winid, "f1", "[ENEMY]", bar_width+left+EnemyTagSize-font_size*1.5, top + padding, 0, 0, ColourNameToRGB(tank_color), false) -- show if enemy
-			 		  else
-		     x = WindowText(winid, "f1", "Lv["..player.level.."]", left, top + padding, 0, 0, ColourNameToRGB(level_color), false) + left -- label and padding
-		     x = x + WindowText(winid, "f1", nonumberabbreviate(player.name), left + 50, top + padding, 0, 0, ColourNameToRGB(player_color), false) + left + 18 + 8 -- player name
-		     x = x + WindowText(winid, "f1", "E", left + 210, top + padding, 0, 0, ColourNameToRGB(tank_color), false) + 2 -- show if minion
-		  end
+			 EnemyTagSize = WindowTextWidth(winid, font_id, "[ENEMY]")
+		     x = WindowText(winid, font_id, "Lv["..player.level.."]", left, top + padding, 0, 0, ColourNameToRGB(level_color), false) + left -- label and padding
+		     x = x + WindowText(winid, font_id, abbreviate(player.name), left + LevelPos + font_size*1.7, top + padding, 0, 0, ColourNameToRGB(player_color), false) + left + 18 + 8 -- player name
+		     x = WindowText(winid, font_id, "[ENEMY]", bar_width+left+EnemyTagSize-font_size*2.5, top + padding, 0, 0, ColourNameToRGB(tank_color), false) -- show if enemy
+       end
+       if not compact_mode and not show_numbers then
+		     x = WindowText(winid, font_id, "Lv["..player.level.."]", left, top + padding, 0, 0, ColourNameToRGB(level_color), false) + left -- label and padding
+		     x = x + WindowText(winid, font_id, abbreviate(player.name), left + LevelPos + font_size*1.7, top + padding, 0, 0, ColourNameToRGB(player_color), false) + left + 18 + 8-- player name
+		     x = x + WindowText(winid, font_id, "E", left + bar_width+font_size, top + padding, 0, 0, ColourNameToRGB(tank_color), false) + 2 -- show if minion
 	       end
 	    end
 	    ---- END ENEMIES ---------------------------------------------------------
 	    ---- <><><><><><><><><><>><><><><><><><><><><><><><><><><><><><><><><><><>
 
 	    -- Magic
-	    top = top + bar_height + font_size/2
+      top = top + line_height + 1
+      x = x + labels_width + GAP
 
+	    --top = top + bar_height + font_size/2
 	    ---- <><><><><><><><><><>><><><><><><><><><><><><><><><><><><><><><><><><>
 	    ---- DRAW BARS -----------------------------------------------------------
 	    if isPlayerOrEnemy then
-	       x = WindowText(winid, "f1", "HP", left, top, 0, 0, ColourNameToRGB(hp_label_color), false) + left -- label and padding
-	       gauge(winid, "HP for "..player.name, tonumber(player.hp), tonumber(player.hp_max), x + padding, top, bar_width, bar_height, ColourNameToRGB(hp_color), 0x000000, bar_ticks, ColourNameToRGB(bar_border), ColourNameToRGB(bar_border), nil, flat_gauges==1) -- hp gauge
+	       x = WindowText(winid, font_id, "HP", left, top, 0, 0, ColourNameToRGB(hp_label_color), false) + left -- label and padding
+	       gauge(winid, "HP for "..player.name, tonumber(player.hp), tonumber(player.hp_max), x + padding, top, bar_width, line_height, ColourNameToRGB(hp_color), 0x000000, bar_ticks, ColourNameToRGB(hp_bar_border), ColourNameToRGB(hp_bar_border), nil, flat_gauges==1) -- hp gauge
 	    elseif not isPlayerOrEnemy then
-	       x = WindowText(winid, "f1", "HP", left, top, 0, 0, ColourNameToRGB(enemy_hp_label_color), false) + left -- label and padding
-	       gauge(winid, "HP for "..player.name, tonumber(player.hp), tonumber(player.hp_max), x + padding, top, bar_width, bar_height, ColourNameToRGB(enemy_hp_color), 0x000000, bar_ticks, ColourNameToRGB(bar_border), ColourNameToRGB(bar_border), nil, flat_gauges==1) -- hp gauge
+	       x = WindowText(winid, font_id, "HP", left, top, 0, 0, ColourNameToRGB(enemy_hp_label_color), false) + left -- label and padding
+	       gauge(winid, "HP for "..player.name, tonumber(player.hp), tonumber(player.hp_max), x + padding, top, bar_width, line_height, ColourNameToRGB(enemy_hp_color), 0x000000, bar_ticks, ColourNameToRGB(enemy_hp_bar_border), ColourNameToRGB(enemy_hp_bar_border), nil, flat_gauges==1) -- hp gauge
 	    end
 	    if overlay_pct then
 	       outlined_text(winid, "s1", math.floor(player.hp / player.hp_max * 100).."%", x + 6, top - font_size/20, 0, 0, ColourNameToRGB(overlay_color), false) -- hp %
@@ -778,37 +839,40 @@
 		 --  print("FONT_SIZE: ", font_size)
 	    end
 	    if show_numbers then
-	       box_right = x + bar_width + WindowTextWidth(winid, "b1", string.rep("X", biggest_number).."/"..string.rep("X", biggest_number)) + 14 -- set max size of hp/mana/moves on side of gauge
-	       WindowText(winid, "f1", limit_n(player.hp).."/"..limit_n(player.hp_max), x + 6 + bar_width, top, 0, 0, ColourNameToRGB(overlay_color), false) -- hp
+	       box_right = x + bar_width + WindowTextWidth(winid, "b1", string.rep("X", biggest_number).."/"..string.rep("X", biggest_number)) + font_size+GAP -- set max size of hp/mana/moves on side of gauge
+	       WindowText(winid, font_id, limit_n(player.hp).."/"..limit_n(player.hp_max), x + 6 + bar_width, top, 0, 0, ColourNameToRGB(overlay_color), false) -- hp
 	    else
 	       box_right = x + bar_width + 6
 	    end
-	    top = top + bar_height + 2
+      top = top + line_height + 1
+	    --top = top + bar_height + 2
 
 	    if show_mana then
-	       x = WindowText(winid, "f1", "MN", left, top, 0, 0, ColourNameToRGB(mana_label_color), false) + left -- label and padding
-	       gauge(winid, "Mana for "..player.name, tonumber(player.mana), tonumber(player.mana_max), x + padding, top, bar_width, bar_height, ColourNameToRGB(mana_color), 0x000000, bar_ticks, ColourNameToRGB(bar_border), ColourNameToRGB(bar_border), nil, flat_gauges==1) -- mana gauge
+	       x = WindowText(winid, font_id, "MN", left, top, 0, 0, ColourNameToRGB(mana_label_color), false) + left -- label and padding
+	       gauge(winid, "Mana for "..player.name, tonumber(player.mana), tonumber(player.mana_max), x + padding, top, bar_width, line_height, ColourNameToRGB(mana_color), 0x000000, bar_ticks, ColourNameToRGB(mana_bar_border), ColourNameToRGB(mana_bar_border), nil, flat_gauges==1) -- mana gauge
 	       local is_number = tonumber(player.mana) and tonumber(player.mana_max)
 	       if (is_number and overlay_pct) then
 		  outlined_text(winid, "s1", math.floor(player.mana / player.mana_max * 100).."%", x + 6, top - font_size/20, 0, 0, ColourNameToRGB(overlay_color), false) -- mana %
 		  		--   print("MANA TOP: ", top)
 	       end
 	       if show_numbers then
-		  WindowText(winid, "f1", player.mana.."/"..player.mana_max, x + 6 + bar_width, top, 0, 0, ColourNameToRGB(overlay_color), false) -- mana
+		  WindowText(winid, font_id, limit_n(player.mana).."/"..limit_n(player.mana_max), x + 6 + bar_width, top, 0, 0, ColourNameToRGB(overlay_color), false) -- mana
 	       end
-	       top = top + bar_height + 2
+	      -- top = top + bar_height + 2
+        top = top + line_height + 1
 
 	       if show_moves then
-		  x = WindowText(winid, "f1", "MV", left, top, 0, 0, ColourNameToRGB(moves_label_color), false) + left -- label and padding
-		  gauge(winid, "Moves for "..player.name, tonumber(player.moves), tonumber(player.moves_max), x + padding, top, bar_width, bar_height, ColourNameToRGB(moves_color), 0x000000, bar_ticks, ColourNameToRGB(bar_border), ColourNameToRGB(bar_border), nil, flat_gauges==1) -- moves gauge
+		  x = WindowText(winid, font_id, "MV", left, top, 0, 0, ColourNameToRGB(moves_label_color), false) + left -- label and padding
+		  gauge(winid, "Moves for "..player.name, tonumber(player.moves), tonumber(player.moves_max), x + padding, top, bar_width, line_height, ColourNameToRGB(moves_color), 0x000000, bar_ticks, ColourNameToRGB(moves_bar_border), ColourNameToRGB(moves_bar_border), nil, flat_gauges==1) -- moves gauge
 		  if overlay_pct then
-		     outlined_text(winid, "s1", math.floor(player.moves / player.moves_max * 100).."%", x + 6, top - font_size/20, 0, 0, ColourNameToRGB(overlay_color), false) -- moves % 
+		     outlined_text(winid, "s1", math.floor(player.moves / player.moves_max * 100).."%", x + 6, top - font_size/20, 0, 0, ColourNameToRGB(overlay_color), false) -- moves %
 			-- 		   print("MOVE TOP: ", top)
 		  end
 		  if show_numbers then
-		     WindowText(winid, "f1", player.moves.."/"..player.moves_max, x + 6 + bar_width, top, 0, 0, ColourNameToRGB(overlay_color), false) -- moves
+		     WindowText(winid, font_id, player.moves.."/"..player.moves_max, x + 6 + bar_width, top, 0, 0, ColourNameToRGB(overlay_color), false) -- moves
 		  end
-		  top = top + bar_height + 2
+		 -- top = top + bar_height + 2
+     top = top + line_height + 1
 	       end
 	    end
 	    ---- END DRAW BARS -------------------------------------------------------
@@ -852,7 +916,7 @@
 	 if group_leader ~= "" then -- group leader
 	    title = "Group Leader: "..group_leader
 	 end
-	 Theme.DrawTitleBar(winid, "f1", title, "center") -- them window title (has to be drawn before border) This is the title bar that says the leader name
+	 Theme.DrawTitleBar(winid, font_id, title, "center") -- them window title (has to be drawn before border) This is the title bar that says the leader name
 	 Theme.DrawBorder(winid) -- theme window border
 
 	 left, top = 7, font_size * 1.1 + 2-- bar location
@@ -931,7 +995,7 @@
 	    str = str.."|Show Moves"
 	 end
 
-	 if bar_width == 200 then
+	 if compact_mode == false then
 	    str = str.."|-|Compact Bars"
 	 else
 	    str = str.."|-|Full Size Bars"
@@ -957,6 +1021,8 @@
 
 	 str = str.."|-|Change Font"
 
+   str = str .."|-|>HP Thresholds|>First|"..(((thresh1active == 1) and "+") or "").."Activate|Set Percent ("..thresh1percent.."%)|Set Color ("..(thresh1color)..")|<|>Second|"..(((thresh2active == 1) and "+") or "").."Activate|Set Percent ("..thresh2percent.."%)|Set Color ("..(thresh2color)..")|<|<|"
+
 	 opt = WindowMenu(winid, x, y, str)
 
 	 if opt == "" then
@@ -975,10 +1041,10 @@
 	    show_moves = not show_moves
 	    SaveState()
 	 elseif opt == 4 then -- 1/2 width bars
-	    if bar_width == 200 then
-	       bar_width = 100
+	    if compact_mode == false then
+        compact_mode = true
 	    else
-	       bar_width = 200
+        compact_mode = false
 	    end
 	    SaveState()
 	 elseif opt == 5 then -- hp color
@@ -1025,26 +1091,59 @@
 	    if wanted_font then
 	   --    print("Bar Height1: ", bar_height)
 	   --    print("Top1: ", top)
-	       font_name = "Fixedsys" or "Fixedsys Excelsior 3.01"
+	     font_name = "Fixedsys Excelsior 3.01" or "Fixedsys"
 		   font_size = tonumber(wanted_font)
 		   if font_size <= 8 then
-		   util.print("{R[{WThe smallest font size you are allowed is {Y8{W. The most ideal font size is {G10{W, or {Y12{W. Setting the font size to {Y9{W.{R]")
+		   util.print("{R[{WThe smallest font size you are allowed is {Y9{W. The most ideal font size is {G10{W, or {Y12{W. Setting the font size to {Y9{W.{R]")
 		   font_size = 9
-		   elseif font_size >= 17 then
-		   util.print("{x238The largest font size currently allowed is 17. If you want to surpass this number, ask Asmodeus to add something in for you.")
-		   font_size = 17
+     elseif font_size >= 30 then
+		   util.print("{x238The largest font size currently allowed is 30. If you want to surpass this number, ask Asmodeus to add something in for you.")
+		   font_size = 30
 		   end
 	      -- font_size = wanted_font.size
 	       SetVariable("font_size", font_size)
-	       bar_height = font_size + 4
-	       top = top + bar_height * 2
+	       --  bar_height = font_size + 4
+	       --top = top + bar_height * 2
 	       --rows+1
-	       SetVariable("top", top)
+	       --SetVariable("top", top)
 	       --SetVariable("bar_height", bar_height)
 	 --      print("Bar Height2: ", bar_height)
 	 --      print("Top2: ", top)
+   	 window(true)
 	    end
-	 end
+    elseif opt == 14 then -- Change thresholds
+               thresh1active = (((thresh1active == 0) and 1) or 0)
+    elseif opt == 15 then -- Change thresholds
+      local perc = utils.inputbox( "I want the HP bars to change color when they drop below this percent...\n(enter a whole number between 1 and 100)", "Group Monitor HP Threshold #1", thresh1percent, nil, nil, {validate=validate_percent})
+      if perc then
+         if string.sub(perc, -1) == "%" then
+            perc = string.sub(perc, 1,-2)
+         end
+         thresh1percent = tonumber(perc)
+      end
+    elseif opt == 16 then -- Change thresholds
+      local clr = PickColour(ColourNameToRGB(thresh1color))
+  		if clr ~= -1 then
+  			thresh1color = RGBColourToName(clr)
+      end
+    elseif opt == 17 then -- Change thresholds
+         thresh2active = (((thresh2active == 0) and 1) or 0)
+    elseif opt == 18 then -- Change thresholds
+      local perc = utils.inputbox( "I want the HP bars to change color when they drop below this percent...\n(enter a whole number between 1 and 100)", "Group Monitor HP Threshold #2", thresh2percent, nil, nil, {validate=validate_percent})
+      if perc then
+         if string.sub(perc, -1) == "%" then
+            perc = string.sub(perc, 1,-2)
+         end
+         thresh2percent = tonumber(perc)
+      end
+    elseif opt == 19 then -- Change thresholds
+      local clr = PickColour(ColourNameToRGB(thresh2color))
+  		if clr ~= -1 then
+  			thresh2color = RGBColourToName(clr)
+  			SaveState()
+      end
+    end
+          SaveState()
 	 window(true)
       end
 
@@ -1087,11 +1186,18 @@
 	 SetVariable("overlay_pct", from_bool(overlay_pct)) -- show % overlay
 	 SetVariable("show_numbers", from_bool(show_numbers)) -- show totals
 	 SetVariable("hp_color", hp_color) -- hp color
+   SetVariable("hp_bar_border", hp_color) -- hp color
 	 SetVariable("enemy_hp_color", enemy_hp_color) -- enemy hp color
 	 SetVariable("mana_color", mana_color) -- mana color
 	 SetVariable("moves_color", moves_color) -- moves color
 	 SetVariable("bar_width", bar_width) -- bar width
 	 SetVariable("top", top)
+   SetVariable("thresh1active", thresh1active)
+   SetVariable("thresh2active", thresh2active)
+   SetVariable("thresh1percent", thresh1percent)
+   SetVariable("thresh2percent", thresh2percent)
+   SetVariable("thresh1color", thresh1color)
+   SetVariable("thresh2color", thresh2color)
 	 SetVariable("debug_state", tostring(debug_state))
       end
 
@@ -1102,7 +1208,7 @@
       util.print("{WVersion      : {G" .. version)
       util.print("{W--------------------------------------------------------------------------------")
       end
-	  
+
 	  function grouphelp()
       util.print("{W--------------------------------------------------------------------------------")
       util.print("{WPlugin Name  : {YC{yl{Ye{yf{Yt{RM{rU{RS{rH {x238Group Window")
@@ -1124,9 +1230,17 @@ end
 
 function OnPluginInstall()
 AddFont("FSEX300.ttf")
+font_id = "font"
+local font_name = "Fixedsys Excelsior 3.01" or "Fixedsys"
+local font_size = GetVariable("font_size") or 12
+labels_width = math.max(WindowTextWidth(winid, font_id, "HP"), WindowTextWidth(winid, font_id, "MN"), WindowTextWidth(winid, font_id, "MV"))
+   WindowFont(winid, font_id, font_name, font_size, false, false, false, false, 0) -- normal font
+--- Grab font size settings.
+line_height = WindowFontInfo (winid, font_id, 1) -  WindowFontInfo (winid, font_id, 4) + 2
+title_height = line_height*2+4
 end
 
-	  
+
 
       -- SIMULATE STUFF
       function simulate_group()
