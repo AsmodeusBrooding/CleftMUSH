@@ -11,7 +11,7 @@
    purpose="Shows hp, mana, move, exp, and mob health in a mini window"
    date_written="2019-06-30 09:00"
    requires="4.40"
-   version="6.37"
+   version="6.38"
    save_state="y"
    >
 <description trim="y">
@@ -142,6 +142,7 @@ require "movewindow"
 require "gauge"
 require "serialize"
 require "utility"
+require "colors"
 dofile(GetPluginInfo(GetPluginID(), 20) .. "cleft_colors.lua")
 
 default_width         = 1137
@@ -163,7 +164,7 @@ local barIndex = {"Health", "Mana", "Moves", "TNL", "Enemy", "Align"}
 local hp, max_hp, mana, max_mana, move, max_move
 local bar_ticks = 9 -- number of ticks to show on bar
 local window_visible = true -- always start out with visible window
-local version = "6.37"
+local version = "6.38"
 TNL = "0"
 exp = "0"
 remorts = "0"
@@ -341,14 +342,14 @@ function DisplayStatsPage(name, line, wildcards)
    WindowRectOp(win, 2, 0, 0, 0, 0, Theme.PRIMARY_BODY) -- blank
    if not page_built then
       if stacked == 1 then
-         local txt = "Status bars will appear"
+         local txt = "Status bars will appear when play begins."
          local txtlen = WindowTextWidth(win,font_id,txt)
          WindowText (win, font_id, txt, (effectiveWidth-txtlen)/2, (height/2)-line_height, 0, 0, Theme.BODY_TEXT, false)
-         txt = "when play begins."
+         txt = "If they do not appear, type setup prompt, and make sure your prompt is ON."
          txtlen = WindowTextWidth(win,font_id,txt)
          WindowText (win, font_id, txt, (effectiveWidth-txtlen)/2, height/2, 0, 0, Theme.BODY_TEXT, false)
       else
-         local txt = "Status bars will appear when play begins."
+         local txt = "Status bars will appear when play begins. If they do not appear, type setup prompt, and make sure your prompt is ON."
          local txtlen = WindowTextWidth(win,font_id,txt)
          WindowText (win, font_id, txt, (effectiveWidth-txtlen)/2, (height-line_height)/2, 0, 0, Theme.BODY_TEXT, false)
       end
