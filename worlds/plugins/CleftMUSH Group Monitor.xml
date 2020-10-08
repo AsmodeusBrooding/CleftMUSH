@@ -13,7 +13,7 @@
    purpose="Group monitor"
    date_written="2019-07-03 12:04:56"
    requires="5.00"
-   version="6.54"
+   version="6.55"
    >
 
 </plugin>
@@ -172,7 +172,7 @@
 
       local group = {}
 
-      local version = "6.54"
+      local version = "6.55"
       local to_bool = {["0"] = false, ["1"] = true}
 
       local winid = "win_"..GetPluginID()
@@ -576,6 +576,12 @@ elseif show_numbers and not compact_mode then
 	 end
       end
 
+
+      function fixNaN(num)
+  if num ~= num or num <= 0 then num = 0 end
+  return num
+end
+
       function drawPlayer(player, i, isPlayerOrEnemy)
 	 if is_tank(player.tags) or (not show_minions and player.minion == 0) or show_minions then
 	   local padding = 3
@@ -852,7 +858,7 @@ elseif show_numbers and not compact_mode then
 	       gauge(winid, "Mana for "..player.name, tonumber(player.mana), tonumber(player.mana_max), x + padding, top, bar_width, line_height, ColourNameToRGB(mana_color), 0x000000, bar_ticks, ColourNameToRGB(mana_bar_border), ColourNameToRGB(mana_bar_border), nil, flat_gauges==1) -- mana gauge
 	       local is_number = tonumber(player.mana) and tonumber(player.mana_max)
 	       if (is_number and overlay_pct) then
-		  outlined_text(winid, "s1", math.floor(player.mana / player.mana_max * 100).."%", x + 6, top - font_size/20, 0, 0, ColourNameToRGB(overlay_color), false) -- mana %
+		  outlined_text(winid, "s1", fixNaN(math.floor(player.mana / player.mana_max * 100)).."%", x + 6, top - font_size/20, 0, 0, ColourNameToRGB(overlay_color), false) -- mana %
 		  		--   print("MANA TOP: ", top)
 	       end
 	       if show_numbers then
