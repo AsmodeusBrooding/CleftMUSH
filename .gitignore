@@ -3,7 +3,6 @@
 worlds/plugins/state/
 
 # Ignore db and backups
-CleftofDimensions.db
 db_backups
 
 # Ignore ALL symlinks (possibly only a wine issue)

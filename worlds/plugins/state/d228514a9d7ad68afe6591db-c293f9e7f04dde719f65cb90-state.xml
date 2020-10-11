@@ -15,9 +15,9 @@
    world_file_version="15"
   >
   <variable name="aard_theme_just_reloading">1</variable>
-  <variable name="trbottom">641</variable>
+  <variable name="trbottom">616</variable>
   <variable name="trleft">7</variable>
-  <variable name="trright">744</variable>
+  <variable name="trright">783</variable>
   <variable name="trtop">7</variable>
 </variables>
 </muclient>

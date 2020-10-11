@@ -25,9 +25,9 @@
   <variable name="hp_color">65535</variable>
   <variable name="mana_color">#3333ff</variable>
   <variable name="moves_color">gold</variable>
-  <variable name="myname">Asmodeus</variable>
+  <variable name="myname">Testthing</variable>
   <variable name="overlay_pct">1</variable>
-  <variable name="pos_x">750</variable>
+  <variable name="pos_x">789</variable>
   <variable name="pos_y">342</variable>
   <variable name="show_mana">1</variable>
   <variable name="show_minions">1</variable>
@@ -39,8 +39,8 @@
   <variable name="thresh2active">1</variable>
   <variable name="thresh2color">red</variable>
   <variable name="thresh2percent">25</variable>
-  <variable name="top">181.2</variable>
+  <variable name="top">98.2</variable>
   <variable name="win_height">280</variable>
-  <variable name="win_width">304</variable>
+  <variable name="win_width">334</variable>
 </variables>
 </muclient>

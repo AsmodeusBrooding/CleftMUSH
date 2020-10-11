@@ -19,7 +19,7 @@
   <variable name="OUR_ROOM_COLOUR">255</variable>
   <variable name="ROOM_SIZE">26</variable>
   <variable name="aard_theme_just_reloading">1</variable>
-  <variable name="cnt">1</variable>
+  <variable name="cnt">52</variable>
   <variable name="config">config = {
   SHOW_ROOM_NOTES = false,
   DELAY = {
@@ -30,21 +30,21 @@
     },
   WINDOW = {
     height = 342,
-    width = 304,
+    width = 335,
     },
-  SHOW_DOOR_EXITS = false,
   SHOW_ROOM_ID = false,
+  SHOW_DOOR_EXITS = false,
   SCAN = {
     depth = 300,
     },
   FONT = {
-    name = "Dina",
-    size = 8,
+    name = "Fixedsys",
+    size = 12,
     },
   SHOW_AREA_EXITS = false,
   }</variable>
   <variable name="last_backup">1566992035</variable>
-  <variable name="mw_dd07d6dbe73fe0bd02ddb62c_mapper_windowx">750</variable>
+  <variable name="mw_dd07d6dbe73fe0bd02ddb62c_mapper_windowx">788</variable>
   <variable name="mw_dd07d6dbe73fe0bd02ddb62c_mapper_windowy">0</variable>
   <variable name="shownotes">1</variable>
   <variable name="tile_mode">1</variable>

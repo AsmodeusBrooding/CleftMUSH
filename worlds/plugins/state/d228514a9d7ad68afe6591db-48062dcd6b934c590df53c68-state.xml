@@ -20,15 +20,15 @@
   <variable name="enemy_color">#ff0000</variable>
   <variable name="exp_color">#9400d3</variable>
   <variable name="flat_gauges">0</variable>
-  <variable name="font_name">Fixedsys Excelsior 3.01</variable>
+  <variable name="font_name">Fixedsys</variable>
   <variable name="font_size">14</variable>
   <variable name="graphicalMode">1</variable>
   <variable name="hp_color">#00ff00</variable>
   <variable name="mana_color">#3333ff</variable>
-  <variable name="max_exp">5000</variable>
+  <variable name="max_exp">2000</variable>
   <variable name="moves_color">#ffd700</variable>
   <variable name="mw_48062dcd6b934c590df53c68_windowx">0</variable>
-  <variable name="mw_48062dcd6b934c590df53c68_windowy">646</variable>
+  <variable name="mw_48062dcd6b934c590df53c68_windowy">622</variable>
   <variable name="overlay_numbers">3</variable>
   <variable name="pos_x">65</variable>
   <variable name="pos_y">100</variable>
@@ -79,7 +79,7 @@
   <variable name="thresh2active">1</variable>
   <variable name="thresh2color">255</variable>
   <variable name="thresh2percent">25</variable>
-  <variable name="width">750</variable>
+  <variable name="width">790</variable>
   <variable name="win_height">170</variable>
   <variable name="win_shown">true</variable>
   <variable name="win_width">100</variable>

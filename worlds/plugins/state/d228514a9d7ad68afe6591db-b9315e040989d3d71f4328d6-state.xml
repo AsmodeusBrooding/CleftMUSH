@@ -14,6 +14,6 @@
    muclient_version="5.07-pre"
    world_file_version="15"
   >
-  <variable name="theme_file">Dark.lua</variable>
+  <variable name="theme_file">Dark (cleft background).lua</variable>
 </variables>
 </muclient>
