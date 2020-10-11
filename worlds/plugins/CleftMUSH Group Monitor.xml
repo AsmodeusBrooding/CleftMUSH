@@ -13,7 +13,7 @@
    purpose="Group monitor"
    date_written="2019-07-03 12:04:56"
    requires="5.00"
-   version="6.57"
+   version="6.58"
    >
 
 </plugin>
@@ -172,7 +172,7 @@
 
       local group = {}
 
-      local version = "6.57"
+      local version = "6.58"
       local to_bool = {["0"] = false, ["1"] = true}
 
       local winid = "win_"..GetPluginID()
@@ -795,12 +795,10 @@ end
 	    ---- <><><><><><><><><><>><><><><><><><><><><><><><><><><><><><><><><><><>
 	    ---- ENEMIES -------------------------------------------------------------
 	    if not isPlayerOrEnemy then
-	       if compact_mode then
-		  if show_numbers then
+	       if compact_mode and show_numbers then
 		     x = x + WindowText(winid, font_id, player.level, left, top + padding, 0, 0, ColourNameToRGB(level_color), false) + left -- label and padding
-		     x = x + WindowText(winid, font_id, abbreviate(player.name), left + labels_width, top + padding, 0, 0, ColourNameToRGB(player_color), false) + left + 18 + 8 -- player name
+		  --   x = x + WindowText(winid, font_id, abbreviate(player.name), left + labels_width, top + padding, 0, 0, ColourNameToRGB(player_color), false) + left + 18 + 8 -- player name
 		     x = WindowText(winid, font_id, "E", left+column_width - labels_width*2, top + padding, 0, 0, ColourNameToRGB(tank_color), false) -- show if enemy
-		  end
 		  end
 		  if compact_mode and not show_numbers then
 		     x = x + WindowText(winid, font_id, player.level, left, top + padding, 0, 0, ColourNameToRGB(level_color), false) + left -- label and padding
@@ -808,9 +806,6 @@ end
 		   	 x = x + WindowText(winid, font_id, "E", left + bar_width+font_size, top + padding, 0, 0, ColourNameToRGB(tank_color), false) + 2 -- show if minion
 		  end
 		   if not compact_mode and show_numbers then
---		  print("Player Name: ", player.name)
---		  print("Player Level: ", player.level)
-		     --x = WindowRectOp(winid, 2, left - 3, top, 307, 198, ColourNameToRGB(enemy_background_color))
 			 EnemyTagSize = WindowTextWidth(winid, font_id, "[ENEMY]")
 		     x = WindowText(winid, font_id, "Lv["..player.level.."]", left, top + padding, 0, 0, ColourNameToRGB(level_color), false) + left -- label and padding
 		     x = x + WindowText(winid, font_id, abbreviate(player.name), left + LevelPos + font_size*1.7, top + padding, 0, 0, ColourNameToRGB(player_color), false) + left + 18 + 8 -- player name
