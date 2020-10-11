@@ -13,7 +13,7 @@
    purpose="Group monitor"
    date_written="2019-07-03 12:04:56"
    requires="5.00"
-   version="6.58"
+   version="6.59"
    >
 
 </plugin>
@@ -172,7 +172,7 @@
 
       local group = {}
 
-      local version = "6.58"
+      local version = "6.59"
       local to_bool = {["0"] = false, ["1"] = true}
 
       local winid = "win_"..GetPluginID()
@@ -802,7 +802,7 @@ end
 		  end
 		  if compact_mode and not show_numbers then
 		     x = x + WindowText(winid, font_id, player.level, left, top + padding, 0, 0, ColourNameToRGB(level_color), false) + left -- label and padding
-		     x = x + WindowText(winid, font_id, abbreviate(player.name), left + labels_width, top + padding, 0, 0, ColourNameToRGB(player_color), false) + left + 18 + 8 -- player name
+	--	     x = x + WindowText(winid, font_id, abbreviate(player.name), left + labels_width, top + padding, 0, 0, ColourNameToRGB(player_color), false) + left + 18 + 8 -- player name
 		   	 x = x + WindowText(winid, font_id, "E", left + bar_width+font_size, top + padding, 0, 0, ColourNameToRGB(tank_color), false) + 2 -- show if minion
 		  end
 		   if not compact_mode and show_numbers then
