@@ -20,7 +20,7 @@
    script_editor="notepad"
    script_editor_argument="%file"
    script_language="Lua"
-   site="cod.mudmagic.com"
+   site="cleftofdimensions.net"
    spam_message="look"
    speed_walk_prefix="#"
    terminal_identification="MUSHclient-Cleft"
