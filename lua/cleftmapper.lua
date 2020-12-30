@@ -1257,10 +1257,11 @@ function find_paths (uid, f)
       if rooms [part.current_room] then
 
         -- get a list of exits from the current room
-        exits = rooms [part.current_room].exits
+        local exits = rooms [part.current_room].exits
 
         -- create one new particle for each exit
-        for dir, dest in pairs(exits) do
+        -- sort exits by descending dir length, thus prioritizing cexits
+        for dir, dest in spairs(exits, function(t, a, b) return #a > #b end) do
           -- if we've been in this room before, drop it
           if not explored_rooms[dest] then
             explored_rooms[dest] = true
@@ -1273,22 +1274,6 @@ function find_paths (uid, f)
               found, done = f (dest)
               if found then
                 paths[dest] = { path = new_path, reason = found }
-			--	tprint(paths[dest])
-				--print(paths[dest].path[1].dir)
-				--[[			for k, v in pairs(exits) do
-		print(#k)
-		if #k >= 3 then
-		non_cardinal_key = k
-		cardinal_key = nil
-		dir.dir = non_cardinal_key
-		print("Non Cardinal: ",non_cardinal_key)
-		else
-		cardinal_key = k
-		non_cardinal_key = nil
-		print("Cardinal: ",cardinal_key)
-		end
-      end
-		]]--
               end -- found one!
 
               -- make a new particle in the new room
@@ -2375,4 +2360,33 @@ function draw_edge()
    check (WindowRectOp (win, 1, 0, 0, 0, 0, 0xE8E8E8, 15))
    check (WindowRectOp (win, 1, 1, 1, -1, -1, 0x777777, 15))
    add_resize_tag()
+end
+
+-------------------------------------------------------------------------------------
+-- UTILITY FUNCTIONS
+-------------------------------------------------------------------------------------
+
+-- sorted pairs
+-- https://stackoverflow.com/a/15706820/865091
+function spairs(t, order)
+   -- collect the keys
+   local keys = {}
+   for k in pairs(t) do keys[#keys+1] = k end
+
+   -- if order function given, sort by it by passing the table and keys a, b,
+   -- otherwise just sort the keys
+   if order then
+      table.sort(keys, function(a,b) return order(t, a, b) end)
+   else
+      table.sort(keys)
+   end
+
+   -- return the iterator function
+   local i = 0
+   return function()
+      i = i + 1
+      if keys[i] then
+         return keys[i], t[keys[i]]
+      end
+   end
 end
