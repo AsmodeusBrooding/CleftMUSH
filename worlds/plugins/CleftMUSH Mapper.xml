@@ -2780,12 +2780,12 @@ function room_change_exit (room, uid, exit)
          return
       end -- not known
 
-      local chosen_exit = utils.listbox ("Choose exit to change destination of:", "Exits ...", available )
+      chosen_exit = utils.listbox ("Choose exit to change destination of:", "Exits ...", available )
       if not chosen_exit then
          return
       end
    end
-   exit_destination = utils.inputbox ("Enter destination room identifier (number) for " .. temp_exit, room.name, room.exits[temp_exit])
+   exit_destination = utils.inputbox ("Enter destination room identifier (number) for " .. chosen_exit, room.name, room.exits[chosen_exit])
 
    if not exit_destination then
       return
@@ -2805,23 +2805,23 @@ function room_change_exit (room, uid, exit)
       return
    end -- if still not there
 
-   if exit_destination ~= room.exits[temp_exit] then
+   if exit_destination ~= room.exits[chosen_exit] then
       run_sql(string.format ([[
          UPDATE exits SET touid = %s WHERE dir = %s AND fromuid = %s;
          ]],
          fix_sql (exit_destination),
-         fix_sql (temp_exit),  -- direction (eg. "n")
+         fix_sql (chosen_exit),  -- direction (eg. "n")
          fix_sql (uid)  -- from current room
       ))
 
-      mapper.mapprint ("Modified exit", temp_exit, "from room", uid, "to be to room", exit_destination, "in database.")
+      mapper.mapprint ("Modified exit", chosen_exit, "from room", uid, "to be to room", exit_destination, "in database.")
 
       -- update in-memory table
-      rooms [uid].exits [temp_exit] = exit_destination
+      rooms [uid].exits [chosen_exit] = exit_destination
 	   add_update_room(uid, rooms[uid])
       mapper.draw (current_room)
    else
-      mapper.mapprint ("Destination unchanged for exit '"..temp_exit.."'.")
+      mapper.mapprint ("Destination unchanged for exit '"..chosen_exit.."'.")
    end
 
 end -- room_change_exit
