@@ -7,8 +7,8 @@
   <!ENTITY show_timing "true" >
   <!ENTITY show_completed "false" >
   <!ENTITY show_database_mods "true" >
-  <!ENTITY show_other_areas "true" >
-  <!ENTITY show_area_exits "true" >
+  <!ENTITY show_other_areas "false" >
+  <!ENTITY show_area_exits "false" >
   <!ENTITY show_door_exits "true" >
   <!ENTITY show_up_down "false" >
   <!ENTITY speedwalk_prefix "run" >
@@ -25,7 +25,7 @@
    save_state="y"
    date_written="2019-07-26 07:21:01"
    requires="4.51"
-   version="6.35"
+   version="6.50"
    >
 
 </plugin>
@@ -439,6 +439,16 @@ where forges | prefix {Where Forge}
 </send>
 </alias>
 <alias
+match="AddDoor"
+enabled="y"
+send_to="14"
+sequence="100"
+>
+<send>
+AddDoors()
+</send>
+</alias>
+<alias
 match="mapper show area"
 enabled="y"
 sequence="100"
@@ -627,7 +637,7 @@ DoAfterSpecial (0.5, 'EnableTrigger ("Exits_Line", true)', sendto.script)
   <trigger
   enabled="y"
   group="get_room_name"
-  match="^\[Room\]\[(?<terrain>.*)\]\[ (?P<name>.*) \]$"
+  match="^\[Room\]\[(?<terrain>.*)\]\[ (?P<name1>.*, (?P<area1>Goa)|(?P<name2>.*, (?P<area2>Brynmaer)|(?P<name3>.*, Brynmaer, (?P<area3>Goa))|(?P<name4>.*))) \]$"
   name="get_room_name"
   script="process_room_name"
   regexp="y"
@@ -637,8 +647,9 @@ DoAfterSpecial (0.5, 'EnableTrigger ("Exits_Line", true)', sendto.script)
   >
   <send>
 terrain = GetTriggerWildcard ("get_room_name", "terrain")  -- get wildcard named 'terrain'
-name = GetTriggerWildcard ("get_room_name", "name")  -- get wildcard named 'who'
-area = "&lt;No_area>"
+name = GetTriggerWildcard ("get_room_name", "name1") or GetTriggerWildcard ("get_room_name", "name2") or GetTriggerWildcard ("get_room_name", "name3") or GetTriggerWildcard ("get_room_name", "name4") -- get wildcard named 'who'
+area = GetTriggerWildcard ("get_room_name", "area1") or GetTriggerWildcard ("get_room_name", "area2") or GetTriggerWildcard ("get_room_name", "area3") or "&lt;No_area>"
+--print(area)
 EnableTriggerGroup ("get_room_name", false)
 </send>
   </trigger>
@@ -659,12 +670,12 @@ area = GetTriggerWildcard ("area_name", "area")  -- get wildcard named 'who'
 name = GetTriggerWildcard ("area_name", "name")  -- get wildcard named 'who'
 </send>
   </trigger>
-  
+
     <trigger
   enabled="n"
   name="area_name2"
   group="get_room_name"
-  match="^\[Room\]\[(?P<terrain>.*)\]\[ (\w+,|\w+\s+\w+,|\w+\s+\w+\s+\w+,|)(\s+|)(?<doublename>(?P<name>[^-].*), (?P<area>([^-]|\w+\s+\w+))) \]$"
+  match="^\[Room\]\[(?P<terrain>.*)\]\[ (\w+,|\w+\s+\w+,|\w+\s+\w+\s+\w+,|)(\s+|)(?<doublename>(?P<name>[^-].*, (?P<area>([^-]\w+|\w+\s+\w+|(Sei'an City)|(The Glitz Pit))))) \]$"
   script="process_room_name"
   regexp="y"
   omit_from_output="y"
@@ -692,11 +703,38 @@ name = GetTriggerWildcard ("area_name2", "name")  -- get wildcard named 'who'
    match="[Exits: *]"
    omit_from_output="y"
    keep_evaluating="y"
+   expand_variables="y"
    send_to="12"
    sequence="100"
   >
   <send>local subTable = { ["S"] = "south", ["W"] = "west", ["E"] = "east", ["U"] = "up", ["D"] = "down", ["SW"] = "sw", ["NW"] = "nw", ["NE"] = "ne", ["SE"] = "se", ["N"] = "north", ["none"] = "none " }
+  local DoorTable = { ["[S ]"] = "[south]", ["[W ]"] = "[west]", ["[E ]"] = "[east]", ["[U ]"] = "[up]", ["[D ]"] = "[down]", ["[SW ]"] = "[sw]", ["[NW ]"] = "[nw]", ["[NE ]"] = "[ne]", ["[SE ]"] = "[se]", ["[N ]"] = "[north]", ["none"] = "none " }
 local result = "%1"
+local door_exits = "%1"
+--print(door_exits)
+for exit in string.gmatch(door_exits, "%w+") do
+  if DoorTable[exit] then
+    door_exits = door_exits:gsub(exit, DoorTable[exit], 1)
+end -- printing exits like this now: Exits:  [N ][E ][S ][W ]D NE NW SE SW  add something like if [EXIT] = rooms[uid].exit then add exits to row.doors
+end
+local doors = {}
+for exit in string.gmatch(door_exits, "%[%w+ %]") do
+  exit = string.gsub(exit, "%[", "")
+  exit = string.gsub(exit, " %]", "")
+  exit = string.lower(exit)
+--  print(exit)
+  if doors ~= "" or nil then
+  table.insert(doors, exit)
+end
+end
+
+for k, v in ipairs(doors) do
+  k = v
+  doors[k] = v
+end
+
+doors2 = doors
+--  print("Exits: ",door_exits)
 result = string.gsub(result, "%[", "")
 result = string.gsub(result, "%]", "")
 
@@ -955,14 +993,13 @@ require "utility"
 require "tprint"
 
 
-version = "6.35"
+version = "6.50"
 uid = -999
 current_room=nil
 current_area = -999
 expected_exit=-666
 name = ""
 from_room=""
-last_direction_moved=nil
 terrain = 0
 area = GetVariable("area") or "<No area>"
 last_backup = GetVariable("last_backup") or 0
@@ -1155,7 +1192,7 @@ end -- got_room_name
 -- -----------------------------------------------------------------
 function process_description_line (name, line, wildcards)
   if Trim (line) == "" then
-  
+
   line = "Empty Desc"
 
   end -- if
@@ -1644,13 +1681,18 @@ Simulate("\n[UID]: ", uid)
 printexits = exits_str
 Simulate("\nLast Dir: ", last_direction_moved)
 
+
+doors = doors2
+--doors = table.concat (doors, "\n")
+--doors = string.gsub(doors, "%[", "")
+--doors = string.gsub(doors, "%]", "")
+--tprint(doors)
   -- add to table if not known
   --Note("add room to table")
   if not rooms [uid] then
-   rooms [uid] = { name = name, desc = desc, exits = exits, area=area, fillcolour=terrain_color[terrain], fillbrush=0, bordercolour=0xffffff }
+   rooms [uid] = { name = name, desc = desc, exits = exits, doors = doors, area=area, fillcolour=terrain_color[terrain], fillbrush=0, bordercolour=0xffffff }
    add_update_room(uid, rooms[uid])
   end -- if
-
   -- save so we know current room later on
   current_room = uid
 --  if rooms[uid].area == "<No_area>" then
@@ -1661,7 +1703,7 @@ Simulate("\nLast Dir: ", last_direction_moved)
 	--Note("rooms[", from_room, "].exits[", last_direction_moved, "] = ", current_room)
 	rooms[from_room].exits[last_direction_moved] = current_room
     add_update_room(from_room, rooms[from_room])
-	last_direction_moved = nil -- remove last direction so updating a room only happens when we walk somewhere
+      	last_direction_moved = nil -- remove last direction so updating a room only happens when we walk somewhere
   end
 --if last_direction_moved ~= nil then
 --EnableTriggerGroup ("get_room_name", true)
@@ -1671,7 +1713,15 @@ Simulate("\nLast Dir: ", last_direction_moved)
    AnsiNote(ColoursToANSI("{R[{WNotes - {Y"..name.." {W- "..rooms[uid].notes.."{R]{w"))
 end
 
---if rooms[uid].area = 
+rooms[uid].doors = doors or ""
+--tprint(rooms[uid].doors)
+--add_update_room(current_room, rooms[current_room])
+--print("Area Name: ", newarea)
+ --  add_update_room(newarea, rooms[area])
+--print("current_room: ", current_room)
+--print("Area: ", area)
+mapper.draw(current_room)
+--if rooms[uid].area =
 
   just_got_room_name = false
   if name == nil then
@@ -1964,10 +2014,10 @@ function map_find (name, line, wildcards)
   local matches = { }
   local count = 0
   local target = Trim (wildcards [1]:lower ())
-  util.print("{R------------------------------------------------------------------------------------------")
-  util.print("                             {D[{WSearching rooms for {D'{Y".. target .. "{D']")
-  util.print("{R------------------------------------------------------------------------------------------")
- -- util.print("    {x238[{WArea and Room{x238]             [{WDistance{x238]")
+  util.print("{R--------------------------------------------------------------------------------")
+  util.print("                        {D[{WSearching rooms for {D'{Y".. target .. "{D']")
+  util.print("{R--------------------------------------------------------------------------------")
+  util.print("    {x238[{WArea and Room{x238]             [{WDistance{x238]")
   if target == "" then
     mapper.maperror ("No search string specified")
     return
@@ -2045,9 +2095,9 @@ function note_find (name, line, wildcards)
   local matches = { }
   local count = 0
   local target = Trim (wildcards [1]:lower ())
-  util.print("{R------------------------------------------------------------------------------------------")
-  util.print("                             {D[{WSearching notes for {D'{Y".. target .. "{D']")
-  util.print("{R------------------------------------------------------------------------------------------")
+    util.print("{R-------------------------------------------------------")
+  util.print("            {D[{WSearching notes for {D'{Y".. target .. "{D']")
+    util.print("{R-------------------------------------------------------")
   if target == "" then
     mapper.maperror ("No search string specified")
     return
@@ -2124,9 +2174,9 @@ function desc_find (name, line, wildcards)
   local matches = { }
   local count = 0
   local target = Trim (wildcards [1]:lower ())
-  util.print("{R------------------------------------------------------------------------------------------")
-  util.print("                             {D[{WSearching descriptions for {D'{Y".. target .. "{D']")
-  util.print("{R------------------------------------------------------------------------------------------")
+    util.print("{R-------------------------------------------------------")
+  util.print("         {D[{WSearching descriptions for {D'{Y".. target .. "{D']")
+    util.print("{R-------------------------------------------------------")
   if target == "" then
     mapper.maperror ("No search string specified")
     return
@@ -2217,7 +2267,7 @@ function map_goto (name, line, wildcards)
     1,          -- how many to expect
     true        -- just walk there
     )
-	
+
 		--TODO: Add code to goto a number on the list mapper find gives
 end -- map_goto
 
@@ -2260,7 +2310,6 @@ function map_where (name, line, wildcards)
                     uid == wanted   -- stop searching?
             end)
   local uid, item = next (paths, nil) -- extract first (only) path
-
   -- nothing? room not found
   if not item then
     mapper.mapprint (string.format ("Room %s not found", wanted))
@@ -2667,7 +2716,8 @@ run_sql(sql)
 			bordercolour = row.bordercolour,
 			info = row.info or "",
 			notes = row.notes,
-			exits = loadstring("return "..row.exits)()
+			exits = loadstring("return "..row.exits)(),
+      doors = row.doors
 		}
 	end
 	Note("Loaded ", cnt, " rooms from database.")
@@ -2688,7 +2738,7 @@ end
 
 function add_update_room(uid, room)
 	sql = [[
-		INSERT OR REPLACE INTO rooms (uid, name, desc, area, fillcolour, fillbrush, bordercolour, info, notes, exits)
+		INSERT OR REPLACE INTO rooms (uid, name, desc, area, fillcolour, fillbrush, bordercolour, info, notes, exits, doors)
 		VALUES
 		(']]..uid..[[',
 		']]..fix_sql(room.name)..[[',
@@ -2699,14 +2749,15 @@ function add_update_room(uid, room)
 		']]..fix_sql(room.bordercolour)..[[',
 		']]..fix_sql(room.info)..[[',
 		']]..fix_sql(room.notes)..[[',
-		']]..fix_sql(serialize.save_simple(room.exits))..[[')
+		']]..fix_sql(serialize.save_simple(room.exits))..[[',
+    ']]..fix_sql(serialize.save_simple(room.doors))..[[')
 	]]
 	run_sql(sql)
 end
 
 function check_create_db()
 	sql = [[
-		CREATE TABLE IF NOT EXISTS rooms (
+  		CREATE TABLE IF NOT EXISTS rooms (
 			uid TEXT PRIMARY KEY,
 			name TEXT,
 			desc TEXT,
@@ -2716,10 +2767,20 @@ function check_create_db()
 			bordercolour INTEGER,
 			info TEXT,
 			notes TEXT,
-			exits TEXT
+			exits TEXT,
+      doors TEXT
 		)
 	]]
 	run_sql(sql)
+end
+
+
+function AddDoors()
+  sql = [[
+  ALTER TABLE rooms
+ADD doors TEXT;
+]]
+run_sql(sql)
 end
 
 ------------------------------------------
@@ -2784,7 +2845,10 @@ function room_change_exit (room, uid, exit)
       if not chosen_exit then
          return
       end
+         temp_exit = chosen_exit
    end
+
+
    exit_destination = utils.inputbox ("Enter destination room identifier (number) for " .. temp_exit, room.name, room.exits[temp_exit])
 
    if not exit_destination then
