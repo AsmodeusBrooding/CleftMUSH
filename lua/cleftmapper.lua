@@ -59,7 +59,7 @@ Room info should include:
 
 module (..., package.seeall)
 
-VERSION = 6.35   -- for querying by plugins
+VERSION = 6.50   -- for querying by plugins
 require "aard_register_z_on_create"
 
 require "mw_theme_base"
@@ -126,28 +126,47 @@ local function build_room_info ()
    barriers = {
       n =  { x1 = -HALF_ROOM, y1 = -HALF_ROOM, x2 = HALF_ROOM, y2 = -HALF_ROOM},
       s =  { x1 = -HALF_ROOM, y1 =  HALF_ROOM, x2 = HALF_ROOM, y2 =  HALF_ROOM},
-      e =  { x1 =  HALF_ROOM, y1 = -HALF_ROOM, x2 =  HALF_ROOM, y2 = HALF_ROOM},
+      e =  { x1 =  HALF_ROOM, y1 = -HALF_ROOM, x2 = HALF_ROOM, y2 = HALF_ROOM},
       w =  { x1 = -HALF_ROOM, y1 = -HALF_ROOM, x2 = -HALF_ROOM, y2 = HALF_ROOM},
+      ne = { x1 =  HALF_ROOM+DISTANCE_LESS1+3, y1 = -HALF_ROOM, x2 = -HALF_ROOM+DISTANCE_LESS1+3, y2 = -HALF_ROOM-DISTANCE_LESS1-3},
+      nw = { x1 = -HALF_ROOM-DISTANCE_LESS1-3, y1 = -HALF_ROOM, x2 = HALF_ROOM-DISTANCE_LESS1-3, y2 = -HALF_ROOM-DISTANCE_LESS1-3, at = {-1,  1 }},
+      se = { x1 =  HALF_ROOM+DISTANCE_LESS1+3, y1 =  HALF_ROOM, x2 = -HALF_ROOM+DISTANCE_LESS1+3, y2 = HALF_ROOM+DISTANCE_LESS1+3, at = {-1,  1 }},
+      sw = { x1 = -HALF_ROOM-DISTANCE_LESS1-3, y1 =  HALF_ROOM, x2 = HALF_ROOM-DISTANCE_LESS1-3, y2 = HALF_ROOM+DISTANCE_LESS1+3, at = {-1,  1 }},
 
-      u = { x1 =  HALF_ROOM-HALF_WAY, y1 = -HALF_ROOM-HALF_WAY, x2 =  HALF_ROOM+HALF_WAY, y2 = -HALF_ROOM+HALF_WAY},
-      d = { x1 = -HALF_ROOM+HALF_WAY, y1 =  HALF_ROOM+HALF_WAY, x2 = -HALF_ROOM-HALF_WAY, y2 =  HALF_ROOM-HALF_WAY},
+      u =  { x1 =  HALF_ROOM-HALF_WAY, y1 = -HALF_ROOM-HALF_WAY, x2 =  HALF_ROOM+HALF_WAY, y2 = -HALF_ROOM+HALF_WAY},
+      d =  { x1 = -HALF_ROOM+HALF_WAY, y1 =  HALF_ROOM+HALF_WAY, x2 = -HALF_ROOM-HALF_WAY, y2 =  HALF_ROOM-HALF_WAY},
 
 
    } -- end barriers
 
+   doorbarriers = {
+      n =  { x1 = -HALF_ROOM, y1 = -HALF_ROOM, x2 = HALF_ROOM, y2 = -HALF_ROOM},
+      s =  { x1 = -HALF_ROOM, y1 =  HALF_ROOM, x2 = HALF_ROOM, y2 =  HALF_ROOM},
+      e =  { x1 =  HALF_ROOM, y1 = -HALF_ROOM, x2 = HALF_ROOM, y2 = HALF_ROOM},
+      w =  { x1 = -HALF_ROOM, y1 = -HALF_ROOM, x2 = -HALF_ROOM, y2 = HALF_ROOM},
+      ne = { x1 =  HALF_ROOM+DISTANCE_LESS1+3, y1 = -HALF_ROOM, x2 = -HALF_ROOM+DISTANCE_LESS1+3, y2 = -HALF_ROOM-DISTANCE_LESS1-3},
+      nw = { x1 = -HALF_ROOM-DISTANCE_LESS1-3, y1 = -HALF_ROOM, x2 = HALF_ROOM-DISTANCE_LESS1-3, y2 = -HALF_ROOM-DISTANCE_LESS1-3, at = {-1,  1 }},
+      se = { x1 =  HALF_ROOM+DISTANCE_LESS1+3, y1 =  HALF_ROOM, x2 = -HALF_ROOM+DISTANCE_LESS1+3, y2 = HALF_ROOM+DISTANCE_LESS1+3, at = {-1,  1 }},
+      sw = { x1 = -HALF_ROOM-DISTANCE_LESS1-3, y1 =  HALF_ROOM, x2 = HALF_ROOM-DISTANCE_LESS1-3, y2 = HALF_ROOM+DISTANCE_LESS1+3, at = {-1,  1 }},
+
+      u =  { x1 =  HALF_ROOM-HALF_WAY, y1 = -HALF_ROOM-HALF_WAY, x2 =  HALF_ROOM+HALF_WAY, y2 = -HALF_ROOM+HALF_WAY},
+      d =  { x1 = -HALF_ROOM+HALF_WAY, y1 =  HALF_ROOM+HALF_WAY, x2 = -HALF_ROOM-HALF_WAY, y2 =  HALF_ROOM-HALF_WAY},
+
+
+   } -- end barriers
    -- how to draw a line from this room to the next one (relative to the center of the room)
    connectors = {
-      n =  { x1 = 0,            y1 = - HALF_ROOM, x2 = 0,                             y2 = - HALF_ROOM - HALF_WAY, at = { 0, -1 } },
-      s =  { x1 = 0,            y1 =   HALF_ROOM, x2 = 0,                             y2 =   HALF_ROOM + HALF_WAY, at = { 0,  1 } },
-      e =  { x1 =   HALF_ROOM,  y1 = 0,           x2 =   HALF_ROOM + HALF_WAY,  y2 = 0,                            at = {  1,  0 }},
-      w =  { x1 = - HALF_ROOM,  y1 = 0,           x2 = - HALF_ROOM - HALF_WAY,  y2 = 0,                            at = { -1,  0 }},
+      n = { x1 = 0,            y1 = - HALF_ROOM, x2 = 0,                             y2 = - HALF_ROOM - HALF_WAY, at = { 0, -1 } },
+      s = { x1 = 0,            y1 =   HALF_ROOM, x2 = 0,                             y2 =   HALF_ROOM + HALF_WAY, at = { 0,  1 } },
+      e = { x1 =   HALF_ROOM,  y1 = 0,           x2 =   HALF_ROOM + HALF_WAY,  y2 = 0,                            at = {  1,  0 }},
+      w = { x1 = - HALF_ROOM,  y1 = 0,           x2 = - HALF_ROOM - HALF_WAY,  y2 = 0,                            at = { -1,  0 }},
 
       u = { x1 =   HALF_ROOM,  y1 = - HALF_ROOM, x2 =   HALF_ROOM + HALF_WAY , y2 = - HALF_ROOM - HALF_WAY, at = { 1, -1 } },
       d = { x1 = - HALF_ROOM,  y1 =   HALF_ROOM, x2 = - HALF_ROOM - HALF_WAY , y2 =   HALF_ROOM + HALF_WAY, at = {-1,  1 } },
-	  ne = { x1 =   HALF_ROOM,  y1 = - HALF_ROOM, x2 =   HALF_ROOM + DISTANCE_LESS1 , y2 = - HALF_ROOM - DISTANCE_LESS1, at = { 1, -1 } },
-      se = { x1 =   HALF_ROOM,  y1 =   HALF_ROOM, x2 =   HALF_ROOM + DISTANCE_LESS1 , y2 =   HALF_ROOM + DISTANCE_LESS1, at = { 1,  1 } },
-      nw = { x1 = - HALF_ROOM,  y1 = - HALF_ROOM, x2 = - HALF_ROOM - DISTANCE_LESS1 , y2 = - HALF_ROOM - DISTANCE_LESS1, at = {-1, -1 } },
-      sw = { x1 = - HALF_ROOM,  y1 =   HALF_ROOM, x2 = - HALF_ROOM - DISTANCE_LESS1 , y2 =   HALF_ROOM + DISTANCE_LESS1, at = {-1,  1 } },
+	   ne = { x1 =   HALF_ROOM,  y1 = - HALF_ROOM, x2 =   HALF_ROOM + DISTANCE_LESS1 , y2 = - HALF_ROOM - DISTANCE_LESS1, at = { 1, -1 } },
+     se = { x1 =   HALF_ROOM,  y1 =   HALF_ROOM, x2 =   HALF_ROOM + DISTANCE_LESS1 , y2 =   HALF_ROOM + DISTANCE_LESS1, at = { 1,  1 } },
+     nw = { x1 = - HALF_ROOM,  y1 = - HALF_ROOM, x2 = - HALF_ROOM - DISTANCE_LESS1 , y2 = - HALF_ROOM - DISTANCE_LESS1, at = {-1, -1 } },
+     sw = { x1 = - HALF_ROOM,  y1 =   HALF_ROOM, x2 = - HALF_ROOM - DISTANCE_LESS1 , y2 =   HALF_ROOM + DISTANCE_LESS1, at = {-1,  1 } },
 
 
    } -- end connectors
@@ -161,7 +180,7 @@ local function build_room_info ()
 
       u = { x1 =   HALF_ROOM,  y1 = - HALF_ROOM, x2 =   HALF_ROOM + THIRD_WAY , y2 = - HALF_ROOM - THIRD_WAY, at = { 1, -1 } },
       d = { x1 = - HALF_ROOM,  y1 =   HALF_ROOM, x2 = - HALF_ROOM - THIRD_WAY , y2 =   HALF_ROOM + THIRD_WAY, at = {-1,  1 } },
-	  ne = { x1 =   HALF_ROOM,  y1 = - HALF_ROOM, x2 =   HALF_ROOM + THIRD_WAY , y2 = - HALF_ROOM - THIRD_WAY, at = { 1, -1 } },
+	   ne = { x1 =   HALF_ROOM,  y1 = - HALF_ROOM, x2 =   HALF_ROOM + THIRD_WAY , y2 = - HALF_ROOM - THIRD_WAY, at = { 1, -1 } },
      se = { x1 =   HALF_ROOM,  y1 =   HALF_ROOM, x2 =   HALF_ROOM + THIRD_WAY , y2 =   HALF_ROOM + THIRD_WAY, at = { 1,  1 } },
      nw = { x1 = - HALF_ROOM,  y1 = - HALF_ROOM, x2 = - HALF_ROOM - THIRD_WAY , y2 = - HALF_ROOM - THIRD_WAY, at = {-1, -1 } },
      sw = { x1 = - HALF_ROOM,  y1 =   HALF_ROOM, x2 = - HALF_ROOM - THIRD_WAY , y2 =   HALF_ROOM + THIRD_WAY, at = {-1,  1 } },
@@ -175,9 +194,9 @@ local function build_room_info ()
       e =  {   HALF_ROOM + 2, -2,   HALF_ROOM + 2, 2,   HALF_ROOM + 6, 0 },
       w =  { - HALF_ROOM - 2, -2, - HALF_ROOM - 2, 2, - HALF_ROOM - 6, 0 },
 
-      u = {   HALF_ROOM + 3,  - HALF_ROOM,  HALF_ROOM + 3, - HALF_ROOM - 3,  HALF_ROOM, - HALF_ROOM - 3 },
-      d = { - HALF_ROOM - 3,    HALF_ROOM,  - HALF_ROOM - 3,   HALF_ROOM + 3,  - HALF_ROOM,   HALF_ROOM + 3},
-	  ne = {   HALF_ROOM + 3,  - HALF_ROOM,  HALF_ROOM + 3, - HALF_ROOM - 3,  HALF_ROOM, - HALF_ROOM - 3 },
+      u =  {   HALF_ROOM + 3,  - HALF_ROOM,  HALF_ROOM + 3, - HALF_ROOM - 3,  HALF_ROOM, - HALF_ROOM - 3 },
+      d =  { - HALF_ROOM - 3,    HALF_ROOM,  - HALF_ROOM - 3,   HALF_ROOM + 3,  - HALF_ROOM,   HALF_ROOM + 3},
+	    ne = {   HALF_ROOM + 3,  - HALF_ROOM,  HALF_ROOM + 3, - HALF_ROOM - 3,  HALF_ROOM, - HALF_ROOM - 3 },
       se = {   HALF_ROOM + 3,    HALF_ROOM,  HALF_ROOM + 3,   HALF_ROOM + 3,  HALF_ROOM,   HALF_ROOM + 3 },
       nw = { - HALF_ROOM - 3,  - HALF_ROOM,  - HALF_ROOM - 3, - HALF_ROOM - 3,  - HALF_ROOM, - HALF_ROOM - 3 },
       sw = { - HALF_ROOM - 3,    HALF_ROOM,  - HALF_ROOM - 3,   HALF_ROOM + 3,  - HALF_ROOM,   HALF_ROOM + 3},
@@ -194,7 +213,7 @@ ROOM_COLOUR                   = { name = "Room",             colour =  ColourNam
 EXIT_COLOUR                   = { name = "Exit",             colour =  ColourNameToRGB "#e0ffff"}
 EXIT_COLOUR_UP_DOWN           = { name = "Exit up/down",     colour =  ColourNameToRGB "lime"}
 NOTE_ROOM_COLOUR              = { name = "Room notes",       colour =  tonumber(GetPluginVariable("dd07d6dbe73fe0bd02ddb62c", "NOTE_ROOM_COLOUR")) or 0x90EE90 }
-UNKNOWN_ROOM_COLOUR           = { name = "Unknown room",     colour =  ColourNameToRGB "#8b0000"}
+UNKNOWN_ROOM_COLOUR           = { name = "Unknown room",     colour =  ColourNameToRGB "#9b0000"}
 DIFFERENT_AREA_COLOUR         = { name = "Another area",     colour =  ColourNameToRGB "#ff0000"}
 PK_BORDER_COLOUR              = { name = "PK border",        colour =  ColourNameToRGB "red"}
 SHOP_FILL_COLOUR              = { name = "Shop",             colour =  ColourNameToRGB "#ffad2f"}
@@ -203,6 +222,7 @@ WAYPOINT_FILL_COLOUR          = { name = "waypoint",         colour =  ColourNam
 TRAINER_FILL_COLOUR           = { name = "Trainer",          colour =  ColourNameToRGB "#9acd32"}
 QUESTOR_FILL_COLOUR           = { name = "Questor",          colour =  ColourNameToRGB "deepskyblue"}
 BANK_FILL_COLOUR              = { name = "Bank",             colour =  ColourNameToRGB "gold"}
+FORGE_FILL_COLOUR             = { name = "Forge",            colour =  ColourNameToRGB "darkorange"}
 REGULAR_FILL_COLOUR           = { name = "Regular",          colour =  ColourNameToRGB "white"}
 FOUNTAIN_FILL_COLOUR          = { name = "Fountain",         colour =  ColourNameToRGB "cyan"}
 QUEST_FILL_COLOUR             = { name = "Quest",            colour =  ColourNameToRGB "yellow"}
@@ -520,7 +540,7 @@ local function draw_configuration ()
 
 
    -- show area exits
-   WindowText(config_win, CONFIG_FONT_ID, "Show Area Exits", x, y, 0, 0, 0x000000)
+   WindowText(config_win, CONFIG_FONT_ID, "Show Area Exits (UNAVAILABLE)", x, y, 0, 0, 0x000000)
    WindowText(config_win, CONFIG_FONT_ID_UL, ((config.SHOW_AREA_EXITS and "On") or "Off"), width + rh_size / 2 + box_size - WindowTextWidth(config_win, CONFIG_FONT_ID_UL, ((config.SHOW_AREA_EXITS and "On") or "Off"))/2, y, 0, 0, 0x808080)
 
   -- show area exits hotspot
@@ -536,7 +556,7 @@ local function draw_configuration ()
    y = y + font_height
 
          -- show door exits
-   WindowText(config_win, CONFIG_FONT_ID, "Show Door Exits", x, y, 0, 0, 0x000000)
+   WindowText(config_win, CONFIG_FONT_ID, "Show Door Exits (UNAVAILABLE)", x, y, 0, 0, 0x000000)
    WindowText(config_win, CONFIG_FONT_ID_UL, ((config.SHOW_DOOR_EXITS and "On") or "Off"), width + rh_size / 2 + box_size - WindowTextWidth(config_win, CONFIG_FONT_ID_UL, ((config.SHOW_DOOR_EXITS and "On") or "Off"))/2, y, 0, 0, 0x808080)
 
      -- show door exits hotspot
@@ -606,7 +626,6 @@ end  -- add_another_room
 
 local function draw_room (uid, path, x, y)
 
-
    local coords = string.format ("%i,%i", math.floor (x), math.floor (y))
 
    -- need this for the *current* room !!!
@@ -673,12 +692,21 @@ local function draw_room (uid, path, x, y)
          local next_y = y + exit_info.at [2] * (ROOM_SIZE + DISTANCE_TO_NEXT_ROOM)
 
          local next_coords = string.format ("%i,%i", math.floor (next_x), math.floor (next_y))
-
          -- remember if a zone exit (first one only)
          if config.SHOW_AREA_EXITS and room.area ~= rooms [exit_uid].area and not rooms[exit_uid].unknown then
             area_exits [ rooms [exit_uid].area ] = area_exits [ rooms [exit_uid].area ] or {x = x, y = y, def = barriers[dir]}
+            --tprint(rooms[exit_uid].exits)
          end -- if
-
+         if config.SHOW_DOOR_EXITS and room.door ~= rooms[uid].doors and not rooms[uid].unknown then--and room.area ~= rooms[uid].area and not rooms[uid].unknown then
+            door_exits [ rooms [uid].doors ] = door_exits [ rooms [uid].doors ] or {x = x, y = y, def = doorbarriers[dir]}
+         end -- if
+      --   for k, v in pairs(door_exits) do
+  --    tprint(door_exits)
+      --   print("K: ",k)
+      --   if k ~= "" or nil then
+      --   draw_doors_exit(v)
+    --   end
+  --   end
          -- if another room (not where this one leads to) is already there, only draw "stub" lines
          if drawn_coords [next_coords] and drawn_coords [next_coords] ~= exit_uid then
             exit_info = stub_exit_info
@@ -750,9 +778,9 @@ local function draw_room (uid, path, x, y)
 
 
    if room.unknown then
-      WindowCircleOp (win, miniwin.circle_rectangle, left, top, right, bottom,
-         UNKNOWN_ROOM_COLOUR.colour, miniwin.pen_dot, 1,  --  dotted single pixel pen
-         -1, miniwin.brush_null)  -- opaque, no brush
+        WindowCircleOp (win, miniwin.circle_rectangle, left, top, right, bottom,
+           UNKNOWN_ROOM_COLOUR.colour, miniwin.pen_dot, 1,  --  dotted single pixel pen
+           0, miniwin.brush_hatch_forwards_diagonal)  -- opaque, no brush
    else
       -- room fill
       WindowCircleOp (win, miniwin.circle_rectangle, left, top, right, bottom,
@@ -892,6 +920,15 @@ area = GetPluginVariable("dd07d6dbe73fe0bd02ddb62c", "area") or "<No_Area>"
                                          room.fillbrush = 8  -- medium pattern
 										                		elseif string.match (room.info, "armorshop") then
                                          special_room = true
+                                      --[[   WindowCreate (inviswindow, 0, 0, ROOM_SIZE, ROOM_SIZE, 0, 0, ColourNameToRGB("white"))    --transparent, not bgcolor
+                                         WindowLoadImage (inviswindow, "armorshop", "worlds\\plugins\\images\\armorshop.png")
+                                         WindowDrawImage (inviswindow, "armorshop", 0, 0, ROOM_SIZE, ROOM_SIZE, miniwin.image_stretch)
+                                        WindowImageFromWindow(win, "armorshop", inviswindow)
+                                        WindowGetImageAlpha(win, "armorshop", 0, 0, ROOM_SIZE, ROOM_SIZE)
+                                        WindowMergeImageAlpha (win, "armorshop", "armorshop",
+                                        0, 0, 0, 0,   -- full image
+                                        1, 1,            -- use transparency, 100% opacity
+                                        0, 0, 0, 0)  -- source offset]]
 		 	                             WindowDrawImage (win, "armorshop", left, top, right, bottom, miniwin.image_stretch)  -- stretch to fill
 										 --WindowDrawImageAlpha (win, "armorshop", left, top, right, bottom)
 				                         WindowCircleOp (win, miniwin.circle_rectangle, left-2-room.borderpenwidth, top-2-room.borderpenwidth,
@@ -981,10 +1018,13 @@ area = GetPluginVariable("dd07d6dbe73fe0bd02ddb62c", "area") or "<No_Area>"
                                          right+2+room.borderpenwidth, bottom+2+room.borderpenwidth,PRIEST_FILL_COLOUR.colour,
                                          room.borderpen, room.borderpenwidth,-1,miniwin.brush_null)
                                          room.fillbrush = 0 -- solid
-                         elseif string.match (room.info, "forge") then
-                                         special_room = true
-                                         room.fillcolour = mapper.FORGE_FILL_COLOUR.colour
-                                         room.fillbrush = 0  -- solid
+                                       elseif string.match (room.info, "forge") then
+                                                        special_room = true
+                                                 WindowDrawImage (win, "forge", left, top, right, bottom, miniwin.image_stretch)  -- stretch to fill
+                                                 WindowCircleOp (win, miniwin.circle_rectangle, left-2-room.borderpenwidth, top-2-room.borderpenwidth,
+                                                       right+2+room.borderpenwidth, bottom+2+room.borderpenwidth,FORGE_FILL_COLOUR.colour,
+                                                       room.borderpen, room.borderpenwidth,-1,miniwin.brush_null)
+                                                         special_room = true
 		                 elseif string.match (room.info, "warriortrainer") then
                                          special_room = true
 		 	                             WindowDrawImage (win, "warriortrainer", left, top, right, bottom, miniwin.image_stretch)  -- stretch to fill
@@ -1099,7 +1139,6 @@ end -- changed_room
 local function draw_zone_exit (exit)
    local x, y, def = exit.x, exit.y, exit.def
    local offset = ROOM_SIZE
-
    WindowLine (win, x + def.x1, y + def.y1, x + def.x2, y + def.y2, ColourNameToRGB("yellow"), miniwin.pen_solid + 0x0200, 5)
    WindowLine (win, x + def.x1, y + def.y1, x + def.x2, y + def.y2, ColourNameToRGB("green"), miniwin.pen_solid + 0x0200, 1)
 end --  draw_zone_exit
@@ -1196,6 +1235,13 @@ function draw_next_batch_of_rooms()
    for i, zone_exit in ipairs(area_exits) do
       draw_zone_exit(zone_exit, barriers)
   end -- for
+  local doorbarriers = metrics.doorbarriers
+  for i, door_exit in ipairs(door_exits) do
+  --  print(door_exit)
+     draw_doors_exit(door_exit, doorbarriers)
+     print("DrawingBarriers")
+ end -- for
+
    local end_time = utils.timer ()
 
  -- draw_edge()
@@ -1229,10 +1275,11 @@ function find_paths (uid, f)
   local done = false
   local found, reason
   local explored_rooms, particles = {}, {}
+
   -- this is where we collect found paths
   -- the table is keyed by destination, with paths as values
   local paths = {}
-  
+
   -- create particle for the initial room
   table.insert (particles, make_particle (uid))
 
@@ -1257,10 +1304,12 @@ function find_paths (uid, f)
       if rooms [part.current_room] then
 
         -- get a list of exits from the current room
-        exits = rooms [part.current_room].exits
+         local exits = rooms [part.current_room].exits
 
         -- create one new particle for each exit
-        for dir, dest in pairs(exits) do
+        -- sort exits by descending dir length, thus prioritizing cexits
+for dir, dest in spairs(exits, function(t, a, b) return #a > #b end) do
+
           -- if we've been in this room before, drop it
           if not explored_rooms[dest] then
             explored_rooms[dest] = true
@@ -1273,22 +1322,6 @@ function find_paths (uid, f)
               found, done = f (dest)
               if found then
                 paths[dest] = { path = new_path, reason = found }
-			--	tprint(paths[dest])
-				--print(paths[dest].path[1].dir)
-				--[[			for k, v in pairs(exits) do
-		print(#k)
-		if #k >= 3 then
-		non_cardinal_key = k
-		cardinal_key = nil
-		dir.dir = non_cardinal_key
-		print("Non Cardinal: ",non_cardinal_key)
-		else
-		cardinal_key = k
-		non_cardinal_key = nil
-		print("Cardinal: ",cardinal_key)
-		end
-      end
-		]]--
               end -- found one!
 
               -- make a new particle in the new room
@@ -1436,7 +1469,7 @@ function draw (uid)
 	      WindowLoadImage (win, "inn", "worlds\\plugins\\images\\inn.png")                                 --Inn Shop Tile
 	      WindowLoadImage (win, "tavern", "worlds\\plugins\\images\\tavern.png")                           --Tavern Tile
 	      WindowLoadImage (win, "inside_brigantes", "worlds\\plugins\\images\\inside_brigantes.png")       --Inside terrain in Brigantes Castle
-
+        WindowLoadImage (win, "forge", "worlds\\plugins\\images\\forge.png")                             --Forge Tile
 
 
    -- Handle background texture.
@@ -1486,9 +1519,14 @@ function draw (uid)
    end -- while all rooms_to_be_drawn
 
    for area, zone_exit in pairs (area_exits) do
+     print(area)
+     tprint(zone_exit)
       draw_zone_exit (zone_exit)
    end -- for
 
+   for door, door_exit in pairs (door_exits) do
+      draw_doors_exit (door_exit)
+   end -- for
    local room_name = room.name
    local name_width = WindowTextWidth (win, FONT_ID, room_name)
    local add_dots = false
@@ -1944,14 +1982,12 @@ else
 end
 		 ColourTell(TextColor, BackgroundColor, "")
 		 if (#last_result_list < 10) then
-		 space = "  "
-		 elseif (#last_result_list >= 100) then
-		 space = ""
-		 else 
 		 space = " "
+		 else
+		 space = ""
 		 end
 	--	 ColourTell("white", "black", "--------------------------------------------------\n")
-      Hyperlink ("!!" .. GetPluginID () .. ":mapper.do_hyperlink(" .. hash .. ")", " " ..#last_result_list.. " ".. space ..room_name, "Click to speedwalk there (" .. distance .. ")", TextColor, BackgroundColor, false, true) 
+      Hyperlink ("!!" .. GetPluginID () .. ":mapper.do_hyperlink(" .. hash .. ")", " " ..#last_result_list.. " ".. space ..room_name, "Click to speedwalk there (" .. distance .. ")", TextColor, BackgroundColor, false, true)
 				-- wanted = GetPluginVariable("dd07d6dbe73fe0bd02ddb62c", "wanted")
 				-- Hyperlink("mapper goto " .. wanted, "[Show Path]", "Download and Update Plugin #" .. path, "red", "black", 0, 1)
 				--print(#distance)
@@ -1969,9 +2005,9 @@ end
 	  blankspace = ""
 	 -- blankspace = string.sub(blankspace, 1, 80)
 	  superstring = distance .. info .. blankspace
-	  superstring = string.format("%-65s %05s",superstring, " ")
-	  superstring = string.sub(superstring, 1, 82-#room_name)
-	  
+	  superstring = string.format("%-65s %05s",superstring, "3")
+	  superstring = string.sub(superstring, 1, 73-#room_name)
+
 	  --print(superstring)
 	  ColourTell(TextColor, BackgroundColor, " - ".. superstring .. "\n")
 
@@ -2025,34 +2061,22 @@ end -- do_hyperlink
 -- build a speedwalk from a path into a string
 
 function build_speedwalk (path)
+
  -- build speedwalk string (collect identical directions)
   local tspeed = {}
   for _, dir in ipairs (path) do
-  
     local n = #tspeed
     if n == 0 then
-
-
---	dir.dir = non_cardinal_key or cardinal_key
-
-	table.insert (tspeed, { dir = dir.dir, count = 1 })
-		--end
---		print(path)
---	print(dir.dir)
+      table.insert (tspeed, { dir = dir.dir, count = 1 })
     else
       if tspeed [n].dir == dir.dir then
-	--  	print("Tspeed1: ",tspeed[n].dir)
-	--  print("TSPEED: ",tspeed[n].dir)
         tspeed [n].count = tspeed [n].count + 1
-	--	print("PATH.DIR: ",dir.dir)
       else
-	 -- 	print("Tspeed2: ",tspeed[n].dir)
-	--  print(dir.dir)
         table.insert (tspeed, { dir = dir.dir, count = 1 })
-		--	  tprint(path)
       end -- if different direction
     end -- if
   end -- for
+
   if #tspeed == 0 then
     return
   end -- nowhere to go (current room?)
@@ -2306,7 +2330,7 @@ function mouseup_change_show_area_exits (flags, hotspot_id)
    if config.SHOW_AREA_EXITS == true then
       config.SHOW_AREA_EXITS = false
    else
-      config.SHOW_AREA_EXITS = true
+      config.SHOW_AREA_EXITS = false  -- THIS SHOULD BE TRUE, this is temporarily disabled
    end
    draw (current_room)
 end
@@ -2315,7 +2339,7 @@ function mouseup_change_show_door_exits (flags, hotspot_id)
    if config.SHOW_DOOR_EXITS == true then
       config.SHOW_DOOR_EXITS = false
    else
-      config.SHOW_DOOR_EXITS = true
+      config.SHOW_DOOR_EXITS = false   --THIS SHOULD BE TRUE, this is temporarily disabled
    end
    draw (current_room)
 end -- mouseup_show_door_Exits
@@ -2370,6 +2394,37 @@ function resize_move_callback()
 
    WindowShow(win, true)
 end
+
+
+-------------------------------------------------------------------------------------
+-- UTILITY FUNCTIONS
+-------------------------------------------------------------------------------------
+
+-- sorted pairs
+-- https://stackoverflow.com/a/15706820/865091
+function spairs(t, order)
+   -- collect the keys
+   local keys = {}
+   for k in pairs(t) do keys[#keys+1] = k end
+
+   -- if order function given, sort by it by passing the table and keys a, b,
+   -- otherwise just sort the keys
+   if order then
+      table.sort(keys, function(a,b) return order(t, a, b) end)
+   else
+      table.sort(keys)
+   end
+
+   -- return the iterator function
+   local i = 0
+   return function()
+      i = i + 1
+      if keys[i] then
+         return keys[i], t[keys[i]]
+      end
+   end
+end
+
 function draw_edge()
    -- draw edge frame.
    check (WindowRectOp (win, 1, 0, 0, 0, 0, 0xE8E8E8, 15))
