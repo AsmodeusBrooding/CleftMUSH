@@ -1258,7 +1258,7 @@ end
 function updateRoomInfo(name, line, wildcards)
    local valid_flags = {
    ["waypoint"]="waypoint", ["bank"]="bank", ["alchemyguild"]="alchemyguild",
-   ["priest"]="priest", ["forge"]="forge", ["weaponshop"]="weaponshop",
+   ["priest"]="priest", ["forge"]="forge", ["weaponshop"]="weaponshop", ["lightshop"]="lightshop",
    ["armorshop"]="armorshop", ["petshop"]="petshop", ["itemshop"]="itemshop",
    ["foodshop"]="foodshop", ["tavern"]="tavern", ["morgue"]="morgue", ["quest"]="quest",
    ["fountain"]="fountain", ["gato"]="gato", ["moti"]="moti", ["inn"]="inn",
@@ -2716,8 +2716,8 @@ run_sql(sql)
 			bordercolour = row.bordercolour,
 			info = row.info or "",
 			notes = row.notes,
-			exits = loadstring("return "..row.exits)(),
-      doors = row.doors
+			exits = loadstring("return "..row.exits)()
+    --  doors = row.doors
 		}
 	end
 	Note("Loaded ", cnt, " rooms from database.")
@@ -2735,10 +2735,10 @@ function check_update_room(uid, room)
 		add_update_room(uid, room)
 	end
 end
-
+--doors
 function add_update_room(uid, room)
 	sql = [[
-		INSERT OR REPLACE INTO rooms (uid, name, desc, area, fillcolour, fillbrush, bordercolour, info, notes, exits, doors)
+		INSERT OR REPLACE INTO rooms (uid, name, desc, area, fillcolour, fillbrush, bordercolour, info, notes, exits)
 		VALUES
 		(']]..uid..[[',
 		']]..fix_sql(room.name)..[[',
@@ -2749,12 +2749,11 @@ function add_update_room(uid, room)
 		']]..fix_sql(room.bordercolour)..[[',
 		']]..fix_sql(room.info)..[[',
 		']]..fix_sql(room.notes)..[[',
-		']]..fix_sql(serialize.save_simple(room.exits))..[[',
-    ']]..fix_sql(serialize.save_simple(room.doors))..[[')
+		']]..fix_sql(serialize.save_simple(room.exits))..[[')
 	]]
 	run_sql(sql)
 end
-
+--,']]..fix_sql(serialize.save_simple(room.doors))..[['
 function check_create_db()
 	sql = [[
   		CREATE TABLE IF NOT EXISTS rooms (
