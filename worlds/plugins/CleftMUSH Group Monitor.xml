@@ -13,7 +13,7 @@
    purpose="Group monitor"
    date_written="2019-07-03 12:04:56"
    requires="5.00"
-   version="6.59"
+   version="6.70"
    >
 
 </plugin>
@@ -83,7 +83,7 @@
    enabled="n"
    regexp="y"
    keep_evaluating="y"
-   match="^\[(\s+|)(?<level>\d+)\s+(?<tags>[^\s]+)\]\s+(?<name>\w+.*\w+)\s+(?<hp>\d+)\/(\s+|)(?<hp_max>\d+)\s+hp\s+(?<mana>(-\d+|\d+|\?))\/(\s+|)(?<mana_max>(-\d+|\d+|\?))\s+mana\s+(?<moves>(-\d+|\d+|\?))\/(\s+|)(?<moves_max>\d+)\s+mv\s+(?<exp>\d+)\s+xp$"
+   match="^\[(\s+|)(?<level>\d+)\s+(?<tags>[^\s]+)\]\s+(?<name>\w+.*\w+)\s+(?<hp>\d+|\?)\/(\s+|)(?<hp_max>\d+|\?)\s+hp\s+(?<mana>(-\d+|\d+|\?))\/(\s+|)(?<mana_max>(-\d+|\d+|\?))\s+mana\s+(?<moves>(-\d+|\d+|\?))\/(\s+|)(?<moves_max>\d+|\?)\s+mv\s+(?<exp>\d+)\s+xp$"
    script="enemy_line"
    omit_from_output="y"
    sequence="100"
@@ -172,7 +172,7 @@
 
       local group = {}
 
-      local version = "6.59"
+      local version = "6.70"
       local to_bool = {["0"] = false, ["1"] = true}
 
       local winid = "win_"..GetPluginID()
@@ -195,7 +195,7 @@
       local no_melee_color = "#cc00cc" -- no melee tag color
       local pet_color = "#ffd700" -- pet mob color
       local you_color = "#0066dd" -- you color
-	  local team_color = "#00FFFF" -- you color
+	    local team_color = "#00FFFF" -- you color
       local hp_label_color = "#00ff00" -- hp label color
       local enemy_hp_label_color = "#00ff00" -- enemy hp label color
       local mana_label_color = "#3333ff" -- mana label color
@@ -218,7 +218,7 @@
       local bar_width = tonumber(GetVariable("bar_width")) or 200 -- width of bars
       local bar_ticks = 9 -- number of ticks to show on bar
       local hp_bar_border = GetVariable("hp_bar_border") or "#777777" -- bar surrounding the gauges
-      local enemy_hp_bar_border = GetVariable("hp_bar_border") or "#777777" -- bar surrounding the gauges
+      local enemy_hp_bar_border = GetVariable("enemy_hp_bar_border") or "#777777" -- bar surrounding the gauges
       local mana_bar_border = GetVariable("mana_bar_border_color") or "#777777" -- bar surrounding the gauges
       local moves_bar_border = GetVariable("moves_bar_border_color") or "#777777" -- bar surrounding the gauges
       local enemy_hp_color = GetVariable("enemy_hp_color") or "#00ff00" -- color of bar
@@ -347,7 +347,8 @@
       function end_group()
 	 EnableTriggerGroup("enemy_group", false)
 	 set_order() -- flag as minion, pet, player
-	 get_biggest_number() -- get longest hp/mana/moves number to format box size
+	-- get_biggest_number() -- get longest hp/mana/moves number to format box size
+  biggest_number = 4
 	 table.sort(group, by_player)
 	 window(true)
       end
@@ -576,7 +577,11 @@ elseif show_numbers and not compact_mode then
 	 end
       end
 
-
+--[[function fixPlayerLevel(str)
+  print(str)
+return string.sub(tostring(str), 1, 7)
+end
+]]
       function fixNaN(num)
   if num ~= num or num <= 0 then num = 0 end
   return num
@@ -592,7 +597,7 @@ end
 	   local x = 0
      local column_width = 0
 	 	 LevelPos = WindowTextWidth(winid, font_id, "[100] ")
-		 NamePos = WindowTextWidth(winid, font_id, abbreviate(player.name).." ")
+		 NamePos = WindowTextWidth(winid, font_id, abbreviate(player.name).."")
      if NamePos <= 80 then
        NamePos = 144
      end
@@ -601,16 +606,29 @@ end
      --if column_width == 0 then
      Level100Width = WindowTextWidth(winid, font_id, " ")
      LeaderTagSize = WindowTextWidth(winid, font_id, "[LEADER] ")
+     --print("Column Width 1: ",column_width)
      column_width = math.max(column_width, WindowTextWidth(winid, font_id, "[]                   "..NamePos..LeaderTagSize))
+     --print("Column Width 2: ",column_width)
+     if column_width == 416 then
+       column_width = 432
+     end
+  --   print(NamePos)
      bar_width = column_width - GAP*3 - labels_width
+     --print(bar_width)
      if compact_mode == true then
        bar_width = bar_width/2
      else
        bar_width = column_width - GAP*3 - labels_width
      end
-        local hpPercent = 100
-        if player.hp and player.hp_max then
-           hpPercent = math.floor(player.hp / player.hp_max * 100)
+     local hpPercent = 100
+        if player.hp == "?" then
+          player.hp = "?"
+        end
+        if player.hp_max == "?" then
+          player.hp_max = "?"
+        end
+        if player.hp ~= "?" and player.hp_max ~= "?" then
+           hpPercent = math.floor(tonumber(player.hp) / tonumber(player.hp_max) * 100)
         end
       local hp_color = "#00ff00" -- color of bar
       local hp_bar_border = "#777777" -- bar surrounding the gauges
@@ -652,8 +670,13 @@ end
 		  if is_no_melee(player.tags) then
 		     x = x + WindowText(winid, font_id, "N", x, top + padding, 0, 0, ColourNameToRGB(no_melee_color), false) + 2 -- show if no melee
 		  end
+      if player.level == "100" then
+        LevelTrunc = "Lv[100]"
+      else
+        LevelTrunc = "Lv[ "..player.level.."]"
+      end
      if not compact_mode then
-		  x = x + WindowText(winid, font_id, "Lv["..player.level.."]", left, top + padding, 0, 0, ColourNameToRGB(level_color), false) + left -- label and padding
+		  x = x + WindowText(winid, font_id, LevelTrunc, left, top + padding, 0, 0, ColourNameToRGB(level_color), false) + left -- label and padding
 		  x = x + WindowText(winid, font_id, abbreviate(player.name), left + LevelPos + font_size*1.7, top + padding, 0, 0, ColourNameToRGB(player_color), false) + left + 18 + 8-- player name truncated
 
 		  if is_no_melee(player.tags) then
@@ -807,12 +830,12 @@ end
 		  end
 		   if not compact_mode and show_numbers then
 			 EnemyTagSize = WindowTextWidth(winid, font_id, "[ENEMY]")
-		     x = WindowText(winid, font_id, "Lv["..player.level.."]", left, top + padding, 0, 0, ColourNameToRGB(level_color), false) + left -- label and padding
+		     x = WindowText(winid, font_id, LevelTrunc, left, top + padding, 0, 0, ColourNameToRGB(level_color), false) + left -- label and padding
 		     x = x + WindowText(winid, font_id, abbreviate(player.name), left + LevelPos + font_size*1.7, top + padding, 0, 0, ColourNameToRGB(player_color), false) + left + 18 + 8 -- player name
 		     x = WindowText(winid, font_id, "[ENEMY]", bar_width+left+EnemyTagSize-font_size*2.5, top + padding, 0, 0, ColourNameToRGB(tank_color), false) -- show if enemy
        end
        if not compact_mode and not show_numbers then
-		     x = WindowText(winid, font_id, "Lv["..player.level.."]", left, top + padding, 0, 0, ColourNameToRGB(level_color), false) + left -- label and padding
+		     x = WindowText(winid, font_id, LevelTrunc, left, top + padding, 0, 0, ColourNameToRGB(level_color), false) + left -- label and padding
 		     x = x + WindowText(winid, font_id, abbreviate(player.name), left + LevelPos + font_size*1.7, top + padding, 0, 0, ColourNameToRGB(player_color), false) + left + 18 + 8-- player name
 		     x = x + WindowText(winid, font_id, "E", left + bar_width+font_size, top + padding, 0, 0, ColourNameToRGB(tank_color), false) + 2 -- show if minion
 	       end
@@ -834,8 +857,9 @@ end
 	       x = WindowText(winid, font_id, "HP", left, top, 0, 0, ColourNameToRGB(enemy_hp_label_color), false) + left -- label and padding
 	       gauge(winid, "HP for "..player.name, tonumber(player.hp), tonumber(player.hp_max), x + padding, top, bar_width, line_height, ColourNameToRGB(enemy_hp_color), 0x000000, bar_ticks, ColourNameToRGB(enemy_hp_bar_border), ColourNameToRGB(enemy_hp_bar_border), nil, flat_gauges==1) -- hp gauge
 	    end
-	    if overlay_pct then
-	       outlined_text(winid, "s1", math.floor(player.hp / player.hp_max * 100).."%", x + 6, top - font_size/20, 0, 0, ColourNameToRGB(overlay_color), false) -- hp %
+      local is_number = tonumber(player.hp) and tonumber(player.hp_max)
+      if (is_number and overlay_pct) then
+	       outlined_text(winid, "s1", fixNaN(math.floor(player.hp / player.hp_max * 100)).."%", x + 6, top - font_size/20, 0, 0, ColourNameToRGB(overlay_color), false) -- hp %
 		 --  print("HP TOP: ", top)
 		 --  print("FONT_SIZE: ", font_size)
 	    end
@@ -865,12 +889,13 @@ end
 	       if show_moves then
 		  x = WindowText(winid, font_id, "MV", left, top, 0, 0, ColourNameToRGB(moves_label_color), false) + left -- label and padding
 		  gauge(winid, "Moves for "..player.name, tonumber(player.moves), tonumber(player.moves_max), x + padding, top, bar_width, line_height, ColourNameToRGB(moves_color), 0x000000, bar_ticks, ColourNameToRGB(moves_bar_border), ColourNameToRGB(moves_bar_border), nil, flat_gauges==1) -- moves gauge
-		  if overlay_pct then
-		     outlined_text(winid, "s1", math.floor(player.moves / player.moves_max * 100).."%", x + 6, top - font_size/20, 0, 0, ColourNameToRGB(overlay_color), false) -- moves %
+      local is_number = tonumber(player.moves) and tonumber(player.moves_max)
+      if (is_number and overlay_pct) then
+		     outlined_text(winid, "s1", fixNaN(math.floor(player.moves / player.moves_max * 100)).."%", x + 6, top - font_size/20, 0, 0, ColourNameToRGB(overlay_color), false) -- moves %
 			-- 		   print("MOVE TOP: ", top)
 		  end
 		  if show_numbers then
-		     WindowText(winid, font_id, player.moves.."/"..player.moves_max, x + 6 + bar_width, top, 0, 0, ColourNameToRGB(overlay_color), false) -- moves
+		     WindowText(winid, font_id, limit_n(player.moves).."/"..limit_n(player.moves_max), x + 6 + bar_width, top, 0, 0, ColourNameToRGB(overlay_color), false) -- moves
 		  end
 		 -- top = top + bar_height + 2
      top = top + line_height + 1
@@ -1024,6 +1049,10 @@ end
 
    str = str .."|-|>HP Thresholds|>First|"..(((thresh1active == 1) and "+") or "").."Activate|Set Percent ("..thresh1percent.."%)|Set Color ("..(thresh1color)..")|<|>Second|"..(((thresh2active == 1) and "+") or "").."Activate|Set Percent ("..thresh2percent.."%)|Set Color ("..(thresh2color)..")|<|<|"
 
+   str = str.."|Change Window Width"
+
+   str = str.."|Change Window Height"
+
 	 opt = WindowMenu(winid, x, y, str)
 
 	 if opt == "" then
@@ -1143,6 +1172,26 @@ end
   			thresh2color = RGBColourToName(clr)
   			SaveState()
       end
+    elseif opt == 20 then
+      win_width = utils.inputbox("Enter desired width for the group miniwindow", "Change the width of the miniwindow", win_width)
+      if tonumber(win_width) <= 100 then
+      util.print("{R[{WThe smallest width you are allowed is {Y100{W. Setting the width to {Y100{W.{R]")
+      win_width = 100
+    elseif tonumber(win_width) >= 2000 then
+      util.print("{x238The largest width currently allowed is 2000. If you want to surpass this number, ask Asmodeus to add something in for you. This is only temporary.")
+      win_width = 2000
+      end
+      SetVariable("win_width", win_width)
+    elseif opt == 21 then
+      win_height = utils.inputbox("Enter desired height for the group miniwindow", "Change the height of the miniwindow", win_height)
+      if tonumber(win_height) <= 100 then
+      util.print("{R[{WThe smallest height you are allowed is {Y100{W. Setting the height to {Y100{W.{R]")
+      win_height = 100
+    elseif tonumber(win_height) >= 2000 then
+      util.print("{x238The largest height currently allowed is 2000. If you want to surpass this number, ask Asmodeus to add something in for you. This is only temporary.")
+      win_height = 2000
+      end
+      SetVariable("win_height", win_height)
     end
           SaveState()
 	 window(true)

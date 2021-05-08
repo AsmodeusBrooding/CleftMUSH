@@ -9,7 +9,7 @@
    purpose="Manages updates for CleftMUSH"
    date_written="2020-5-24 01:08:25"
    requires="4.76"
-   version="2.01"
+   version="2.03"
    save_state="y"
    >
 <description trim="y">
@@ -84,7 +84,7 @@ require "zip"
 require "serialize"
 require "utility"
 dofile(GetPluginInfo(GetPluginID(), 20) .. "cleft_colors.lua")
-version = 2.01
+version = 2.03
 local installedPlugins = {}
 local lastListHash
 local currentPlugin = {}
@@ -104,6 +104,7 @@ function cmu_install(name, line, wc)
       if pluginList[p] ~= nil and tonumber(wc.index) == p then
          printmsg("Attempting to install plugin #" .. wc.index .. " (" .. pluginList[p].name .. ")")
          install_plugin(pluginList[p])
+         tprint(pluginList[p])
       end
    end
    if #pluginList == 0 then
@@ -140,7 +141,7 @@ end
 
 function cmu_help(name, line, wc)
    print("")
-	NoteStyle(2)			        
+	NoteStyle(2)
 	--ColourNote("MediumSeaGreen", "", "CleftMUSH Plugin Manager")
 	  util.print("{R================================================================================")
 	  util.print("")
@@ -219,7 +220,7 @@ function async_head_plugin(retval, page, status, headers, full_status, request_u
          ColourTell("dimgrey", "", "[" .. i .. "] ", "gold", "", thisPlugin.name .. " ")
          if thisPlugin.installed then
             Hyperlink("cmu reload " .. i, "[Reload Plugin] ", "Reload Plugin #" .. pListNum, "yellow", "black", 0, 1)
-			
+
             for k, v in pairs(installedPlugins) do
                if thisPlugin.ids[1] == k then
 			--   print(thisPlugin.lastModified)
@@ -232,7 +233,7 @@ function async_head_plugin(retval, page, status, headers, full_status, request_u
 					 end
                   end
                end
-			
+
             if not thisPlugin.updated then
                Hyperlink("cmu install " .. i, "[Update Plugin]", "Download and Update Plugin #" .. i, "red", "black", 0, 1)
                print("")
@@ -297,7 +298,7 @@ function async_plugin_download_complete(retval, page, status, headers, full_stat
       folder = GetInfo(66)
    else
       folder = GetPluginInfo(GetPluginID(), 20)
-	 -- print(folder)
+	  --print(folder)
    end
    --print("FOLDER IS " .. folder)
    if status == 200 then -- download successful
@@ -316,9 +317,10 @@ function async_plugin_download_complete(retval, page, status, headers, full_stat
 		---	print(folder)
 			FileName = file.filename
 			FileName = string.gsub(FileName, "worlds/plugins/", "worlds\\plugins\\")
-				--print("Folder:Filename" ,folder..file.filename)
-	--			print(FileName)
-         local hBinaryOutput = io.open(FileName, "wb")
+				print("Folder:Filename" ,folder..file.filename)
+				print(FileName)
+        NewLoadFile = folder..file.filename
+         local hBinaryOutput = io.open(folder..FileName, "wb")
           -- write current file inside zip to a file outside zip
           if(hBinaryOutput)then
 	--	  print("YES")
@@ -330,20 +332,20 @@ function async_plugin_download_complete(retval, page, status, headers, full_stat
          if fileExt == ".xml" then
             xmlFile.filename = file.filename
             --print(xmlFile.filename)
-            xmlFile.pluginid = string.match(currFileContents, '%s%s+id="(.-)"')            
+            xmlFile.pluginid = string.match(currFileContents, '%s%s+id="(.-)"')
             table.insert(xmlFiles, xmlFile)
             xmlFile = {}
          end
     --     print(currFile:close())
-	--	 print(currFile)	
+	--	 print(currFile)
       end
       os.remove(folder .. "temp_update.zip")
 	 -- print("REMOVED FOLDER: ", folder)
-      printmsg("Update succeeded, loading/reloading plugins.")  
+      printmsg("Update succeeded, loading/reloading plugins.")
       printmsg("----------------------------------------------")
       for i = 1, #updatePlugin.ids do
          --if not IsPluginInstalled(thisPlugin.ids[i]) then
-            --LoadPlugin(folder ..  
+            --LoadPlugin(folder ..
          --end
          --(IsPluginInstalled(thisPlugin.ids[i]) and GetPluginInfo(thisPlugin.ids[i], 17)) then
          --ReloadPlugin(updatePlugin.ids[i])
@@ -352,7 +354,7 @@ function async_plugin_download_complete(retval, page, status, headers, full_stat
          --print(xmlFiles[i].filename, xmlFiles[i].pluginid)
          --local version = tonumber(string.match(page, '%s%s+version="([0-9%.]+)"'))
          if not (IsPluginInstalled(xmlFiles[i].pluginid) and GetPluginInfo(xmlFiles[i].pluginid, 17)) then
-            LoadPlugin(FileName)
+            LoadPlugin(NewLoadFile)
 			util.print("{x238Plugin {RNOT{x238 loaded, loading now.")
          else
             ReloadPlugin(xmlFiles[i].pluginid)
@@ -446,10 +448,10 @@ function OnPluginInstall()
    local installedStr = GetVariable("installedPlugins")
    local lastListStr = GetVariable("lastPluginList")
 	if installedStr ~= nil then
-		installedPlugins = load( "return "..installedStr)( ) 
+		installedPlugins = load( "return "..installedStr)( )
 	end
    if lastListStr ~= nil then
-		lastPluginList = load( "return "..lastListStr)( ) 
+		lastPluginList = load( "return "..lastListStr)( )
 	end
    lastListHash = GetVariable("lastListHash")
       util.print("{W--------------------------------------------------------------------------------")
@@ -459,7 +461,7 @@ function OnPluginInstall()
       util.print("{W--------------------------------------------------------------------------------")
       util.print("")
       util.print("{x238Type {Ycmu{x238 or {Ycmu help{x238 to find new plugins or update existing ones.")
-      util.print("")   
+      util.print("")
       util.print("{W--------------------------------------------------------------------------------")
 	  print("")
 end
@@ -489,11 +491,11 @@ function md5sum(filename)
 end
 
 function textWrap( str, limit, indent, indentFirst )
- 
+
     limit = limit or 72
     indent = indent or ""
     indentFirst = indentFirst or indent
- 
+
     local here = 1 - #indentFirst
     return indentFirst .. str:gsub( "(%s+)()(%S+)()",
         function( sp, st, word, fi )
@@ -506,5 +508,5 @@ function textWrap( str, limit, indent, indentFirst )
 end
 
 ]]>
-</script> 
+</script>
 </muclient>

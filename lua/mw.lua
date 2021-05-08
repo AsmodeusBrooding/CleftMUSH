@@ -190,7 +190,7 @@ function colourtext (win, font_id, Text, Left, Top, Right, Bottom, Capitalize, u
       Text = DEFAULT_COLOUR .. Text
     end -- if
 
-    for colour, text in Text:gmatch ("{(%a)([^{]+)") do
+    for colour, text in Text:gmatch ("{(%a)([^{@]+)") do
       text = text:gsub ("%z", "{") -- put any { characters back
 
       if need_caps then
@@ -235,7 +235,7 @@ function ColoursToStyles (Text)
        Text = DEFAULT_COLOUR .. Text
     end -- if
 
-    for colour, text in Text:gmatch ("{(%a)([^{]+)") do
+    for colour, text in Text:gmatch ("{(%a)([^{@]+)") do
 
        text = text:gsub ("%z", "{") -- put any { characters back
 

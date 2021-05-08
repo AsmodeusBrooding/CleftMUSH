@@ -112,7 +112,7 @@ keep_evaluating="y"
    sequence="100"
   >
   <send>Hyperlink ("note read %1", "%0", "Read note", "white", "black", 0)</send>
-  </trigger>	
+  </trigger>
   <trigger
    group="changes"
    match="[* ] *: *"
@@ -156,16 +156,98 @@ keep_evaluating="y"
    script="DisarmAlert"
   >
   </trigger>
+
+  <trigger
+   enabled="y"
+   name="cure"
+   group="spellstrings"
+   omit_from_output="y"
+   match="* utters the words, 'mehy'."
+   send_to="12"
+   sequence="100"
+  ><send>util.print("{w"..tostring("%1").." utters the words, 'mehy'. {D({WCure{D) {W[{Ghealing{W]")</send>
+  </trigger>
+  <trigger
+   enabled="y"
+   name="wizen"
+   group="spellstrings"
+   omit_from_output="y"
+   match="* utters the words, 'vafyr'."
+   send_to="12"
+   sequence="100"
+  ><send>util.print("{w"..tostring("%1").." utters the words, 'vafyr'. {D({WWizen{D) {W[{Brestore mana{W]")</send>
+  </trigger>
+  <trigger
+   enabled="y"
+   name="summon"
+   group="spellstrings"
+   omit_from_output="y"
+   match="* utters the words, 'leccir'."
+   send_to="12"
+   sequence="100"
+  ><send>util.print("{w"..tostring("%1").." utters the words, 'leccir'. {D({WSummon{D) {W[{Mutility{W]")</send>
+  </trigger>
+  <trigger
+   enabled="y"
+   name="barrier"
+   group="spellstrings"
+   omit_from_output="y"
+   match="* utters the words, 'bohhayh'."
+   send_to="12"
+   sequence="100"
+  ><send>util.print("{w"..tostring("%1").." utters the words, 'bohhayh'. {D({WBarrier{D) {W[{Ydefensive{W]")</send>
+  </trigger>
+  <trigger
+   enabled="y"
+   name="gravity_well"
+   group="spellstrings"
+   omit_from_output="y"
+   match="* utters the words, 'ghozatuvyss'."
+   send_to="12"
+   sequence="100"
+  ><send>util.print("{w"..tostring("%1").." utters the words, 'ghozatuvyss'. {D({WGravity Well{D) {W[{Roffensive{W]")</send>
+  </trigger>
+  <trigger
+   enabled="y"
+   name="esuna"
+   group="spellstrings"
+   omit_from_output="y"
+   match="* utters the words, 'ylero'."
+   send_to="12"
+   sequence="100"
+  ><send>util.print("{w"..tostring("%1").." utters the words, 'ylero'. {D({WEsuna{D) {W[{Gstatus heal{W]")</send>
+  </trigger>
+  <trigger
+   enabled="y"
+   name="nayru  "
+   group="spellstrings"
+   omit_from_output="y"
+   match="* utters the words, 'rouhelsizy'."
+   send_to="12"
+   sequence="100"
+  ><send>util.print("{w"..tostring("%1").." utters the words, 'rouhelsizy'. {D({WNayru's Love{D) {W[{Ydefensive{W]")</send>
+  </trigger>
+
 </triggers>
 
 
 
 
 
+
 -----------------------------------------------------------------------------------
--- SOUNDS SECTION 
+-- SOUNDS SECTION
 -----------------------------------------------------------------------------------
   <aliases>
+  <alias
+   enabled="y"
+   match="test shortslash"
+   regexp="n"
+   send_to="12"
+   sequence="100">
+   <send>shortslash()
+   </send>
+   </alias>
   <alias
    name="volumesetting"
    match="^vol(|u|um|ume) (?P<volumenumber>\d+)$"
@@ -183,7 +265,7 @@ SetVariable("volume", volume)
 util.print("{YVolume changed to {R" .. (GetVariable("volume") or 100) .. "{Y percent.")
    SaveState()
 </send>
-</alias> 
+</alias>
 <alias
  enabled="y"
  match="show volume"
@@ -203,7 +285,7 @@ util.print("{YVolume changed to {R" .. (GetVariable("volume") or 100) .. "{Y per
  send_to="14"
  >
 <send>
-Sound ("sounds/COD_%1.wav") 
+Sound ("sounds/COD_%1.wav")
 </send>
  </trigger>
  <trigger
@@ -213,7 +295,7 @@ Sound ("sounds/COD_%1.wav")
  send_to="14"
  >
 <send>
-Sound ("sounds/tell.wav") 
+Sound ("sounds/tell.wav")
 </send>
  </trigger>
  <trigger
@@ -224,7 +306,7 @@ Sound ("sounds/tell.wav")
  send_to="14"
  >
 <send>
-Sound ("sounds/tell.wav") 
+Sound ("sounds/tell.wav")
 </send>
  </trigger>
  <trigger
@@ -234,7 +316,7 @@ Sound ("sounds/tell.wav")
  send_to="14"
  >
 <send>
-Sound ("sounds/gtell.wav") 
+Sound ("sounds/gtell.wav")
 </send>
  </trigger>
  <trigger
@@ -245,7 +327,18 @@ Sound ("sounds/gtell.wav")
  send_to="14"
  >
 <send>
-Sound ("sounds/secret.wav") 
+Sound ("sounds/secret.wav")
+</send>
+ </trigger>
+ <trigger
+ enabled="y"
+ match="What?! * is evolving!"
+ regexp="n"
+ sequence="100"
+ send_to="14"
+ >
+<send>
+Sound ("sounds/evolution.mp3")
 </send>
  </trigger>
  <trigger
@@ -256,7 +349,7 @@ Sound ("sounds/secret.wav")
  send_to="14"
  >
 <send>
-Sound ("sounds/leene.wav") 
+Sound ("sounds/leene.wav")
 </send>
  </trigger>
  <trigger
@@ -266,7 +359,7 @@ Sound ("sounds/leene.wav")
  send_to="14"
  >
 <send>
-Sound ("sounds/Purchase.wav") 
+Sound ("sounds/Purchase.wav")
 </send>
  </trigger>
 <trigger
@@ -276,7 +369,7 @@ Sound ("sounds/Purchase.wav")
  send_to="14"
     sequence="100"
     ><send>
-Sound ("sounds/spouse.wav") 
+Sound ("sounds/spouse.wav")
 </send></trigger>
  <trigger
  enabled="y"
@@ -285,7 +378,7 @@ Sound ("sounds/spouse.wav")
  send_to="14"
  >
 <send>
-Sound ("sounds/Item.wav") 
+Sound ("sounds/Item.wav")
 </send>
  </trigger>
  <trigger
@@ -319,7 +412,7 @@ DoAfterSpecial (0.2, 'EnableTriggerGroup ("equip", true)', sendto.script) </send
  send_to="14"
  >
 <send>
-Sound ("sounds/door.wav") 
+Sound ("sounds/door.wav")
 </send>
  </trigger>
  <trigger
@@ -329,7 +422,7 @@ Sound ("sounds/door.wav")
  send_to="14"
  >
 <send>
-Sound ("sounds/door.wav") 
+Sound ("sounds/door.wav")
 </send>
  </trigger>
 <trigger
@@ -340,7 +433,7 @@ regexp="n"
  send_to="14"
  >
 <send>
-Sound ("sounds/cackle.wav") 
+Sound ("sounds/cackle.wav")
 </send>
  </trigger>
 <trigger
@@ -351,7 +444,7 @@ regexp="n"
  send_to="14"
  >
 <send>
-Sound ("sounds/cackle.wav") 
+Sound ("sounds/cackle.wav")
 </send>
  </trigger>
 <trigger
@@ -362,7 +455,7 @@ regexp="n"
  send_to="14"
  >
 <send>
-Sound ("sounds/sancfall.wav") 
+Sound ("sounds/sancfall.wav")
 </send>
  </trigger>
  <trigger
@@ -394,6 +487,26 @@ Sound ("sounds/death.mp3")
   >
   <send>Sound ("sounds/bite.wav") </send>
   </trigger>
+  <trigger
+   enabled="y"
+   group="Battle_Weapons"
+   match="^(You|\w+) (is slashed by|have SLASHED|slash|SLASH|have slashed) (.*)(?:\.|!|!!|!!!) (?:(\(\d+\)|\*dodge\*|\*miss\*|\*shell\*|\*block\*|\*parry\*)\s?)+$"
+   regexp="y"
+   send_to="12"
+   sequence="100"
+  >
+  <send>Sound ("sounds/cleave.wav") </send>
+  </trigger>
+  <trigger
+   enabled="y"
+   group="Battle_Weapons"
+   match="^(You|\w+) (is punched by|have PUNCHED|punch|PUNCH|have punched) (.*)(?:\.|!|!!|!!!) (?:(\(\d+\)|\*dodge\*|\*miss\*|\*shell\*|\*block\*|\*parry\*)\s?)+$"
+   regexp="y"
+   send_to="12"
+   sequence="100"
+  >
+  <send>Sound ("sounds/punch.mp3") </send>
+  </trigger>
 
 
 ------------------------------------------------------------------------------------
@@ -414,7 +527,7 @@ Sound ("sounds/death.mp3")
 		end -- if musicPlaying</send></trigger>
 </triggers>
 ------------------------------------------------------------------------------------
--- ALIASES SECTION 
+-- ALIASES SECTION
 ------------------------------------------------------------------------------------
 
    <aliases>
@@ -587,8 +700,39 @@ Execute("ide list")
 ColourNote("red", "", "Idea List:")
 DoAfterSpecial (1, 'EnableTriggerGroup ("idea", false)', sendto.script)</send>
   </alias>
+  <alias
+ match="^rain (.*?) (.*?)$"
+ enabled="y"
+ regexp="y"
+ send_to="12"
+ sequence="100"
+>
+<send>
+--^rnbw\s(tell \S+|\S+)\s(.*?)$
+function mod(a, b)
+  return a - (math.floor(a/b)*b)
+end
+
+stng = string.gsub("%2", "\s", "~")
+--c = {"{R","{Y", "{G", "{C", "{B", "{M","{m"}
+c = {"{D","{R", "{r"}
+strLen = stng:len()
+increment = 1
+startAt = 0
+lastAt = 0
+ret = ""
+for i=0, strLen -1 do
+  next = lastAt + increment
+  print(mod(i, #c))
+  ret = ret .. c[mod(i, #c) + 1]..stng:sub(lastAt+1, next)
+  lastAt = next
+end
+
+  Send("%1 "..ret:gsub("~", "\s"))
+</send>
+</alias>
   </aliases>
-  
+
 
 <!--  Script  -->
 
@@ -655,7 +799,7 @@ end -- function
 function hl_reply (name, line, wildcards, styles)
 	-- The trigger should be sending the named match "reply"
 	-- This should call that up and make a hyperlink.
-	
+
 	-- Note (line)
   reply="say "..wildcards["reply"]
   Hyperlink(reply, line, reply, "yellow", "black", 0)
@@ -665,7 +809,7 @@ function hl_splitreply (name, line, wildcards, styles)
 	-- The trigger should be sending the named match "reply" for what to say
 	-- "pre" for what to place before the response.
 	-- "pst" for what to place after.
-	
+
 	-- Note (line)
   reply="say "..wildcards["reply"]
   Tell (wildcards["pre"])
@@ -675,15 +819,15 @@ end -- function
 
 function hl_middle (name, line, wildcards, styles)
 	-- This is currently useless until I can figure out how to send an argument for the hyperlink to DO.
-	-- Nevertheless, let's see: 
+	-- Nevertheless, let's see:
 	-- The strings pre and pst are not hypertext and should be displayed as normal.
-	-- "pre" before the link 
+	-- "pre" before the link
 	-- "pst" after the link
 	-- "mid" is displayed as the link text
 	-- "act" is the link contents, itself
 	-- "tip" is the helper popup text for the link
 	-- now, how we go about setting all this up, I neither know nor care.
-	
+
 	-- Chaining functions is a pretty obvious part of that.
 	pre=wildcards["pre"]
   mid=wildcards["pre"]
@@ -698,9 +842,9 @@ end -- function
 --  Send (line) --Sends the line to the MUD
 --  reply="say "..wildcards [1]
 -- Whoopsie: This immediately sends.  Send ("say ", wildcards [1])
--- Later on, I might try to pull out and hyperlink JUST the phrase, for style points, but maybe not.	
+-- Later on, I might try to pull out and hyperlink JUST the phrase, for style points, but maybe not.
 -------------------------------------------------------------------------------------------------------------------------------
----- HELP PAGES SECTION 
+---- HELP PAGES SECTION
 -------------------------------------------------------------------------------------------------------------------------------
 
 function clefthelp()
@@ -723,6 +867,32 @@ function clefthelp()
       util.print("{R----------------------------------------------------------------------------------")
       util.print("")
 end
+
+
+function shortslash()
+util.print("***shortslashing (sword)")
+util.print( "    .........")
+util.print("   .dmmmmmmmmy+")
+util.print("   JXMM9UUTTT0w&,")
+util.print("   JXNS!.`````TM0+..")
+util.print("   JXN0``..`  ``OWRx")
+util.print("   JXN0``` .....??zwmx.")
+util.print("    ?9X&+..^`:^.. `O9X&.")
+util.print("      zMHk+,.^:!`....vMSo..  .....")
+util.print("        1XNk+.^`^....`?jXmo..dNNNk+")
+util.print("        .?CXQAz.^`^^...jWMNmwXWMMH:")
+util.print("           ?TWXs+..:+++dHMMHWXyXH6")
+util.print("             ?XMWo+..dMNMM0!jXN0")
+util.print("              ??wWHHHMMMY?wQNMN$")
+util.print("                ?7WMMM9UAdWMMMWXA+.")
+util.print("                ..JUMS&dWMNNNkzXMHo..")
+util.print("                jNHkzXMMMMMNMMNkCwWNy.")
+util.print("                dMMNk0C???WMNNMNHHMN$")
+util.print("                ?TUU9!    ?THMMMMMH9!")
+util.print("                            ?TMMM8:")
+util.print("                              !!!")
+end
+
 ]]>
 </script>
 </muclient>

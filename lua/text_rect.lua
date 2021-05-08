@@ -313,7 +313,7 @@ function TextRect:reWrapLines()
       end
       self:wrapLine(line[1], line[2], i)
    end
-   
+
    self.start_line = start_line
    self.start_line, self.end_line = self:snapToBottom()
    self.display_start_line = self.start_line
@@ -833,4 +833,3 @@ function TextRect:generateHotspotID(id)
    TextRect.hotspot_map[hotspot_id] = self
    return hotspot_id
 end
-
